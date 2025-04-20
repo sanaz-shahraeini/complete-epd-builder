@@ -286,38 +286,36 @@ export default function VerticalToggleButtons({
         sx={{
           position: "fixed",
           bottom: "20px",
-          right: "35px",
-          zIndex: 2,
-          borderRadius: "20px",
-          background: "rgba(255, 255, 255, 0.9)",
-          backdropFilter: "blur(10px)",
+          right: "20px",
+          zIndex: 100,
+          backgroundColor: "white",
           boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
-          padding: "8px 4px",
-          transition: "all 0.3s ease",
-          "&:hover": {
-            boxShadow: "0 10px 40px rgba(0, 0, 0, 0.15)",
-          },
+          borderRadius: "16px",
+          overflow: "hidden",
+          padding: "8px",
+          border: "1px solid rgba(43, 190, 183, 0.15)",
+          display: "flex",
+          flexDirection: "column",
+          gap: 1,
           "& .MuiToggleButton-root": {
             border: "none",
+            borderRadius: "12px",
             padding: "10px",
-            margin: "4px 0",
-            borderRadius: "50%",
+            color: "var(--text-medium)",
             transition: "all 0.2s ease",
-            ...(isMobile && {
-              padding: "6px",
-              margin: "2px 0",
-            }),
+            minWidth: "44px",
+            minHeight: "44px",
+            "&.Mui-selected": {
+              background: "var(--gradient-teal)",
+              color: "white",
+              boxShadow: "0 4px 10px rgba(0, 124, 119, 0.2)",
+            },
             "&:hover": {
-              backgroundColor: "#E0F2F1",
-              transform: "scale(1.1)",
+              backgroundColor: "rgba(43, 190, 183, 0.08)",
+              transform: "translateY(-2px)",
+              color: "var(--dark-teal)",
             },
           },
-          ...(isMobile && {
-            bottom: "15px",
-            right: "15px",
-            borderRadius: "15px",
-            padding: "6px 3px",
-          }),
         }}
       >
         {buttons.map(({ value, icon, action, selected }) => (
@@ -328,23 +326,14 @@ export default function VerticalToggleButtons({
             onClick={action}
             selected={selected}
             sx={{
-              ...(isMobile ? { padding: "4px" } : {}),
-              "&:hover": {
-                backgroundColor: "#E0F2F1",
-              },
-              "&.Mui-selected": {
-                backgroundColor: "#B2DFDB",
-                "&:hover": {
-                  backgroundColor: "#80CBC4",
-                },
-              },
+              ...(isMobile ? { padding: "8px" } : {}),
+              transition: "all 0.3s ease",
             }}
           >
             {React.cloneElement(icon, {
               sx: {
-                color: selected ? "#00695C" : "#00897B",
-                ...(isMobile && { fontSize: "small" }),
                 transition: "all 0.2s ease",
+                fontSize: isMobile ? "20px" : "24px",
               },
             })}
           </ToggleButton>

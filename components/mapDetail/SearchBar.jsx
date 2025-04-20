@@ -281,7 +281,7 @@ const SearchBar = ({ mapRef }) => {
         padding: isMobile ? "5px" : "10px",
         width: "100%",
         position: "fixed",
-        top: isMobile ? "70px" : "100px",
+        top: isMobile ? "30px" : "40px",
         left: 0,
         right: 0,
         zIndex: 999,
@@ -293,7 +293,7 @@ const SearchBar = ({ mapRef }) => {
         sx={{
           display: "flex",
           justifyContent: "center",
-          width: isMobile ? "85%" : "70%",
+          width: isMobile ? "70%" : "45%",
           padding: isMobile ? "0 10px" : 0,
           position: "relative",
           zIndex: 999,
@@ -301,14 +301,15 @@ const SearchBar = ({ mapRef }) => {
           alignItems: "center",
           flexWrap: "nowrap",
           margin: "0 auto",
+          gap: 0,
         }}
       >
         <Grid
           item
-          xs={isMobile ? 10 : 10}
+          xs={isMobile ? 10 : 11}
           className="search-container"
           sx={{
-            marginRight: isMobile ? "5px" : "10px",
+            marginRight: 0,
             position: "relative",
             zIndex: 999,
           }}
@@ -322,59 +323,67 @@ const SearchBar = ({ mapRef }) => {
             onKeyDown={handleKeyPress}
             onClick={handleSearchClick}
             sx={{
-              borderRadius: "25px",
+              borderRadius: "30px",
               transition: "all 0.3s ease",
               position: "relative",
               zIndex: 999,
               "& .MuiOutlinedInput-root": {
-                height: isMobile ? "40px" : "45px",
-                borderRadius: "25px",
-                background: "rgba(251, 251, 251, 0.95)",
+                height: isMobile ? "40px" : "48px",
+                borderRadius: "30px",
+                background: "white",
                 backdropFilter: "blur(10px)",
-                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
+                boxShadow: "0 8px 20px rgba(0, 0, 0, 0.07)",
+                border: "1px solid rgba(43, 190, 183, 0.15)",
                 transition: "all 0.3s ease",
                 "&:hover": {
-                  boxShadow: "0 6px 16px rgba(0, 0, 0, 0.12)",
+                  boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
                   transform: "translateY(-2px)",
+                  borderColor: "var(--primary-teal)",
                 },
                 "&.Mui-focused": {
-                  boxShadow: "0 8px 20px rgba(0, 137, 123, 0.15)",
+                  boxShadow: "0 10px 25px rgba(0, 124, 119, 0.15)",
                   background: "#ffffff",
+                  borderColor: "var(--primary-teal)",
+                },
+                "& .MuiOutlinedInput-notchedOutline": {
+                  border: "none",
                 },
                 ...(isMobile && {
                   "& .MuiOutlinedInput-input": {
                     fontSize: "14px",
                     padding: "8px 14px",
-                    caretColor: "#00897B",
+                    caretColor: "var(--primary-teal)",
                   },
                 }),
               },
             }}
             InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon 
+                    fontSize={isMobile ? "small" : "medium"} 
+                    sx={{ 
+                      color: "var(--primary-teal)",
+                      ml: 1, 
+                    }} 
+                  />
+                </InputAdornment>
+              ),
               endAdornment: (
                 <InputAdornment position="end">
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                     <IconButton
                       sx={{
-                        padding: isMobile ? "8px" : "4px",
-                        color: "#00897B",
-                      }}
-                    >
-                      <HelpOutlineIcon
-                        fontSize={isMobile ? "small" : "medium"}
-                      />
-                    </IconButton>
-                    <IconButton
-                      onClick={() => setShowResults(true)}
-                      sx={{
-                        padding: isMobile ? "8px" : "4px",
-                        color: "#00897B",
-                        "&:active": {
-                          transform: "scale(0.95)",
+                        padding: isMobile ? "8px" : "8px",
+                        color: "var(--medium-green)",
+                        "&:hover": {
+                          backgroundColor: "rgba(101, 184, 125, 0.1)",
                         },
                       }}
                     >
-                      <SearchIcon fontSize={isMobile ? "small" : "medium"} />
+                      <HelpOutlineIcon
+                        fontSize={isMobile ? "small" : "small"}
+                      />
                     </IconButton>
                   </Box>
                 </InputAdornment>
@@ -536,9 +545,9 @@ const SearchBar = ({ mapRef }) => {
           sx={{
             display: "flex",
             alignItems: "flex-start",
-            justifyContent: "center",
+            justifyContent: "flex-start",
             paddingRight: isMobile ? "5px" : 0,
-            paddingLeft: isMobile ? "0px" : "5px",
+            paddingLeft: 0,
             height: "45px",
             position: "relative",
             zIndex: 999,
@@ -548,24 +557,24 @@ const SearchBar = ({ mapRef }) => {
             size={isMobile ? "small" : "medium"}
             aria-label="Icon"
             sx={{
-              background: "white",
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
+              background: "var(--gradient-teal)",
+              boxShadow: "0 6px 15px rgba(43, 190, 183, 0.2)",
               transition: "all 0.3s ease",
-              width: isMobile ? "32px" : "40px",
-              height: isMobile ? "32px" : "40px",
+              width: isMobile ? "36px" : "48px",
+              height: isMobile ? "36px" : "48px",
               minHeight: "unset",
-              marginLeft: 0,
+              marginLeft: "5px",
+              border: "2px solid white",
               "&:hover": {
-                background: "#E0F2F1",
-                boxShadow: "0 6px 16px rgba(0, 0, 0, 0.12)",
-                transform: "translateY(-2px)",
+                boxShadow: "0 8px 20px rgba(43, 190, 183, 0.3)",
+                transform: "translateY(-2px) scale(1.05)",
               },
             }}
             onClick={handleIconClick}
           >
             {React.cloneElement(icon, {
               sx: {
-                color: "#384029",
+                color: "white",
                 fontSize: isMobile ? "18px" : "24px",
               },
             })}

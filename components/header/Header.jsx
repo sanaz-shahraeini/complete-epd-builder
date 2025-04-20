@@ -24,6 +24,7 @@ import MapIcon from "@mui/icons-material/Map";
 import ConstructionIcon from "@mui/icons-material/Construction";
 import ApartmentIcon from "@mui/icons-material/Apartment";
 import DevicesIcon from "@mui/icons-material/Devices";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import { useProducts } from "../../useContexts/ProductsContext";
 
 const Header = () => {
@@ -52,26 +53,32 @@ const Header = () => {
       position="fixed"
       elevation={0}
       sx={{
-        backgroundColor: "rgba(255, 255, 255, 0.95)",
+        backgroundColor: '#FFFFFF',
         backdropFilter: "blur(10px)",
-        borderBottom: "1px solid rgba(0, 0, 0, 0.06)",
-        color: "#424242",
+        borderBottom: '1px solid var(--upload_bg)',
+        color: 'var(--text-dark)',
         zIndex: 1100,
         height: "64px",
         display: { xs: "none", sm: "block" },
       }}
     >
-      <Toolbar sx={{ justifyContent: "space-between", minHeight: "64px" }}>
+      <Toolbar 
+        sx={{ 
+          justifyContent: "space-between", 
+          minHeight: "64px",
+          px: 2,
+          position: 'relative'
+        }}
+      >
         {/* Left side - Logo/Brand */}
-        <Box sx={{ display: "flex", alignItems: "center" }}>
+        <Box sx={{ display: "flex", alignItems: "center", minWidth: '180px' }}>
           <Typography
             variant="h6"
             sx={{
               fontWeight: 600,
-              color: "#00897B",
+              color: 'var(--dark-teal)',
               letterSpacing: "0.5px",
-              mr: 1,
-              display: { xs: "none", sm: "flex" },
+              display: "flex",
               alignItems: "center",
             }}
           >
@@ -80,103 +87,100 @@ const Header = () => {
               sx={{
                 width: 38,
                 height: 28,
-                backgroundColor: "#00897B",
+                background: 'var(--gradient-teal)',
                 borderRadius: "8px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 mr: 1.5,
-                boxShadow: "0 2px 8px rgba(0, 137, 123, 0.25)",
               }}
             >
-              <Typography
-                sx={{ color: "white", fontWeight: 700, fontSize: "14px" }}
-              >
+              <Typography sx={{ color: "white", fontWeight: 700, fontSize: "14px" }}>
                 EPD
               </Typography>
             </Box>
-            {!isMobile && "Map Platform"}
+            Map Platform
           </Typography>
-
-          {!isMobile && (
-            <Box
-              sx={{
-                ml: 2,
-                display: "flex",
-                background: "rgba(0, 137, 123, 0.04)",
-                borderRadius: "16px",
-                padding: "6px",
-                gap: "6px",
-                boxShadow: "0 2px 12px rgba(0, 137, 123, 0.08)",
-              }}
-            >
-              {categories.map((category) => {
-                const Icon = category.icon;
-                const isSelected = selectedCategory === category.id;
-                return (
-                  <Button
-                    key={category.id}
-                    size="small"
-                    onClick={() => setSelectedCategory(category.id)}
-                    sx={{
-                      color: isSelected ? "#00897B" : "#757575",
-                      fontWeight: isSelected ? 600 : 500,
-                      px: 2,
-                      py: 1,
-                      fontSize: "0.875rem",
-                      backgroundColor: isSelected
-                        ? "rgba(0, 137, 123, 0.12)"
-                        : "transparent",
-                      borderRadius: "12px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      minWidth: category.id === "map" ? "100px" : "160px",
-                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                      "&:hover": {
-                        backgroundColor: isSelected
-                          ? "rgba(0, 137, 123, 0.16)"
-                          : "rgba(0, 137, 123, 0.08)",
-                        transform: "translateY(-1px)",
-                        boxShadow: "0 4px 12px rgba(0, 137, 123, 0.08)",
-                      },
-                      "& .icon": {
-                        transition: "transform 0.3s ease",
-                        transform: isSelected ? "scale(1.1)" : "scale(1)",
-                      },
-                      "&:hover .icon": {
-                        transform: "scale(1.1)",
-                      },
-                    }}
-                  >
-                    <Icon
-                      className="icon"
-                      sx={{
-                        fontSize: "20px",
-                        color: isSelected ? "#00897B" : "#757575",
-                      }}
-                    />
-                    {category.label}
-                  </Button>
-                );
-              })}
-            </Box>
-          )}
         </Box>
 
+        {/* Center - Navigation */}
+        {!isMobile && (
+          <Box
+            sx={{
+              position: 'absolute',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              display: "flex",
+              gap: "8px",
+              alignItems: 'center',
+            }}
+          >
+            {categories.map((category) => {
+              const Icon = category.icon;
+              const isSelected = selectedCategory === category.id;
+              return (
+                <Button
+                  key={category.id}
+                  size="small"
+                  onClick={() => setSelectedCategory(category.id)}
+                  sx={{
+                    color: isSelected ? 'var(--dark-teal)' : 'var(--text-medium)',
+                    fontWeight: 500,
+                    px: 2,
+                    py: 1.5,
+                    fontSize: "0.875rem",
+                    backgroundColor: "transparent",
+                    borderRadius: "4px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    textTransform: 'none',
+                    minWidth: 'auto',
+                    position: 'relative',
+                    "&::after": isSelected ? {
+                      content: '""',
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: '2px',
+                      backgroundColor: 'var(--primary-teal)',
+                      borderRadius: '2px'
+                    } : {},
+                    "&:hover": {
+                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                    },
+                  }}
+                >
+                  <Icon
+                    sx={{
+                      fontSize: "20px",
+                      color: isSelected ? 'var(--dark-teal)' : 'var(--text-medium)',
+                    }}
+                  />
+                  {category.label}
+                </Button>
+              );
+            })}
+          </Box>
+        )}
+
         {/* Right side - Actions */}
-        <Box sx={{ display: "flex", alignItems: "center" }}>
+        <Box sx={{ display: "flex", alignItems: "center", minWidth: '180px', justifyContent: 'flex-end' }}>
           {!loading && (
             <Box sx={{ position: "relative", mr: 1 }}>
               <IconButton
                 size="small"
                 sx={{
-                  backgroundColor: "rgba(0, 0, 0, 0.03)",
+                  backgroundColor: 'var(--upload_bg)',
                   mr: 1,
-                  "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.08)" },
+                  "&:hover": { 
+                    backgroundColor: '#FFFFFF',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+                  },
                 }}
               >
-                <SearchIcon fontSize="small" sx={{ color: "#616161" }} />
+                <SearchIcon fontSize="small" sx={{ color: 'var(--text-medium)' }} />
               </IconButton>
             </Box>
           )}
@@ -185,12 +189,15 @@ const Header = () => {
             <IconButton
               size="small"
               sx={{
-                backgroundColor: "rgba(0, 0, 0, 0.03)",
+                backgroundColor: 'var(--upload_bg)',
                 mr: 1,
-                "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.08)" },
+                "&:hover": { 
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+                },
               }}
             >
-              <HelpOutlineIcon fontSize="small" sx={{ color: "#616161" }} />
+              <HelpOutlineIcon fontSize="small" sx={{ color: 'var(--text-medium)' }} />
             </IconButton>
           </Tooltip>
 
@@ -198,14 +205,17 @@ const Header = () => {
             <IconButton
               size="small"
               sx={{
-                backgroundColor: "rgba(0, 0, 0, 0.03)",
+                backgroundColor: 'var(--upload_bg)',
                 mr: 2,
-                "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.08)" },
+                "&:hover": { 
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+                },
               }}
             >
               <NotificationsNoneIcon
                 fontSize="small"
-                sx={{ color: "#616161" }}
+                sx={{ color: 'var(--text-medium)' }}
               />
             </IconButton>
           </Tooltip>
@@ -221,17 +231,18 @@ const Header = () => {
                 height: 36,
                 fontSize: "0.875rem",
                 fontWeight: 500,
-                color: "#616161",
-                backgroundColor: "rgba(0, 0, 0, 0.03)",
+                color: 'var(--text-medium)',
+                backgroundColor: 'var(--upload_bg)',
                 borderRadius: "8px",
                 "& .MuiOutlinedInput-notchedOutline": {
                   border: "none",
                 },
                 "&:hover": {
-                  backgroundColor: "rgba(0, 0, 0, 0.08)",
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
                 },
                 "& .MuiSelect-icon": {
-                  color: "#616161",
+                  color: 'var(--text-medium)',
                 },
               }}
               MenuProps={{
@@ -253,20 +264,26 @@ const Header = () => {
 
           <Avatar
             sx={{
-              width: 36,
-              height: 36,
-              backgroundColor: "#00897B",
-              fontSize: "14px",
-              fontWeight: 600,
+              width: 40,
+              height: 40,
+              backgroundColor: '#00BFB3',
               cursor: "pointer",
               transition: "all 0.2s ease",
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               "&:hover": {
-                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
                 transform: "scale(1.05)",
-              },
+                boxShadow: '0 2px 8px rgba(0, 191, 179, 0.25)',
+              }
             }}
           >
-            U
+            <PersonOutlineIcon 
+              sx={{ 
+                fontSize: 24,
+                color: '#FFFFFF',
+              }} 
+            />
           </Avatar>
         </Box>
       </Toolbar>

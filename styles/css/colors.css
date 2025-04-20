@@ -1,14 +1,34 @@
 :root {
-  --primary:#F0FDFA; /*6bbd7c; /*0F717A;*/
-  --second_color:  rgba(39, 189, 25, 0.719);  /*19404C;*/
-  --third_color: #3BAA9F;
-  --bg_color: #f1f1f1;
+  /* Core Colors - Refined for better contrast and vibrancy */
+  --primary-teal: #2BBEB7; /* Main teal - more vibrant */
+  --dark-teal: #007C77; /* Deep teal for headings and focus */
+  --light-teal: #DEF1F1; /* Lightest teal for backgrounds */
+  --accent-lime: #BED945; /* Vibrant lime green for accents */
+  --bright-lime: #C8E333; /* Brighter lime for highlights */
+  --medium-green: #65B87D; /* Medium green for secondary elements */
+  --dark-green: #156148; /* Deep green for strong contrast */
+  
+  /* UI Colors */
+  --primary: var(--light-teal); /* Base background */
+  --second_color: var(--accent-lime); /* Secondary accent */
+  --third_color: var(--primary-teal); /* Primary accent */
+  --bg_color: #f7f7f7; /* Slightly brighter background */
   --exel_color: #1d6f42;
   --upload_bg: #f3f3f3;
   --button_bg: #f5f3f3;
-  --dark_green: #0de6a8;
-  --highlight:#68fced ;
-  --border:#2AAAB5;
-  --sideBar:"linear-gradient(to bottom, #007A7F, #00B2B3)"; /*#2aaab5;*/
+  --highlight: var(--bright-lime); /* More vibrant highlight */
+  --border: var(--primary-teal); /* Border color */
+  
+  /* Text Colors */
+  --text-dark: #2A3A34; /* Near-black with teal undertone for text */
+  --text-medium: #546F65; /* Medium contrast text */
+  --text-light: #77A399; /* Light text for backgrounds */
+  
+  /* Gradients */
+  --gradient-teal: linear-gradient(135deg, var(--primary-teal) 0%, var(--dark-teal) 100%);
+  --gradient-green: linear-gradient(135deg, var(--medium-green) 0%, var(--dark-green) 100%);
+  --gradient-mixed: linear-gradient(135deg, var(--primary-teal) 0%, var(--accent-lime) 100%);
+  --sideBar: linear-gradient(to bottom, var(--dark-teal), var(--primary-teal));
+  
   box-sizing: border-box;
 }
