@@ -1,0 +1,106 @@
+import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
+import { locales, defaultLocale } from "./i18n/navigation"
+
+// Adding export keyword to fix the "Cannot find the middleware module" error
+export function middleware(request: NextRequest) {
+  // Get the pathname from the URL
+  const { pathname } = request.nextUrl;
+
+  // Skip processing for static assets and API routes
+  if (
+    pathname.startsWith("/_next") || 
+    pathname.includes("/static/") ||
+    pathname.includes(".") ||
+    pathname === "/favicon.ico" ||
+    pathname.startsWith("/api/") ||
+    pathname.startsWith("/users/") || // Skip for backend API endpoints
+    pathname === "/" // Skip processing for root path to prevent recursive redirects
+  ) {
+    return NextResponse.next();
+  }
+
+  // Detect and redirect API routes with locale prefixes
+  // e.g., /epd/en/api/auth/error -> /api/auth/error
+  const localeApiMatch = new RegExp(`^/epd/(${locales.join("|")})/api/`);
+  if (localeApiMatch.test(pathname)) {
+    const apiPath = pathname.replace(/^\/epd\/[^\/]+\/api/, '/api');
+    return NextResponse.redirect(
+      new URL(apiPath, request.url)
+    );
+  }
+
+  // Detect infinite redirect loops - if URL contains a certain pattern that indicates
+  // we're in a loop, just serve the content without further redirection
+  if (pathname.includes("/epd/epd/") || pathname.match(/\/epd\/[^\/]+\/epd\//)) {
+    const correctedPath = pathname.replace(/\/epd\/+/g, '/epd/');
+    if (correctedPath !== pathname) {
+      // Fix the path if it has redundant /epd/ segments
+      return NextResponse.redirect(
+        new URL(correctedPath, request.url)
+      );
+    }
+    return NextResponse.next();
+  }
+
+  // Handle direct locale routes like /en/signin -> redirect to /epd/en/signin
+  const directLocaleMatch = new RegExp(`^/(${locales.join("|")})/`);
+  if (directLocaleMatch.test(pathname)) {
+    const segments = pathname.split('/');
+    const locale = segments[1];
+    const newPath = `/epd${pathname}`;
+    return NextResponse.redirect(
+      new URL(newPath, request.url)
+    );
+  }
+
+  // Check if this is an EPD route
+  const isEpdRoute = pathname.startsWith("/epd") || 
+                    ["/signin", "/signup", "/forgot-password", "/dashboard"].some(
+                      route => pathname === route || pathname.startsWith(`${route}/`)
+                    );
+
+  // If not an EPD route, let Next.js handle it
+  if (!isEpdRoute) {
+    return NextResponse.next();
+  }
+
+  // Handle /epd or /epd-builder root paths
+  if (pathname === "/epd" || pathname === "/epd-builder") {
+    return NextResponse.redirect(
+      new URL(`/epd/${defaultLocale}/signin`, request.url)
+    );
+  }
+
+  // Check if the path has a locale
+  const localePattern = new RegExp(`^/epd/(${locales.join("|")})/`);
+  const hasLocale = localePattern.test(pathname);
+
+  // If already has locale, don't modify
+  if (hasLocale) {
+    return NextResponse.next();
+  }
+
+  // Add locale to EPD routes
+  if (pathname.startsWith("/epd/")) {
+    const pathWithoutPrefix = pathname.substring(4); // Remove /epd
+    return NextResponse.redirect(
+      new URL(`/epd/${defaultLocale}${pathWithoutPrefix}`, request.url)
+    );
+  }
+
+  // Handle non-prefixed routes
+  if (["/signin", "/signup", "/forgot-password", "/dashboard"].some(route => 
+    pathname === route || pathname.startsWith(`${route}/`))
+  ) {
+    return NextResponse.redirect(
+      new URL(`/epd/${defaultLocale}${pathname}`, request.url)
+    );
+  }
+
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+}

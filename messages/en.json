@@ -1,0 +1,555 @@
+{
+  "metadata": {
+    "title": "TerraNEXT - Product Creation",
+    "description": "Create and manage your products"
+  },
+  "languages": {
+    "en": "English",
+    "de": "German",
+    "switchLanguage": "Switch language"
+  },
+  "Index": {
+    "title": "Welcome to EPD Builder",
+    "description": "Create and manage Environmental Product Declarations"
+  },
+  "SignIn": {
+    "title": "Sign In",
+    "description": "Sign in to your account",
+    "or": "or",
+    "signIn": "Sign In",
+    "signingIn": "Signing in...",
+    "signInWithPassword": "Sign in with Password",
+    "signInWithEmail": "Sign in with Email",
+    "signInWithGoogle": "Continue with Google",
+    "submit": "Sign In",
+    "noAccount": "Don't have an account?",
+    "createAccount": "Create Account",
+    "email": "Email",
+    "username": "Username",
+    "password": "Password",
+    "placeholders": {
+      "email": "Enter your email",
+      "username": "Enter your username",
+      "password": "Enter your password",
+      "verificationCode": "Enter 6-digit code"
+    },
+    "verificationCode": "Verification Code",
+    "verifyTitle": "Enter Verification Code",
+    "verifyDescription": "Please enter the 6-digit code sent to your email",
+    "sendCode": "Send Code",
+    "verify": "Verify Code",
+    "verifying": "Verifying...",
+    "sendingCode": "Sending code...",
+    "resendCode": "Resend code",
+    "codeExpiresIn": "Code expires in",
+    "codeExpired": "Code expired",
+    "checkEmail": "Please check your email for the verification code",
+    "success": {
+      "signedIn": "Successfully signed in",
+      "codeSentAgain": "New verification code has been sent",
+      "verificationEmailSent": "Verification code sent to your email"
+    },
+    "validation": {
+      "username": {
+        "required": "Username is required"
+      },
+      "password": {
+        "required": "Password is required"
+      },
+      "email": {
+        "required": "Email is required",
+        "invalid": "Please enter a valid email address"
+      },
+      "verificationCode": {
+        "required": "Verification code is required"
+      },
+      "credentials": {
+        "required": "Please provide both username and password"
+      }
+    },
+    "errors": {
+      "networkError": "Network error occurred",
+      "invalidCredentials": "Invalid username or password",
+      "unknown": "An unknown error occurred",
+      "emailError": "Failed to send verification code",
+      "codeError": "Invalid verification code",
+      "resendError": "Failed to resend verification code",
+      "accessDenied": "Access Denied",
+      "regularUserNotAllowed": "Regular user accounts are not allowed at this time. Please contact support for assistance.",
+      "emailNotFound": "Email address not found",
+      "invalidCode": "Invalid verification code",
+      "serverError": "A server error occurred. Please try again."
+    },
+    "processing": "Processing...",
+    "signUp": "Sign Up",
+    "tabs": {
+      "regular": "Regular User",
+      "company": "Company User"
+    }
+  },
+  "SignUp": {
+    "title": "Create Account",
+    "description": "Sign up for a new account",
+    "createAccount": "Create Account",
+    "creatingAccount": "Creating account...",
+    "regular_user": "Regular User",
+    "company_user": "Company User",
+    "first_name": "First Name",
+    "last_name": "Last Name",
+    "email": "Email",
+    "password": "Password",
+    "confirm_password": "Confirm Password",
+    "company_name": "Company Name",
+    "job_title": "Job Title",
+    "industry": "Industry",
+    "country": "Country",
+    "phone_number": "Phone Number",
+    "username": "Username",
+    "enter": "Enter",
+    "continueWithGoogle": "Continue with Google",
+    "alreadyAccount": "Already have an account?",
+    "signIn": "Sign in",
+    "errors": {
+      "networkError": "A network error occurred. Please try again.",
+      "serverError": "A server error occurred. Please try again.",
+      "usernameTaken": "This username is already taken",
+      "emailRegistered": "This email is already registered",
+      "generalError": "An error occurred. Please try again.",
+      "usernameTaken": "Username is already taken",
+      "emailRegistered": "Email is already registered",
+      "registrationFailed": "Registration failed"
+    },
+    "success": {
+      "registrationComplete": "Registration successful! Redirecting to sign in..."
+    },
+    "validation": {
+      "first_name": {
+        "required": "First name is required",
+        "min": "First name must be at least 2 characters",
+        "max": "First name must be at most 50 characters",
+        "matches": "First name can only contain letters, spaces, hyphens, and apostrophes",
+        "phone_number": {
+          "required": "Phone number is required",
+          "matches": "Please enter a valid phone number. Example: +1234567890 or (123) 456-7890"
+        }
+      },
+      "last_name": {
+        "required": "Last name is required",
+        "min": "Last name must be at least 2 characters",
+        "max": "Last name must be at most 50 characters",
+        "matches": "Last name can only contain letters, spaces, hyphens, and apostrophes"
+      },
+      "username": {
+        "required": "Username is required",
+        "min": "Username must be at least 3 characters",
+        "max": "Username must be at most 50 characters",
+        "taken": "Username is already taken"
+      },
+      "email": {
+        "required": "Email is required",
+        "invalid": "Invalid email address",
+        "registered": "Email is already registered"
+      },
+      "password": {
+        "required": "Password is required",
+        "min": "Password must be at least 8 characters",
+        "matches": "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&#)"
+      },
+      "confirm_password": {
+        "required": "Please confirm your password",
+        "mustMatch": "Passwords must match"
+      },
+      "company_name": {
+        "required": "Company name is required",
+        "min": "Company name must be at least 2 characters",
+        "max": "Company name must be at most 100 characters"
+      },
+      "job_title": {
+        "required": "Job title is required",
+        "min": "Job title must be at least 2 characters",
+        "max": "Job title must be at most 50 characters"
+      },
+      "industry": {
+        "required": "Industry is required",
+        "min": "Industry must be at least 2 characters",
+        "max": "Industry must be at most 50 characters"
+      },
+      "country": {
+        "required": "Country is required",
+        "min": "Country must be at least 2 characters",
+        "max": "Country must be at most 50 characters"
+      },
+      "phone_number": {
+        "required": "Phone number is required",
+        "matches": "Please enter a valid phone number. Example: +1234567890 or (123) 456-7890"
+      }
+    },
+    "tabs": {
+      "regular": "Regular User",
+      "company": "Company User"
+    }
+  },
+  "ForgotPassword": {
+    "title": "Forgot Password",
+    "description": "Enter your email address and we'll send you a verification code to reset your password.",
+    "verifyTitle": "Enter Verification Code",
+    "verifyDescription": "We've sent a 6-digit verification code to your email. Please enter it below.",
+    "resetTitle": "Reset Password",
+    "resetDescription": "Please enter your new password.",
+    "email": "Email",
+    "emailPlaceholder": "Enter your email address",
+    "verificationCode": "Verification Code",
+    "newPassword": "New Password",
+    "newPasswordPlaceholder": "Enter your new password",
+    "confirmNewPassword": "Confirm New Password",
+    "confirmNewPasswordPlaceholder": "Confirm your new password",
+    "sendCode": "Send Verification Code",
+    "verifyCode": "Verify Code",
+    "resetPassword": "Reset Password",
+    "backToSignIn": "Back to Sign In",
+    "resendCode": "Resend Code",
+    "emailSent": "Verification code sent to your email",
+    "emailError": "Failed to send verification code",
+    "codeVerified": "Code verified successfully",
+    "codeError": "Invalid verification code",
+    "passwordReset": "Password reset successfully",
+    "resetError": "Failed to reset password",
+    "networkError": "Network error occurred",
+    "codeSentAgain": "Verification code sent again",
+    "resendError": "Failed to resend verification code"
+  },
+  "team": {
+    "title": "Team",
+    "members": "Team Members",
+    "invite": "Invite Member",
+    "position": "Position"
+  },
+  "sidebar": "Sidebar",
+  "navigation": {
+    "sidebarMenu": "Sidebar Menu",
+    "companyUser": "Company User",
+    "tabs": {
+      "epdOverview": "EPD Overview",
+      "inbox": "Inbox",
+      "myProfile": "My Profile"
+    },
+    "dashboard": {
+      "portfolio": "Portfolio",
+      "projects": "Projects",
+      "admin": "Admin",
+      "epd": "EPD",
+      "requests": "Requests"
+    },
+    "userName": "User Name",
+    "companyName": "Company Name",
+    "productportfolio": "Product Portfolio",
+    "projectmanagement": "Project Management",
+    "administrative": "Administrative",
+    "epdpreview": "EPD Preview",
+    "requests": "Requests",
+    "profile": "Profile",
+    "settings": "Settings",
+    "signOut": "Sign Out",
+    "logout": "Logout",
+    "myEPDs": "My EPDs",
+    "inbox": "Inbox",
+    "dataDirectory": "Data Directory",
+    "myProfile": "My Profile",
+    "projectManagement": "Project Management",
+    "productPortfolio": "Product Portfolio",
+    "epdPreview": "EPD Preview"
+  },
+  "ProductForm": {
+    "goBack": "Go Back",
+    "createNewProduct": "Create New Product",
+    "basicInformation": "Basic Information",
+    "productName": "Product Name",
+    "enterProductName": "Enter product name",
+    "productDescription": "Product Description",
+    "enterProductDescription": "Enter product description",
+    "category": "Category",
+    "selectCategory": "Select Category",
+    "projectName": "Project Name",
+    "selectProject": "Select Project",
+    "project1": "Project 1",
+    "project2": "Project 2",
+    "dimension": "Dimension",
+    "1x1x1 cm": "1x1x1 cm",
+    "productPackaging": "Product Packaging",
+    "materials": "Materials",
+    "addMaterial": "Add Material",
+    "materialName": "Material Name",
+    "enterMaterialName": "Enter material name",
+    "weight": "Weight",
+    "enterWeight": "Enter weight",
+    "unit": "Unit",
+    "selectUnit": "Select Unit",
+    "quantity": "Quantity",
+    "actions": "Actions",
+    "remove": "Remove",
+    "save": "Save",
+    "cancel": "Cancel",
+    "show": "Show",
+    "hide": "Hide",
+    "weightSummary": "Weight Summary",
+    "weightCalculations": "Weight Calculations",
+    "packagingWeight": "Packaging Weight",
+    "productWeight": "Product Weight",
+    "totalWeight": "Total Weight",
+    "productionPlant": "Production Plant",
+    "supplierCountry": "Supplier Country",
+    "selectCountry": "Select Country",
+    "productLifetime": "Product Lifetime",
+    "enterLifetime": "Enter lifetime",
+    "year": "Year",
+    "month": "Month",
+    "technicalInformation": "Technical Information",
+    "createProduct": "Create Product",
+    "productImage": "Product Image",
+    "dragAndDropImage": "Drag and drop image here",
+    "orBrowse": "or browse",
+    "productDocument": "Product Document",
+    "dragAndDropDocument": "Drag and drop document here",
+    "needHelp": "Need Help?",
+    "supportTeam": "Our support team is here to help",
+    "askQuestions": "Ask Questions",
+    "chooseYourLCA": "Choose Your LCA Method",
+    "fastLCA": "Fast LCA",
+    "quickAssessment": "Quick assessment with basic inputs",
+    "intelligentLCA": "Intelligent LCA",
+    "aiPoweredAssessment": "AI-powered comprehensive assessment",
+    "epdBuilder": "EPD Builder",
+    "manageEPD": "Manage your EPD creation process",
+    "optimizerLCA": "Optimizer LCA",
+    "optimizeEnvironmentalImpact": "Optimize environmental impact with advanced analysis",
+    "searchPlaceholder": "Search..."
+  },
+  "Profile": {
+    "title": "Profile",
+    "description": "Manage your profile information",
+    "personalInfo": "Personal Information",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "country": "Country",
+    "city": "City",
+    "selectCountry": "Select your country",
+    "company": "Company",
+    "companyName": "Company Name",
+    "jobTitle": "Job Title",
+    "phoneNumber": "Phone Number",
+    "industry": "Industry",
+    "bio": "Bio",
+    "saveChanges": "Save Changes",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "passwordManager": "Password Manager",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "changePassword": "Change Password",
+    "savePassword": "Save Password",
+    "success": {
+      "title": "Success",
+      "profileUpdated": "Profile updated successfully",
+      "passwordChanged": "Password changed successfully"
+    },
+    "errors": {
+      "title": "Error",
+      "profileFetchFailed": "Failed to load profile",
+      "profileUpdateFailed": "Failed to update profile. Please try again",
+      "noChanges": "No changes were made to your profile",
+      "sessionExpired": "Your session has expired. Please sign in again",
+      "connectionError": "Unable to connect to the server. Please try again in a few moments",
+      "emailInUse": "This email is already in use by another account",
+      "passwordsDoNotMatch": "Passwords do not match",
+      "currentPasswordIncorrect": "Current password is incorrect",
+      "passwordTooShort": "Password must be at least 8 characters long",
+      "passwordNeedsCases": "Password must contain both uppercase and lowercase letters",
+      "passwordNeedsNumber": "Password must contain at least one number",
+      "passwordNeedsSpecial": "Password must contain at least one special character (!@#$%^&*(),.?\":{}|<>)",
+      "serverError": "Server error occurred. Please try again later"
+    },
+    "validation": {
+      "firstName": {
+        "required": "First name is required"
+      },
+      "lastName": {
+        "required": "Last name is required"
+      },
+      "email": {
+        "required": "Email is required",
+        "invalid": "Invalid email address"
+      },
+      "country": {
+        "required": "Country is required"
+      },
+      "city": {
+        "required": "City is required"
+      },
+      "currentPassword": {
+        "required": "Current password is required"
+      },
+      "newPassword": {
+        "required": "New password is required",
+        "min": "Password must be at least 8 characters"
+      },
+      "confirmPassword": {
+        "required": "Please confirm your password",
+        "match": "Passwords must match"
+      }
+    }
+  },
+  "profile": {
+    "companyName": "Company Name",
+    "users": "Users",
+    "new": "New",
+    "addNewUser": "Add New User"
+  },
+  "epdPreview": "EPD Preview",
+  "NotFound": {
+    "title": "404 - Page Not Found",
+    "heading": "Page not found",
+    "description": "Sorry, we couldn't find the page you're looking for. It might have been moved or deleted.",
+    "goHome": "Go back home",
+    "goBack": "Previous page"
+  },
+  "Error": {
+    "title": "Oops! Something went wrong",
+    "message": "Don't worry, we're on it! Try refreshing the page or click below to try again.",
+    "tryAgain": "Try Again",
+    "goBack": "Go back"
+  },
+  "MessageView": {
+    "reply": "Reply",
+    "forward": "Forward",
+    "attach": "Attach",
+    "send": "Send",
+    "typePlaceholder": "Type here",
+    "today": "Today",
+    "productFastLCA": "Fast LCA"
+  },
+  "MessageList": {
+    "unread": "Unread",
+    "new": "New",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "subject": "Subject"
+  },
+  "ComingSoon": {
+    "title": "Coming Soon",
+    "description": "We're working hard to bring you an amazing dashboard experience.",
+    "subtext": "This feature is currently under development. We appreciate your patience.",
+    "goBack": "Go Back"
+  },
+  "EPD": {
+    "filters": {
+      "classification": {
+        "placeholder": "Classification",
+        "all": "All Classifications"
+      },
+      "industry": {
+        "placeholder": "Industry Solution",
+        "all": "All Industry Solutions"
+      },
+      "users": {
+        "placeholder": "Select User",
+        "all": "All Users"
+      },
+      "year": {
+        "placeholder": "Reference Year",
+        "all": "All Years"
+      },
+      "status": {
+        "placeholder": "Status",
+        "all": "All Status",
+        "verified": "Verified",
+        "pending": "Pending"
+      },
+      "search": {
+        "placeholder": "Search for EPDs"
+      }
+    },
+    "comparison": {
+      "title": "Product Comparison",
+      "button": "Product comparison ({count}/3)",
+      "addMore": "Add more products",
+      "remove": "Remove product"
+    },
+    "card": {
+      "verified": "Verified",
+      "pending": "Pending",
+      "viewPDF": "View PDF",
+      "industry": "Industry Solutions",
+      "country": "Country",
+      "id": "ID"
+    },
+    "loading": "Loading EPD data...",
+    "noResults": {
+      "pending": "No pending EPDs available at the moment",
+      "filtered": "No results found for the selected filters"
+    },
+    "pagination": {
+      "showing": "Showing {start}-{end} of {total} items"
+    }
+  },
+  "productList": {
+    "productPortfolio": "Product Portfolio",
+    "searchPlaceholder": "Search products...",
+    "viewMode": {
+      "list": "List View",
+      "grid": "Grid View"
+    },
+    "filter": {
+      "allProducts": "All products",
+      "myProducts": "My products"
+    },
+    "newProduct": "New Product",
+    "actions": {
+      "retry": "Retry",
+      "previousPage": "Previous Page",
+      "nextPage": "Next Page"
+    },
+    "columns": {
+      "name": "Name",
+      "description": "Description",
+      "industrySolution": "Industry solution",
+      "category": "Category",
+      "verificationYear": "EPD verification year",
+      "country": "Country"
+    },
+    "status": {
+      "loading": "Loading products...",
+      "noProducts": "No products found",
+      "noSearchResults": "No products found matching your search"
+    },
+    "pagination": {
+      "show": "Show",
+      "total": "Total: {count} products",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "button": { "comparison": "Comparison" }
+  },
+  "dashboard": {
+    "portfolio": "Portfolio",
+    "projects": "Projects",
+    "admin": "Admin",
+    "epd": "EPD",
+    "requests": {
+      "title": "Requests",
+      "columns": {
+        "title": "Title",
+        "status": "Status",
+        "date": "Date",
+        "requester": "Requester",
+        "type": "Type"
+      },
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      }
+    }
+  }
+}
