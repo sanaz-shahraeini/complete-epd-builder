@@ -20,9 +20,9 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Search, Image, Info } from 'lucide-react'
-import { AdminSidebar } from "@/app/components/dashboard/AdminSidebar"
+import { AdminSidebar } from "../../../components/dashboard/AdminSidebar"
 import { useDebounce } from "@/lib/hooks/useDebounce"
-import { ProductComparison as ProductComparisonComponent } from "@/app/components/comparison/ProductComparison"
+import { ProductComparison as ProductComparisonComponent } from "../../../components/comparison/ProductComparison"
 import { API_ROUTES, buildApiUrl } from "@/lib/api/config";
 
 interface Product {

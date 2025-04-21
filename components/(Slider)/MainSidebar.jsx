@@ -275,7 +275,7 @@ const MainSidebar = ({
         sx={{
           width: "128%",
           bgcolor: "#ffffff",
-          boxShadow: 1,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
           display: "flex",
           flexDirection: "column",
           overflow: "hidden",
@@ -287,11 +287,13 @@ const MainSidebar = ({
         {/* Buttons */}
         <Box
           sx={{
-            bgcolor: "#f0f0f0",
+            bgcolor: "#ffffff",
             display: "flex",
             justifyContent: "center",
             borderRadius: "20px",
             margin: "15px",
+            padding: "4px",
+            border: `1px solid var(--light-teal)`,
           }}
         >
           <Grid container spacing={1}>
@@ -308,11 +310,17 @@ const MainSidebar = ({
                   borderRadius: "20px",
                   background:
                     selected === "Legend"
-                      ? "linear-gradient(to right, #4DB6AC, #00897B,#00897B,#4DB6AC)"
-                      : "#f0f0f0",
-                  color: selected === "Legend" ? "white" : "black",
+                      ? "var(--gradient-teal)"
+                      : "#ffffff",
+                  color: selected === "Legend" ? "white" : "var(--primary-teal)",
                   fontWeight: "bold",
                   boxShadow: "none",
+                  "&:hover": {
+                    background: selected === "Legend"
+                      ? "var(--gradient-mixed)"
+                      : "var(--light-teal)",
+                    color: selected === "Legend" ? "white" : "var(--dark-teal)",
+                  },
                 }}
               >
                 Legend
@@ -331,11 +339,17 @@ const MainSidebar = ({
                   borderRadius: "20px",
                   background:
                     selected === "Products"
-                      ? "linear-gradient(to right, #4DB6AC, #00897B,#00897B,#4DB6AC)"
-                      : "#f0f0f0",
-                  color: selected === "Products" ? "white" : "black",
+                      ? "var(--gradient-teal)"
+                      : "#ffffff",
+                  color: selected === "Products" ? "white" : "var(--primary-teal)",
                   fontWeight: "bold",
                   boxShadow: "none",
+                  "&:hover": {
+                    background: selected === "Products"
+                      ? "var(--gradient-mixed)"
+                      : "var(--light-teal)",
+                    color: selected === "Products" ? "white" : "var(--dark-teal)",
+                  },
                 }}
               >
                 Products
@@ -367,16 +381,26 @@ const MainSidebar = ({
                   },
                   PaperProps: {
                     onClick: (e) => e.stopPropagation(),
+                    sx: {
+                      bgcolor: "#ffffff",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                    },
                   },
                 }}
                 variant="outlined"
                 size="small"
                 fullWidth
                 sx={{
-                  bgcolor: "#F5F5F5",
+                  bgcolor: "#ffffff",
                   borderRadius: "20px",
                   height: "42px",
-                  border: "none",
+                  border: `1px solid var(--light-teal)`,
+                  "& .MuiSelect-select": {
+                    color: "var(--text-dark)",
+                  },
+                  "&:hover": {
+                    bgcolor: "var(--light-teal)",
+                  },
                   "& fieldset": {
                     border: "none",
                   },
@@ -462,7 +486,7 @@ const MainSidebar = ({
                             sx={{
                               width: "64px",
                               height: "64px",
-                              backgroundColor: "#f7f7f7",
+                              backgroundColor: "#ffffff",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
@@ -474,15 +498,16 @@ const MainSidebar = ({
                               aspectRatio: "1/1",
                               transition: "all 0.3s ease",
                               boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                              border: `1px solid var(--light-teal)`,
                               "&:hover": {
-                                backgroundColor: "#f0f0f0",
+                                borderColor: "var(--primary-teal)",
                                 transform: "scale(1.05)",
                                 boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
                               },
                               "&::before": {
                                 content: '""',
                                 display: "block",
-                                paddingTop: "100%", // This ensures a perfect square
+                                paddingTop: "100%",
                               },
                             }}
                           >
@@ -514,9 +539,9 @@ const MainSidebar = ({
                                     justifyContent: "center",
                                     width: "100%",
                                     height: "100%",
-                                    background:
-                                      "linear-gradient(135deg, #E0F2F1 0%, #B2DFDB 100%)",
-                                    color: "#00897B",
+                                    background: "#ffffff",
+                                    color: "var(--primary-teal)",
+                                    border: `1px solid var(--light-teal)`,
                                   }}
                                 >
                                   <ViewInArIcon sx={{ fontSize: "32px" }} />
@@ -533,9 +558,9 @@ const MainSidebar = ({
                                   display: "flex",
                                   alignItems: "center",
                                   justifyContent: "center",
-                                  background:
-                                    "linear-gradient(135deg, #E0F2F1 0%, #B2DFDB 100%)",
-                                  color: "#00897B",
+                                  background: "#ffffff",
+                                  color: "var(--primary-teal)",
+                                  border: `1px solid var(--light-teal)`,
                                   transition: "all 0.3s ease",
                                 }}
                               >
@@ -556,7 +581,7 @@ const MainSidebar = ({
                               primaryTypographyProps={{
                                 sx: {
                                   fontWeight: 500,
-                                  color: "#424242",
+                                  color: "var(--text-dark)",
                                   fontSize: "15px",
                                   overflow: "hidden",
                                   textOverflow: "ellipsis",
@@ -565,7 +590,7 @@ const MainSidebar = ({
                               }}
                               secondaryTypographyProps={{
                                 sx: {
-                                  color: "#666",
+                                  color: "var(--text-medium)",
                                   fontSize: "14px",
                                   overflow: "hidden",
                                   textOverflow: "ellipsis",
@@ -579,9 +604,9 @@ const MainSidebar = ({
                             size="small"
                             sx={{
                               ml: "auto",
-                              color: "#4DB6AC",
+                              color: "var(--primary-teal)",
                               "&:hover": {
-                                backgroundColor: "rgba(77, 182, 172, 0.1)",
+                                backgroundColor: "var(--light-teal)",
                               },
                             }}
                           >

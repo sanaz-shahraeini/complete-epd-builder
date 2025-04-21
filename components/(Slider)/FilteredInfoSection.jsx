@@ -13,10 +13,12 @@ const FilteredInfoSection = ({
     <Paper
       sx={{
         padding: 2,
-        bgcolor: "#fbfbfb",
+        bgcolor: "#ffffff",
         mt: 1,
         width: "128%",
         marginLeft: { xs: "-1%", md: "9%" },
+        boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+        border: `1px solid var(--light-teal)`,
       }}
     >
       {/* نمایش اطلاعات اضافی */}
@@ -28,16 +30,16 @@ const FilteredInfoSection = ({
               display: "flex",
               justifyContent: "space-between",
               mb: 1,
-              borderBottom: "1px solid #e0e0e0",
+              borderBottom: `1px solid var(--light-teal)`,
               pb: 1,
               position: "relative",
             }}
           >
-            <Typography variant="body2">
+            <Typography variant="body2" sx={{ color: 'var(--text-dark)' }}>
               <span
                 style={{
                   fontSize: "20px",
-                  color: "#37392e",
+                  color: "var(--primary-teal)",
                   marginRight: "4px",
                 }}
               >
@@ -56,13 +58,13 @@ const FilteredInfoSection = ({
               sx={{
                 ml: "auto",
                 height: "20px",
-                color: "#fff",
-                backgroundColor: "#3b4230",
+                color: "white",
+                backgroundColor: "var(--primary-teal)",
                 borderRadius: "50%",
                 padding: "1px",
                 mt: "4px",
                 "&:hover": {
-                  backgroundColor: "#00897B",
+                  backgroundColor: "var(--dark-teal)",
                 },
               }}
             >
@@ -73,7 +75,7 @@ const FilteredInfoSection = ({
       ) : (
         <Typography
           variant="body2"
-          sx={{ color: "#888", textAlign: "center", display: "block" }}
+          sx={{ color: "var(--text-medium)", textAlign: "center", display: "block" }}
         >
           No additional information available.
         </Typography>
@@ -93,37 +95,33 @@ const FilteredInfoSection = ({
             sx={{
               width: "48px",
               height: "48px",
-              backgroundColor: "#f0f0f0",
+              backgroundColor: "#ffffff",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               marginRight: "16px",
+              borderRadius: "8px",
+              border: `1px solid var(--light-teal)`,
+              transition: "all 0.3s ease",
+              "&:hover": {
+                borderColor: "var(--primary-teal)",
+                transform: "scale(1.05)",
+              },
             }}
           >
-            <ImageIcon sx={{ color: "#656959", fontSize: "32px" }} />
+            <ImageIcon sx={{ color: "var(--primary-teal)", fontSize: "32px" }} />
           </Box>
-          {/* <Box paddingLeft={"10px"}>
-            <Typography
-              variant="body2"
-              sx={{ fontWeight: "bold", color: "#333" }}
-            >
-              Product 05
-            </Typography>
-            <Typography variant="caption" sx={{ color: "#999" }}>
-              Lorem ipsum dolor sit amet
-            </Typography>
-          </Box> */}
 
           <IconButton
             size="small"
             sx={{
               ml: "auto",
-              color: "#fff",
-              backgroundColor: "#3b4230",
+              color: "white",
+              backgroundColor: "var(--primary-teal)",
               borderRadius: "50%",
               padding: "2px",
               "&:hover": {
-                backgroundColor: "#00897B",
+                backgroundColor: "var(--dark-teal)",
               },
             }}
             onClick={(e) => {

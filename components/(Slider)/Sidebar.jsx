@@ -47,15 +47,13 @@ const Sidebar = ({
       container
       sx={{
         width: "100%",
-        // height: "550px",
-        bgcolor: "background.paper",
+        bgcolor: "#ffffff",
         padding: 3,
       }}
     >
       {/* Year Range Section */}
       <Grid item xs={12}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-          
           <FormGroup>
             <FormControlLabel 
               control={
@@ -67,12 +65,27 @@ const Sidebar = ({
                     }
                   }}
                   size="small"
-                  color="info"
+                  sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                      color: 'var(--primary-teal)',
+                      '&:hover': {
+                        backgroundColor: 'var(--light-teal)',
+                      },
+                    },
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                      backgroundColor: 'var(--dark-teal)',
+                    },
+                  }}
                 />
               } 
               label="EPD API Only" 
               labelPlacement="start"
-              sx={{ margin: 0 }}
+              sx={{ 
+                margin: 0,
+                '& .MuiTypography-root': {
+                  color: 'var(--text-dark)',
+                }
+              }}
             />
           </FormGroup>
         </Box>
@@ -83,26 +96,57 @@ const Sidebar = ({
           min={2000}
           max={2030}
           marks={marks}
-          sx={{ color: "#00897B" }}
+          sx={{ 
+            color: "var(--primary-teal)",
+            '& .MuiSlider-thumb': {
+              backgroundColor: "var(--primary-teal)",
+              '&:hover, &.Mui-focusVisible': {
+                boxShadow: '0 0 0 8px var(--light-teal)',
+              },
+            },
+            '& .MuiSlider-rail': {
+              backgroundColor: 'var(--light-teal)',
+            },
+            '& .MuiSlider-track': {
+              backgroundColor: 'var(--primary-teal)',
+            },
+            '& .MuiSlider-mark': {
+              backgroundColor: 'var(--text-light)',
+            },
+            '& .MuiSlider-markLabel': {
+              color: 'var(--text-medium)',
+            },
+          }}
         />
-        <Typography variant="body2" sx={{ color: "text.secondary", mt: 2 }}>
+        <Typography variant="body2" sx={{ color: "var(--text-medium)", mt: 2 }}>
           Filter EPD markers by their reference year
         </Typography>
 
-        <Divider sx={{ mt: 2 }} />
+        <Divider sx={{ mt: 2, bgcolor: 'var(--light-teal)' }} />
 
         {/* Country Selection Accordion */}
         <Accordion
           expanded={expanded === "panel1"}
           onChange={handleChange("panel1")}
-          sx={{ boxShadow: "none" }}
+          sx={{ 
+            boxShadow: "none",
+            bgcolor: '#ffffff',
+            '& .MuiAccordionSummary-root': {
+              '&:hover': {
+                bgcolor: 'var(--light-teal)',
+              },
+            },
+            '& .Mui-expanded': {
+              color: 'var(--primary-teal)',
+            },
+          }}
         >
           <AccordionSummary
-            expandIcon={<ExpandMoreIcon />}
+            expandIcon={<ExpandMoreIcon sx={{ color: 'var(--text-dark)' }} />}
             aria-controls="panel1-content"
             id="panel1-header"
           >
-            <Typography>Countries</Typography>
+            <Typography sx={{ color: 'var(--text-dark)' }}>Countries</Typography>
           </AccordionSummary>
           <AccordionDetails sx={{ maxHeight: "90px", overflowY: "auto" }}>
             <List>
@@ -111,33 +155,49 @@ const Sidebar = ({
                   <ListItem
                     button
                     key={index}
-                    style={{ cursor: "pointer" }}
+                    sx={{ 
+                      cursor: "pointer",
+                      '&:hover': {
+                        bgcolor: 'var(--light-teal)',
+                      },
+                    }}
                     onClick={() => setSelectedCountry(country.country)}
                   >
-                    <Typography>{country.country}</Typography>
+                    <Typography sx={{ color: 'var(--text-dark)' }}>{country.country}</Typography>
                   </ListItem>
                 ))
               ) : (
-                <Typography>No countries available</Typography>
+                <Typography sx={{ color: 'var(--text-medium)' }}>No countries available</Typography>
               )}
             </List>
           </AccordionDetails>
         </Accordion>
 
-        <Divider />
+        <Divider sx={{ bgcolor: 'var(--light-teal)' }} />
 
         {/* Additional Options Accordion */}
         <Accordion
           expanded={expanded === "panel2"}
           onChange={handleChange("panel2")}
-          sx={{ boxShadow: "none" }}
+          sx={{ 
+            boxShadow: "none",
+            bgcolor: '#ffffff',
+            '& .MuiAccordionSummary-root': {
+              '&:hover': {
+                bgcolor: 'var(--light-teal)',
+              },
+            },
+            '& .Mui-expanded': {
+              color: 'var(--primary-teal)',
+            },
+          }}
         >
           <AccordionSummary
-            expandIcon={<ExpandMoreIcon />}
+            expandIcon={<ExpandMoreIcon sx={{ color: 'var(--text-dark)' }} />}
             aria-controls="panel2-content"
             id="panel2-header"
           >
-            <Typography>Additional Options</Typography>
+            <Typography sx={{ color: 'var(--text-dark)' }}>Additional Options</Typography>
           </AccordionSummary>
           <AccordionDetails sx={{ maxHeight: "60px", overflowY: "auto" }}>
             <List>
@@ -146,7 +206,12 @@ const Sidebar = ({
                   button
                   key={index}
                   onClick={() => console.log(`${option} clicked`)}
-                  sx={{ color: "green" }}
+                  sx={{ 
+                    color: 'var(--primary-teal)',
+                    '&:hover': {
+                      bgcolor: 'var(--light-teal)',
+                    },
+                  }}
                 >
                   <Typography>{option}</Typography>
                 </ListItem>

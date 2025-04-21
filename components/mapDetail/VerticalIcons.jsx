@@ -258,18 +258,70 @@ const VerticalIcons = ({
         },
       }}
     >
-      {/* Logo/Profile area at top */}
+      {/* Category section */}
       <Box
         sx={{
-          mb: 3,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
+          gap: 1,
+          width: "100%",
+          mt: 2,
           position: "relative",
         }}
       >
+        {/* Modern Categories Label */}
+        <Box
+          sx={{
+            position: "relative",
+            width: "100%",
+            display: "flex",
+            justifyContent: "center",
+            mb: 2,
+          }}
+        >
+          <Box
+            sx={{
+              position: "relative",
+              padding: "6px 12px",
+              background: "linear-gradient(135deg, rgba(0, 137, 123, 0.08), rgba(0, 150, 136, 0.05))",
+              borderRadius: "8px",
+              boxShadow: "0 2px 8px rgba(0, 137, 123, 0.1)",
+              border: "1px solid rgba(0, 137, 123, 0.08)",
+              "&::before": {
+                content: '""',
+                position: "absolute",
+                inset: 0,
+                borderRadius: "8px",
+                padding: "1px",
+                background: "linear-gradient(135deg, rgba(0, 137, 123, 0.2), rgba(0, 150, 136, 0.1))",
+                WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                WebkitMaskComposite: "xor",
+                maskComposite: "exclude",
+              }
+            }}
+          >
+            <Typography
+              variant="caption"
+              sx={{
+                color: "#00796B",
+                fontWeight: 600,
+                fontSize: isMobile ? "10px" : "11px",
+                letterSpacing: "0.5px",
+                textTransform: "uppercase",
+                display: "block",
+                position: "relative",
+                textAlign: "center",
+              }}
+            >
+              Categories
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* All Categories button */}
         <Tooltip
-          title="Profile"
+          title="All Categories"
           placement="right"
           TransitionComponent={Zoom}
           arrow
@@ -279,107 +331,37 @@ const VerticalIcons = ({
             },
           }}
         >
-          <Avatar
-            sx={{
-              width: "48px",
-              height: "48px",
-              backgroundColor: "#00897B",
-              cursor: "pointer",
-              transition: "all 0.3s ease",
-              boxShadow: "0 4px 12px rgba(0, 137, 123, 0.25)",
-              "&:hover": {
-                transform: "scale(1.15)",
-                boxShadow: "0 6px 16px rgba(0, 137, 123, 0.3)",
-              },
+          <CategoryButton
+            selected={selectedCategory === "all"}
+            onClick={() => {
+              handleCategoryClick("all");
+              setFilterEpdOnly(false);
             }}
           >
-            <AccountCircleOutlinedIcon
-              sx={{ color: "#ffffff", fontSize: "28px" }}
-            />
-          </Avatar>
+            <CategoryIndicator selected={selectedCategory === "all"} />
+            <StyledCategoryIcon selected={selectedCategory === "all"}>
+              <AutoAwesomeRoundedIcon />
+            </StyledCategoryIcon>
+            <Typography
+              className="category-label"
+              variant="caption"
+              sx={{
+                mt: 0.5,
+                color: selectedCategory === "all" ? "#00796B" : "#26A69A",
+                fontWeight: selectedCategory === "all" ? 600 : 500,
+                fontSize: isMobile ? "8px" : "10px",
+              }}
+            >
+              All
+            </Typography>
+          </CategoryButton>
         </Tooltip>
 
-        {/* App name/brand below avatar */}
-        <Typography
-          variant="subtitle2"
-          sx={{
-            mt: 1.5,
-            fontSize: isMobile ? "9px" : "11px",
-            color: "#00897B",
-            fontWeight: 600,
-            letterSpacing: "0.5px",
-          }}
-        >
-          USER
-        </Typography>
-      </Box>
-
-      {/* Category section */}
-      <Box
-        sx={{
-          width: "100%",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          flex: 1,
-          position: "relative",
-          "&::before": {
-            content: '""',
-            position: "absolute",
-            top: 0,
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: "40px",
-            height: "2px",
-            background:
-              "linear-gradient(90deg, transparent, rgba(0, 137, 123, 0.2), transparent)",
-          },
-        }}
-      >
-        {/* "Categories" Label */}
-        <Typography
-          variant="caption"
-          sx={{
-            color: "#00796B",
-            fontWeight: 700,
-            fontSize: isMobile ? "8px" : "12px",
-            textTransform: "uppercase",
-            letterSpacing: isMobile ? "0.5px" : "1px",
-            textAlign: "center",
-            display: "block",
-            mb: 2,
-            position: "relative",
-            "&::after": {
-              content: '""',
-              position: "absolute",
-              bottom: "-6px",
-              left: "50%",
-              transform: "translateX(-50%)",
-              width: isMobile ? "12px" : "16px",
-              height: "2px",
-              backgroundColor: "#00897B",
-              borderRadius: "2px",
-            },
-          }}
-        >
-          Categories
-        </Typography>
-
-        <List
-          sx={{
-            width: "100%",
-            p: 0,
-            mt: 1,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          {/* All Categories button */}
+        {/* Category list */}
+        {topCategories.map((category) => (
           <Tooltip
-            title="All Categories"
+            key={category.name}
+            title={category.name}
             placement="right"
             TransitionComponent={Zoom}
             arrow
@@ -390,104 +372,63 @@ const VerticalIcons = ({
             }}
           >
             <CategoryButton
-              selected={selectedCategory === "all"}
-              onClick={() => {
-                handleCategoryClick("all");
-                setFilterEpdOnly(false);
+              selected={selectedCategory === category.name}
+              onClick={() => handleCategoryClick(category.name)}
+              sx={{
+                padding: isMobile ? "16px 6px" : "12px 6px",
+                margin: isMobile ? "6px 0" : "4px 0",
+                minHeight: isMobile ? "72px" : "64px",
+                touchAction: "manipulation",
+                WebkitTapHighlightColor: "transparent",
+                cursor: "pointer",
+                userSelect: "none",
+                "&:active": {
+                  transform: "scale(0.95)",
+                },
+                "&:hover": {
+                  backgroundColor: "rgba(0, 137, 123, 0.05)",
+                },
               }}
             >
-              <CategoryIndicator selected={selectedCategory === "all"} />
-              <StyledCategoryIcon selected={selectedCategory === "all"}>
-                <AutoAwesomeRoundedIcon />
+              <CategoryIndicator
+                selected={selectedCategory === category.name}
+              />
+              <StyledCategoryIcon
+                selected={selectedCategory === category.name}
+                sx={{
+                  width: isMobile ? "40px" : "36px",
+                  height: isMobile ? "40px" : "36px",
+                  touchAction: "manipulation",
+                }}
+              >
+                <CategoryRoundedIcon />
               </StyledCategoryIcon>
               <Typography
                 className="category-label"
                 variant="caption"
                 sx={{
                   mt: 0.5,
-                  color: selectedCategory === "all" ? "#00796B" : "#26A69A",
-                  fontWeight: selectedCategory === "all" ? 600 : 500,
+                  color:
+                    selectedCategory === category.name
+                      ? "#00796B"
+                      : "#26A69A",
+                  fontWeight: selectedCategory === category.name ? 600 : 500,
                   fontSize: isMobile ? "8px" : "10px",
+                  maxWidth: "90%",
+                  textAlign: "center",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  pointerEvents: "none",
                 }}
               >
-                All
+                {category.name.length > 8
+                  ? `${category.name.substring(0, 7)}...`
+                  : category.name}
               </Typography>
             </CategoryButton>
           </Tooltip>
-
-          {/* Category list */}
-          {topCategories.map((category) => (
-            <Tooltip
-              key={category.name}
-              title={category.name}
-              placement="right"
-              TransitionComponent={Zoom}
-              arrow
-              PopperProps={{
-                sx: {
-                  zIndex: 99999,
-                },
-              }}
-            >
-              <CategoryButton
-                selected={selectedCategory === category.name}
-                onClick={() => handleCategoryClick(category.name)}
-                sx={{
-                  padding: isMobile ? "16px 6px" : "12px 6px",
-                  margin: isMobile ? "6px 0" : "4px 0",
-                  minHeight: isMobile ? "72px" : "64px",
-                  touchAction: "manipulation",
-                  WebkitTapHighlightColor: "transparent",
-                  cursor: "pointer",
-                  userSelect: "none",
-                  "&:active": {
-                    transform: "scale(0.95)",
-                  },
-                  "&:hover": {
-                    backgroundColor: "rgba(0, 137, 123, 0.05)",
-                  },
-                }}
-              >
-                <CategoryIndicator
-                  selected={selectedCategory === category.name}
-                />
-                <StyledCategoryIcon
-                  selected={selectedCategory === category.name}
-                  sx={{
-                    width: isMobile ? "40px" : "36px",
-                    height: isMobile ? "40px" : "36px",
-                    touchAction: "manipulation",
-                  }}
-                >
-                  <CategoryRoundedIcon />
-                </StyledCategoryIcon>
-                <Typography
-                  className="category-label"
-                  variant="caption"
-                  sx={{
-                    mt: 0.5,
-                    color:
-                      selectedCategory === category.name
-                        ? "#00796B"
-                        : "#26A69A",
-                    fontWeight: selectedCategory === category.name ? 600 : 500,
-                    fontSize: isMobile ? "8px" : "10px",
-                    maxWidth: "90%",
-                    textAlign: "center",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                    pointerEvents: "none",
-                  }}
-                >
-                  {category.name.length > 8
-                    ? `${category.name.substring(0, 7)}...`
-                    : category.name}
-                </Typography>
-              </CategoryButton>
-            </Tooltip>
-          ))}
-        </List>
+        ))}
 
         {/* Separator before EPD Explorer */}
         <Box

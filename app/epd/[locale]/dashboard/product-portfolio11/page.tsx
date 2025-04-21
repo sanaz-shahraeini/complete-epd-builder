@@ -3,7 +3,7 @@
 import { Suspense } from 'react'
 import "@radix-ui/themes/styles.css";
 import ProductForm  from "@/components/product-form"
-import Loading from '@/app/loading'
+import Loading from '../../../loading'
 
 export default function Page() {
   return (
