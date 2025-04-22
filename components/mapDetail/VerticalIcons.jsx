@@ -287,21 +287,20 @@ const VerticalIcons = ({
           <Box
             sx={{
               position: "relative",
-              padding: "6px 12px",
-              background: "var(--light-teal)",
-              borderRadius: "8px",
-              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-              border: "1px solid var(--primary-teal)",
-              "&::before": {
+              padding: "8px 16px",
+              background: "white",
+              borderRadius: "12px",
+              boxShadow: "0 2px 6px rgba(0, 0, 0, 0.08)",
+              border: "1px solid var(--light-teal)",
+              overflow: "hidden",
+              "&::after": {
                 content: '""',
                 position: "absolute",
-                inset: 0,
-                borderRadius: "8px",
-                padding: "1px",
-                background: "var(--gradient-mixed)",
-                WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
-                WebkitMaskComposite: "xor",
-                maskComposite: "exclude",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: "3px",
+                background: "var(--gradient-teal)",
               }
             }}
           >
@@ -310,7 +309,7 @@ const VerticalIcons = ({
               sx={{
                 color: "var(--dark-teal)",
                 fontWeight: 600,
-                fontSize: isMobile ? "10px" : "11px",
+                fontSize: isMobile ? "11px" : "12px",
                 letterSpacing: "0.5px",
                 textTransform: "uppercase",
                 display: "block",
