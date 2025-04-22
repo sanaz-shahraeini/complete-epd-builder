@@ -356,8 +356,25 @@ const VerticalIcons = ({
           <CategoryButton
             selected={selectedCategory === "all"}
             onClick={() => {
-              handleCategoryClick("all");
+              // Always reset to 'all' and make sure EPD filter is off
+              setSelectedCategory("all");
               setFilterEpdOnly(false);
+              
+              // Force Products view and open sidebar
+              setSelectedSidebar("Products");
+              toggleSidebar();
+              
+              // Clear search to ensure all markers are shown
+              clearSearchQuery();
+              
+              // Make sure the map shows all markers
+              console.log("All Categories clicked, showing all markers");
+              
+              // Dispatch an event to reset any other filters
+              const resetEvent = new CustomEvent('showAllMarkers', { 
+                detail: { source: 'allCategoriesButton' } 
+              });
+              window.dispatchEvent(resetEvent);
             }}
           >
             <CategoryIndicator selected={selectedCategory === "all"} />

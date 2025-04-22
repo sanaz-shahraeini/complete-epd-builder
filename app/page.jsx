@@ -132,13 +132,32 @@ const IndexPage = () => {
       }
     };
     
+    // Add listener for showAllMarkers event
+    const handleShowAllMarkers = (event) => {
+      console.log("Showing all markers, triggered by:", event.detail.source);
+      
+      // Ensure we're showing all markers by setting default states
+      setSelectedCategory("all");
+      setFilterEpdOnly(false);
+      setSelectedCountry("");
+      setSelectedProduct("");
+      
+      // If the map has a reset method, call it
+      if (mapRef.current && mapRef.current.resetView) {
+        console.log("Calling map resetView method");
+        mapRef.current.resetView();
+      }
+    };
+    
     window.addEventListener('resetFilters', handleResetFilters);
+    window.addEventListener('showAllMarkers', handleShowAllMarkers);
     
     // Clean up all timers and event listeners if the component unmounts
     return () => {
       clearInterval(dataLoadingCheckTimer);
       clearTimeout(fallbackTimer);
       window.removeEventListener('resetFilters', handleResetFilters);
+      window.removeEventListener('showAllMarkers', handleShowAllMarkers);
     };
   }, []); // Empty dependency array means this runs once on component mount
 

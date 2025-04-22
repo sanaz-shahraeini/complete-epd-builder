@@ -110,6 +110,22 @@ const MapComponent = forwardRef(
           );
           return location;
         },
+        highlightMarker: (productId) => {
+          // Function to highlight a specific marker
+          console.log("Highlighting marker for product:", productId);
+          // Implementation depends on how markers are tracked in this component
+        },
+        resetView: () => {
+          // Reset the map view to default state
+          console.log("Resetting map view to default");
+          if (mapRef.current) {
+            // Default European view
+            mapRef.current.setView([50, 10], 4);
+            
+            // Clear any selected markers or highlights
+            setSelectedLocation(null);
+          }
+        }
       }),
       [locations]
     );

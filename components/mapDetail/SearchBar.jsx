@@ -226,6 +226,12 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
     // If search box is clicked when no results are showing
     console.log("Search box clicked, current query:", searchQuery);
     
+    // Always dispatch the event to show all markers when search box is clicked
+    const showAllEvent = new CustomEvent('showAllMarkers', { 
+      detail: { source: 'searchBoxClick' } 
+    });
+    window.dispatchEvent(showAllEvent);
+    
     // Always clear filters when clicking on search to ensure we see all results
     if (selectedCategory !== "all" || filterEpdOnly) {
       console.log("Resetting filters from search box click");
@@ -389,6 +395,12 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
             onKeyDown={handleKeyPress}
             onClick={handleSearchClick}
             onFocus={() => {
+              // Always dispatch event to show all markers when focusing on search
+              const showAllEvent = new CustomEvent('showAllMarkers', { 
+                detail: { source: 'searchFocus' } 
+              });
+              window.dispatchEvent(showAllEvent);
+              
               // Only reset filters if:
               // 1. There's no current search query (to avoid clearing results when re-focusing)
               // 2. We're coming from a filtered state
