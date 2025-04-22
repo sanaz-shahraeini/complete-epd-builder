@@ -287,33 +287,25 @@ const VerticalIcons = ({
           <Box
             sx={{
               position: "relative",
-              padding: "8px 16px",
-              background: "white",
-              borderRadius: "12px",
-              boxShadow: "0 2px 6px rgba(0, 0, 0, 0.08)",
-              border: "1px solid var(--light-teal)",
-              overflow: "hidden",
-              "&::after": {
-                content: '""',
-                position: "absolute",
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: "3px",
-                background: "var(--gradient-teal)",
-              }
+              padding: "6px 10px",
+              background: "var(--gradient-teal)",
+              borderRadius: "16px",
+              boxShadow: "0 2px 5px rgba(0, 137, 123, 0.2)",
+              maxWidth: "80%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
             <Typography
               variant="caption"
               sx={{
-                color: "var(--dark-teal)",
+                color: "white",
                 fontWeight: 600,
-                fontSize: isMobile ? "11px" : "12px",
+                fontSize: isMobile ? "10px" : "11px",
                 letterSpacing: "0.5px",
                 textTransform: "uppercase",
                 display: "block",
-                position: "relative",
                 textAlign: "center",
               }}
             >
