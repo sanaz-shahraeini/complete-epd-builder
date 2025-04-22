@@ -66,16 +66,19 @@ const Header = () => {
         sx={{ 
           justifyContent: "space-between", 
           minHeight: "64px",
-          px: 4,
+          px: { xs: 2, md: 4 },
           position: 'relative',
-          gap: 6
+          gap: { xs: 2, md: 3, lg: 6 },
+          maxWidth: '1800px',
+          margin: '0 auto',
+          width: '100%'
         }}
       >
         {/* Left side - Logo/Brand */}
         <Box sx={{ 
           display: "flex", 
           alignItems: "center", 
-          minWidth: '220px',
+          minWidth: { xs: '180px', md: '200px' },
           flex: '0 0 auto'
         }}>
           <Typography
@@ -128,10 +131,12 @@ const Header = () => {
               left: '50%',
               transform: 'translateX(-50%)',
               display: "flex",
-              gap: "24px",
+              gap: { xs: '12px', sm: '16px', md: '24px' },
               alignItems: 'center',
               justifyContent: 'center',
-              flex: '1 1 auto'
+              flex: '1 1 auto',
+              maxWidth: { sm: '600px', md: '800px', lg: '1000px' },
+              width: '100%',
             }}
           >
             {categories.map((category) => {
@@ -144,18 +149,21 @@ const Header = () => {
                   onClick={() => setSelectedCategory(category.id)}
                   sx={{
                     color: isSelected ? 'var(--dark-teal)' : 'var(--text-medium)',
-                    fontWeight: 400,
-                    px: 2.5,
+                    fontWeight: 500,
+                    px: 3,
                     py: 1.5,
-                    fontSize: "0.8rem",
+                    fontSize: "0.875rem",
                     backgroundColor: "transparent",
                     borderRadius: "4px",
                     display: "flex",
                     alignItems: "center",
-                    gap: "6px",
+                    gap: "8px",
                     textTransform: 'none',
-                    minWidth: 'auto',
+                    minWidth: category.id === 'map' ? '80px' : '160px',
+                    width: 'auto',
+                    justifyContent: 'center',
                     position: 'relative',
+                    whiteSpace: 'nowrap',
                     "&::after": isSelected ? {
                       content: '""',
                       position: 'absolute',
@@ -188,9 +196,9 @@ const Header = () => {
         <Box sx={{ 
           display: "flex", 
           alignItems: "center", 
-          minWidth: '220px', 
+          minWidth: { xs: '180px', md: '200px' }, 
           justifyContent: 'flex-end',
-          gap: 2,
+          gap: { xs: 1, sm: 1.5, md: 2 },
           flex: '0 0 auto'
         }}>
           {!loading && (
