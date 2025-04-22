@@ -213,6 +213,16 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
       setSearchQuery("");
       setContextSearchQuery("");
       setSelectedProduct(null);
+      
+      // Reset category filters to show all markers when doing a new search
+      if (selectedCategory !== "all" || filterEpdOnly) {
+        // Create a custom event to communicate with the parent component
+        const resetEvent = new CustomEvent('resetFilters', { 
+          detail: { source: 'searchBar' } 
+        });
+        window.dispatchEvent(resetEvent);
+      }
+      
       setShowResults(true);
     }
   };
@@ -358,6 +368,15 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
             onChange={handleSearchChange}
             onKeyDown={handleKeyPress}
             onClick={handleSearchClick}
+            onFocus={() => {
+              // Reset filters when user focuses on the search input
+              if (selectedCategory !== "all" || filterEpdOnly) {
+                const resetEvent = new CustomEvent('resetFilters', { 
+                  detail: { source: 'searchFocus' } 
+                });
+                window.dispatchEvent(resetEvent);
+              }
+            }}
             sx={{
               borderRadius: "30px",
               transition: "all 0.3s ease",

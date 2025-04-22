@@ -180,6 +180,11 @@ const VerticalIcons = ({
   }, [categories, findTopCategories]);
 
   const handleCategoryClick = (label) => {
+    // If we're already on this category, don't do anything
+    if (selectedCategory === label) {
+      return;
+    }
+    
     setSelectedCategory(label);
     if (isMobile) {
       handleDrawerToggle();
@@ -204,6 +209,11 @@ const VerticalIcons = ({
 
   // Add or update the EPD icon click handler to clear search query
   const handleEpdIconClick = () => {
+    // If the state isn't changing, don't do anything
+    if (selectedCategory === "all" && filterEpdOnly) {
+      return;
+    }
+    
     // Toggle the EPD filter
     setFilterEpdOnly(!filterEpdOnly);
     

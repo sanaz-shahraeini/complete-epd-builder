@@ -81,6 +81,10 @@ const IndexPage = () => {
 
   const closeSidebar = () => {
     setIsSidebarOpen(false);
+    // When sidebar is closed, reset the category to "all" and turn off EPD filter
+    // to show all markers on the map
+    setSelectedCategory("all");
+    setFilterEpdOnly(false);
   };
 
   const handleSidebarSelect = (tab) => {
@@ -110,10 +114,20 @@ const IndexPage = () => {
       clearInterval(dataLoadingCheckTimer);
     }, 8000); // 8 seconds as fallback
     
-    // Clean up both timers if the component unmounts
+    // Add listener for resetFilters event from SearchBar
+    const handleResetFilters = (event) => {
+      console.log("Resetting filters from:", event.detail.source);
+      setSelectedCategory("all");
+      setFilterEpdOnly(false);
+    };
+    
+    window.addEventListener('resetFilters', handleResetFilters);
+    
+    // Clean up all timers and event listeners if the component unmounts
     return () => {
       clearInterval(dataLoadingCheckTimer);
       clearTimeout(fallbackTimer);
+      window.removeEventListener('resetFilters', handleResetFilters);
     };
   }, []); // Empty dependency array means this runs once on component mount
 
