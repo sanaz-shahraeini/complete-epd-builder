@@ -16,21 +16,32 @@ html {
   text-size-adjust: 100% !important; /* Standard property */
 }
 
-/* Override Material UI typography at its root */
-.MuiTypography-root {
+/* Override Material UI typography only for header components */
+.header-title {
   font-size: var(--font-size-base) !important;
 }
 
-.MuiTypography-h6 {
+.MuiAppBar-root .MuiTypography-root {
   font-size: var(--font-size-base) !important;
 }
 
-.MuiTypography-body1 {
+.MuiAppBar-root .MuiTypography-h6 {
+  font-size: var(--font-size-base) !important;
+}
+
+.MuiAppBar-root .MuiTypography-body1 {
   font-size: var(--font-size-small) !important;
 }
 
-.MuiTypography-body2 {
+.MuiAppBar-root .MuiTypography-body2 {
   font-size: var(--font-size-smaller) !important;
+}
+
+/* Allow sidebar components to use their original font sizes */
+[class*="VerticalIcons"] .MuiTypography-root,
+[class*="Sidebar"] .MuiTypography-root,
+[class*="MainSidebar"] .MuiTypography-root {
+  font-size: inherit;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -44,7 +55,6 @@ body {
   color: var(--foreground);
   background: var(--background);
   font-family: 'Poppins', Arial, Helvetica, sans-serif !important; /* Explicitly set font family */
-  font-size: var(--font-size-base) !important;
 }
 
 @layer utilities {

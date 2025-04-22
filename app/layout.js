@@ -19,7 +19,8 @@ export default function RootLayout({ children }) {
             font-size: 16px !important;
           }
           
-          .MuiTypography-h6 {
+          /* Target only header components */
+          .MuiAppBar-root .MuiTypography-h6 {
             font-size: 1rem !important;
           }
           
@@ -28,7 +29,7 @@ export default function RootLayout({ children }) {
           }
           
           @media screen and (min-width: 0px) {
-            :root {
+            .MuiAppBar-root {
               --mui-typography-h6-fontSize: 16px;
             }
           }
