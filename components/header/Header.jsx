@@ -33,6 +33,9 @@ import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import ViewInArIcon from "@mui/icons-material/ViewInAr";
+import GridViewIcon from "@mui/icons-material/GridView";
+import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import { useProducts } from "../../useContexts/ProductsContext";
 
 const Header = () => {
@@ -46,6 +49,17 @@ const Header = () => {
     { id: "building", label: "Building Products", icon: ApartmentIcon },
     { id: "electronic", label: "Electronic Products", icon: DevicesIcon },
   ];
+  
+  // Sidebar categories based on the image
+  const sidebarCategories = [
+    { id: "all", label: "All", icon: GridViewIcon },
+    { id: "norm", label: "Norm...", icon: FormatListBulletedIcon },
+    { id: "beton", label: "Beton...", icon: ViewInArIcon },
+    { id: "baur", label: "Baur...", icon: ViewInArIcon },
+    { id: "o2build", label: "O2 Buil...", icon: ViewInArIcon },
+    { id: "epd", label: "EPD", icon: ViewInArIcon },
+  ];
+  
   const { loading } = useProducts();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -54,6 +68,7 @@ const Header = () => {
   const [selectedLanguage, setSelectedLanguage] = useState("en");
   const [selectedCategory, setSelectedCategory] = useState(categories[2].id);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [selectedSidebarCategory, setSelectedSidebarCategory] = useState("all");
 
   const handleLanguageChange = (event) => {
     setSelectedLanguage(event.target.value);
@@ -66,6 +81,10 @@ const Header = () => {
   const handleCategorySelect = (category) => {
     setSelectedCategory(category);
     setMobileDrawerOpen(false);
+  };
+  
+  const handleSidebarCategorySelect = (category) => {
+    setSelectedSidebarCategory(category);
   };
 
   // Custom mobile drawer
@@ -131,8 +150,64 @@ const Header = () => {
       
       {/* Category list */}
       <Box sx={{ p: 2 }}>
+        <Typography sx={{ fontWeight: 600, color: 'var(--text-medium)', fontSize: '14px', mb: 1, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          CATEGORIES
+        </Typography>
+        
+        <List sx={{ p: 0 }}>
+          {sidebarCategories.map((category) => {
+            const Icon = category.icon;
+            const isSelected = selectedSidebarCategory === category.id;
+            
+            return (
+              <ListItem 
+                button
+                key={category.id}
+                onClick={() => handleSidebarCategorySelect(category.id)}
+                sx={{ 
+                  borderRadius: '8px',
+                  mb: 0.5,
+                  backgroundColor: isSelected ? 'var(--light-teal)' : 'transparent',
+                  '&:hover': { backgroundColor: 'var(--light-teal)' },
+                  height: "48px",
+                  padding: "6px 8px",
+                  gap: 1
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '50%',
+                    backgroundColor: isSelected ? 'white' : 'var(--light-teal)',
+                    color: 'var(--dark-teal)',
+                  }}
+                >
+                  <Icon sx={{ fontSize: 20 }} />
+                </Box>
+                <ListItemText 
+                  primary={category.label} 
+                  primaryTypographyProps={{ 
+                    fontWeight: isSelected ? 600 : 500, 
+                    color: isSelected ? 'var(--dark-teal)' : 'var(--text-dark)',
+                    fontSize: '14px'
+                  }} 
+                />
+              </ListItem>
+            );
+          })}
+        </List>
+      </Box>
+      
+      <Divider sx={{ borderColor: 'var(--upload_bg)', mt: 1 }} />
+      
+      {/* Standard categories */}
+      <Box sx={{ p: 2 }}>
         <Typography sx={{ fontWeight: 600, color: 'var(--text-medium)', fontSize: '12px', mb: 1, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-          Categories
+          Navigation
         </Typography>
         
         <List sx={{ p: 0 }}>
