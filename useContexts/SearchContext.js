@@ -24,6 +24,7 @@ export function SearchProvider({ children }) {
   useEffect(() => {
     if (!searchQuery.trim()) {
       setSearchResults([]);
+      console.log("Empty search query, clearing results");
       return;
     }
 
@@ -31,7 +32,14 @@ export function SearchProvider({ children }) {
     setIsLoading(true);
 
     console.log('Searching for:', lowerCaseQuery);
-    console.log('Available products:', regularProducts.length);
+    console.log('Available products for search:', regularProducts?.length || 0);
+
+    if (!regularProducts || regularProducts.length === 0) {
+      console.warn('No products available for search');
+      setSearchResults([]);
+      setIsLoading(false);
+      return;
+    }
 
     const filtered = regularProducts.filter((product) => {
       // Only search in regular API products, not EPD API products
@@ -41,10 +49,22 @@ export function SearchProvider({ children }) {
       
       const productName = (product.product_name || product.name || "").toLowerCase();
       
+      // More verbose logging to debug product filtering
+      const isMatch = checkProductMatch(productName, lowerCaseQuery);
+      if (isMatch) {
+        console.log(`Match found: "${productName}" for query "${lowerCaseQuery}"`);
+      }
+      return isMatch;
+    });
+
+    console.log('Filtered results count:', filtered.length);
+    
+    // Function to check if a product matches the search query
+    function checkProductMatch(productName, query) {
       // Special case for zehnder-basic-silent-wall-fan
-      if (lowerCaseQuery === "zehnder-basic-silent-wall-fan" ||
-          lowerCaseQuery === "silent wall fan" ||
-          lowerCaseQuery === "wall fan") {
+      if (query === "zehnder-basic-silent-wall-fan" ||
+          query === "silent wall fan" ||
+          query === "wall fan") {
         return productName.includes("zehnder") && 
                (productName.includes("silent") || productName.includes("wall-fan"));
       }
@@ -52,9 +72,9 @@ export function SearchProvider({ children }) {
       // For zehnder products, check the part after "zehnder-"
       if (productName.includes("zehnder-")) {
         // If searching explicitly for a zehnder product
-        if (lowerCaseQuery.includes("zehnder-")) {
+        if (query.includes("zehnder-")) {
           // Compare full product names
-          return productName.includes(lowerCaseQuery);
+          return productName.includes(query);
         }
         
         // Otherwise, check if the part after prefix matches
@@ -63,7 +83,7 @@ export function SearchProvider({ children }) {
           const afterPrefix = productName.substring(zehnderIndex);
           
           // Check for part matches (more flexible matching)
-          const queryParts = lowerCaseQuery.split(' ');
+          const queryParts = query.split(' ');
           for (const part of queryParts) {
             if (part.length > 2 && afterPrefix.includes(part)) {
               return true;
@@ -71,18 +91,16 @@ export function SearchProvider({ children }) {
           }
           
           // Fallback to first character match
-          return lowerCaseQuery.length > 0 && afterPrefix.charAt(0) === lowerCaseQuery.charAt(0);
+          return query.length > 0 && afterPrefix.charAt(0) === query.charAt(0);
         }
         return false;
       }
       
       // For non-zehnder products, check first character
       return productName.length > 0 && 
-             lowerCaseQuery.length > 0 && 
-             productName.charAt(0) === lowerCaseQuery.charAt(0);
-    });
-
-    console.log('Filtered results:', filtered.length);
+             query.length > 0 && 
+             productName.charAt(0) === query.charAt(0);
+    }
 
     // Enhance search results with coordinates
     const enhancedResults = filtered.map(product => {
@@ -146,7 +164,7 @@ export function SearchProvider({ children }) {
       return product;
     });
 
-    console.log('Enhanced results:', enhancedResults.length);
+    console.log('Final enhanced results count:', enhancedResults.length);
     
     setSearchResults(enhancedResults);
     setIsLoading(false);

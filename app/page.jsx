@@ -117,8 +117,19 @@ const IndexPage = () => {
     // Add listener for resetFilters event from SearchBar
     const handleResetFilters = (event) => {
       console.log("Resetting filters from:", event.detail.source);
-      setSelectedCategory("all");
-      setFilterEpdOnly(false);
+      
+      // Only reset filters if they're actually active
+      if (selectedCategory !== "all" || filterEpdOnly) {
+        setSelectedCategory("all");
+        setFilterEpdOnly(false);
+        
+        // If this was triggered by a search focus/click, let the UI update before searching
+        if (event.detail.source === 'searchFocus' || event.detail.source === 'searchClick') {
+          console.log("Search initiated filter reset, allowing UI to update");
+        }
+      } else {
+        console.log("Filters already reset, no action needed");
+      }
     };
     
     window.addEventListener('resetFilters', handleResetFilters);

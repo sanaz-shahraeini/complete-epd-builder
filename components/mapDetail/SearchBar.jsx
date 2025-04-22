@@ -100,11 +100,23 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
 
   const handleSearchChange = (e) => {
     const query = e.target.value;
+    console.log("Search input changed to:", query);
+    
+    // Set local state and context state
     setSearchQuery(query);
     setContextSearchQuery(query);
 
     // Clear the selected product when typing a new search
     setSelectedProduct(null);
+
+    // If user is typing in search box with active filters, reset them
+    if ((selectedCategory !== "all" || filterEpdOnly) && query.length > 0) {
+      console.log("User typing with active filters, resetting filters");
+      const resetEvent = new CustomEvent('resetFilters', { 
+        detail: { source: 'searchTyping' } 
+      });
+      window.dispatchEvent(resetEvent);
+    }
 
     // Show results while typing if query is not empty
     setShowResults(query.length > 0);
@@ -205,24 +217,32 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
   };
 
   const handleSearchClick = () => {
+    // If search is already showing results, clicking will toggle it off
     if (showResults) {
-      // If results are shown, clicking will close them
       setShowResults(false);
+      return;
+    }
+
+    // If search box is clicked when no results are showing
+    console.log("Search box clicked, current query:", searchQuery);
+    
+    // Always clear filters when clicking on search to ensure we see all results
+    if (selectedCategory !== "all" || filterEpdOnly) {
+      console.log("Resetting filters from search box click");
+      const resetEvent = new CustomEvent('resetFilters', { 
+        detail: { source: 'searchClick' } 
+      });
+      window.dispatchEvent(resetEvent);
+    }
+    
+    // Only clear search when specifically performing a new search
+    if (searchQuery) {
+      console.log("Maintaining current search query:", searchQuery);
+      // Show results for current query
+      setShowResults(true);
     } else {
-      // If results are hidden, clear search and show results
-      setSearchQuery("");
-      setContextSearchQuery("");
-      setSelectedProduct(null);
-      
-      // Reset category filters to show all markers when doing a new search
-      if (selectedCategory !== "all" || filterEpdOnly) {
-        // Create a custom event to communicate with the parent component
-        const resetEvent = new CustomEvent('resetFilters', { 
-          detail: { source: 'searchBar' } 
-        });
-        window.dispatchEvent(resetEvent);
-      }
-      
+      // Empty search box behavior - just show all results
+      console.log("Empty search, showing dropdown");
       setShowResults(true);
     }
   };
@@ -369,12 +389,22 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
             onKeyDown={handleKeyPress}
             onClick={handleSearchClick}
             onFocus={() => {
-              // Reset filters when user focuses on the search input
-              if (selectedCategory !== "all" || filterEpdOnly) {
+              // Only reset filters if:
+              // 1. There's no current search query (to avoid clearing results when re-focusing)
+              // 2. We're coming from a filtered state
+              if ((!searchQuery || searchQuery.length === 0) && (selectedCategory !== "all" || filterEpdOnly)) {
+                console.log("Focusing search box from filtered state, resetting filters");
                 const resetEvent = new CustomEvent('resetFilters', { 
                   detail: { source: 'searchFocus' } 
                 });
                 window.dispatchEvent(resetEvent);
+              } else {
+                console.log("Focusing with existing query, not resetting filters:", searchQuery);
+              }
+              
+              // When focusing on the search box and there's a query, show results
+              if (searchQuery && searchQuery.length > 0) {
+                setShowResults(true);
               }
             }}
             sx={{
