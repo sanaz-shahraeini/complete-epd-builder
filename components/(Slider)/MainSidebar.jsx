@@ -37,7 +37,8 @@ const MainSidebar = ({
   const [products, setProducts] = useState([]);
   const [error, setError] = useState();
   const [filteredExtraInfo, setFilteredExtraInfo] = useState([]);
-  const [showLastProduct, setShowLastProduct] = useState(true);
+  const [showLastProduct, setShowLastProduct] = useState(false);
+  const [lastProductImage, setLastProductImage] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPriority, setSelectedPriority] = useState("Top products");
   const sidebarRef = useRef(null);
@@ -209,6 +210,9 @@ const MainSidebar = ({
       `Selected product: ${product.name}`,
       `Industry solution: ${product.industry_solution}`,
     ]);
+    // Enable the last product display and set image if available
+    setShowLastProduct(true);
+    setLastProductImage(product.image_url);
   };
 
   // Filter and sort products based on selected category and priority
@@ -698,6 +702,7 @@ const MainSidebar = ({
       <FilteredInfoSection
         extraInfo={filteredExtraInfo}
         showLastProduct={showLastProduct}
+        productImage={lastProductImage}
         handleRemoveInfo={handleRemoveInfo}
         handleRemoveLastProduct={handleRemoveLastProduct}
       />
