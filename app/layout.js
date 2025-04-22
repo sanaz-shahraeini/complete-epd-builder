@@ -21,7 +21,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" dir="ltr" className={poppins.className}>
       <body>
-        <AppRouterCacheProvider options={{ enableCssLayer: true }}>
+        <AppRouterCacheProvider options={{ enableCssLayer: false }}>
           <ThemeProvider theme={theme}>
             <CssBaseline />
             {children}

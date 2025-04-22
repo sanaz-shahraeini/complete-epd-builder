@@ -11,12 +11,12 @@ import {
   Select,
   MenuItem,
   Skeleton,
+  Grid,
 } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import Sidebar from "./Sidebar";
 import FilteredInfoSection from "./FilteredInfoSection";
 import ImageIcon from "@mui/icons-material/Image";
-import Grid from "@mui/material/Grid2";
 import ViewInArIcon from "@mui/icons-material/ViewInAr";
 
 const MainSidebar = ({
@@ -297,7 +297,7 @@ const MainSidebar = ({
           }}
         >
           <Grid container spacing={1}>
-            <Grid size={{ xs: 6, md: 6 }}>
+            <Grid item xs={6} md={6}>
               <Button
                 variant={selected === "Legend" ? "contained" : "outlined"}
                 color="success"
@@ -327,7 +327,7 @@ const MainSidebar = ({
               </Button>
             </Grid>
 
-            <Grid size={{ xs: 6, md: 6 }}>
+            <Grid item xs={6} md={6}>
               <Button
                 variant={selected === "Products" ? "contained" : "outlined"}
                 color="success"
@@ -361,10 +361,10 @@ const MainSidebar = ({
         {/* Select Priority */}
         {selected === "Products" && (
           <Grid container alignItems="center" sx={{ px: 4, my: 3 }}>
-            <Grid size={{ xs: 6, md: 6 }}>
+            <Grid item xs={6} md={6}>
               <Typography variant="body2">Select Priority</Typography>
             </Grid>
-            <Grid size={{ xs: 6, md: 6 }}>
+            <Grid item xs={6} md={6}>
               <Select
                 value={selectedPriority}
                 onChange={handlePriorityChange}

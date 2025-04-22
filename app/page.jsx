@@ -8,8 +8,8 @@ import {
   Fade,
   useMediaQuery,
   useTheme,
+  Grid,
 } from "@mui/material";
-import Grid from "@mui/material/Grid2";
 import dynamic from "next/dynamic";
 import MainSidebar from "../components/(Slider)/MainSidebar";
 import VerticalIcons from "../components/mapDetail/VerticalIcons";
@@ -221,7 +221,8 @@ const IndexPage = () => {
 
               {/* Map */}
               <Grid
-                size={{ xs: 12 }}
+                item
+                xs={12}
                 sx={{
                   position: "absolute",
                   zIndex: 1,
@@ -259,6 +260,7 @@ const IndexPage = () => {
 
               {/* Toggle Buttons */}
               <Grid
+                item
                 sx={{
                   position: "fixed",
                   bottom: "20px",

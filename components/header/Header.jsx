@@ -53,7 +53,7 @@ const Header = () => {
       position="fixed"
       elevation={0}
       sx={{
-        backgroundColor: '#FFFFFF',
+        backgroundColor: 'var(--bg_color)',
         backdropFilter: "blur(10px)",
         borderBottom: '1px solid var(--upload_bg)',
         color: 'var(--text-dark)',
@@ -66,12 +66,18 @@ const Header = () => {
         sx={{ 
           justifyContent: "space-between", 
           minHeight: "64px",
-          px: 2,
-          position: 'relative'
+          px: 4,
+          position: 'relative',
+          gap: 6
         }}
       >
         {/* Left side - Logo/Brand */}
-        <Box sx={{ display: "flex", alignItems: "center", minWidth: '180px' }}>
+        <Box sx={{ 
+          display: "flex", 
+          alignItems: "center", 
+          minWidth: '220px',
+          flex: '0 0 auto'
+        }}>
           <Typography
             variant="h6"
             sx={{
@@ -111,8 +117,10 @@ const Header = () => {
               left: '50%',
               transform: 'translateX(-50%)',
               display: "flex",
-              gap: "8px",
+              gap: "24px",
               alignItems: 'center',
+              justifyContent: 'center',
+              flex: '1 1 auto'
             }}
           >
             {categories.map((category) => {
@@ -126,14 +134,14 @@ const Header = () => {
                   sx={{
                     color: isSelected ? 'var(--dark-teal)' : 'var(--text-medium)',
                     fontWeight: 500,
-                    px: 2,
+                    px: 2.5,
                     py: 1.5,
                     fontSize: "0.875rem",
                     backgroundColor: "transparent",
                     borderRadius: "4px",
                     display: "flex",
                     alignItems: "center",
-                    gap: "8px",
+                    gap: "6px",
                     textTransform: 'none',
                     minWidth: 'auto',
                     position: 'relative',
@@ -148,7 +156,7 @@ const Header = () => {
                       borderRadius: '2px'
                     } : {},
                     "&:hover": {
-                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                      backgroundColor: 'var(--light-teal)',
                     },
                   }}
                 >
@@ -166,23 +174,27 @@ const Header = () => {
         )}
 
         {/* Right side - Actions */}
-        <Box sx={{ display: "flex", alignItems: "center", minWidth: '180px', justifyContent: 'flex-end' }}>
+        <Box sx={{ 
+          display: "flex", 
+          alignItems: "center", 
+          minWidth: '220px', 
+          justifyContent: 'flex-end',
+          gap: 2,
+          flex: '0 0 auto'
+        }}>
           {!loading && (
-            <Box sx={{ position: "relative", mr: 1 }}>
-              <IconButton
-                size="small"
-                sx={{
-                  backgroundColor: 'var(--upload_bg)',
-                  mr: 1,
-                  "&:hover": { 
-                    backgroundColor: '#FFFFFF',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
-                  },
-                }}
-              >
-                <SearchIcon fontSize="small" sx={{ color: 'var(--text-medium)' }} />
-              </IconButton>
-            </Box>
+            <IconButton
+              size="small"
+              sx={{
+                backgroundColor: 'var(--upload_bg)',
+                "&:hover": { 
+                  backgroundColor: 'var(--bg_color)',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+                },
+              }}
+            >
+              <SearchIcon fontSize="small" sx={{ color: 'var(--text-medium)' }} />
+            </IconButton>
           )}
 
           <Tooltip title="Help">
@@ -190,9 +202,8 @@ const Header = () => {
               size="small"
               sx={{
                 backgroundColor: 'var(--upload_bg)',
-                mr: 1,
                 "&:hover": { 
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: 'var(--bg_color)',
                   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
                 },
               }}
@@ -206,85 +217,63 @@ const Header = () => {
               size="small"
               sx={{
                 backgroundColor: 'var(--upload_bg)',
-                mr: 2,
                 "&:hover": { 
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: 'var(--bg_color)',
                   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
                 },
               }}
             >
-              <NotificationsNoneIcon
-                fontSize="small"
-                sx={{ color: 'var(--text-medium)' }}
-              />
+              <Badge color="error" variant="dot">
+                <NotificationsNoneIcon fontSize="small" sx={{ color: 'var(--text-medium)' }} />
+              </Badge>
             </IconButton>
           </Tooltip>
 
-          <FormControl sx={{ mr: 2 }}>
+          <FormControl
+            size="small"
+            sx={{
+              minWidth: 100,
+              ml: 0.5,
+              "& .MuiOutlinedInput-root": {
+                backgroundColor: 'var(--upload_bg)',
+                borderRadius: "4px",
+                "& fieldset": { border: "none" },
+                "&:hover": {
+                  backgroundColor: 'var(--bg_color)',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+                },
+              },
+            }}
+          >
             <Select
               value={selectedLanguage}
               onChange={handleLanguageChange}
-              displayEmpty
-              variant="outlined"
-              size="small"
               sx={{
-                height: 36,
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                color: 'var(--text-medium)',
-                backgroundColor: 'var(--upload_bg)',
-                borderRadius: "8px",
-                "& .MuiOutlinedInput-notchedOutline": {
-                  border: "none",
-                },
-                "&:hover": {
-                  backgroundColor: '#FFFFFF',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
-                },
-                "& .MuiSelect-icon": {
-                  color: 'var(--text-medium)',
-                },
-              }}
-              MenuProps={{
-                PaperProps: {
-                  sx: {
-                    borderRadius: 2,
-                    boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-                    mt: 0.5,
-                  },
+                "& .MuiSelect-select": {
+                  py: 1,
+                  pr: 3,
+                  pl: 1.5,
                 },
               }}
             >
               <MenuItem value="en">English</MenuItem>
               <MenuItem value="de">Deutsch</MenuItem>
               <MenuItem value="fr">Français</MenuItem>
-              <MenuItem value="es">Español</MenuItem>
             </Select>
           </FormControl>
 
-          <Avatar
+          <IconButton
+            size="small"
             sx={{
-              width: 40,
-              height: 40,
-              backgroundColor: '#00BFB3',
-              cursor: "pointer",
-              transition: "all 0.2s ease",
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              "&:hover": {
-                transform: "scale(1.05)",
-                boxShadow: '0 2px 8px rgba(0, 191, 179, 0.25)',
-              }
+              backgroundColor: 'var(--upload_bg)',
+              "&:hover": { 
+                backgroundColor: 'var(--bg_color)',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+              },
             }}
           >
-            <PersonOutlineIcon 
-              sx={{ 
-                fontSize: 24,
-                color: '#FFFFFF',
-              }} 
-            />
-          </Avatar>
+            <PersonOutlineIcon fontSize="small" sx={{ color: 'var(--text-medium)' }} />
+          </IconButton>
         </Box>
       </Toolbar>
     </AppBar>

@@ -54,14 +54,14 @@ const Loading = ({ fullScreen = false, message = "Loading data..." }) => {
         .spinner {
           width: 50px;
           height: 50px;
-          border: 5px solid rgba(38, 166, 154, 0.3); /* Teal color to match the map markers */
+          border: 5px solid rgba(43, 177, 190, 0.3); /* Primary teal with transparency */
           border-radius: 50%;
-          border-top-color: #26a69a;
+          border-top-color: #2BB1BE; /* Primary teal */
           animation: spin 1s ease-in-out infinite;
         }
         .loading-message {
           font-size: 1.1rem;
-          color: #00695c;
+          color: #0F6268; /* Dark teal */
           font-weight: 600;
           margin: 1rem 0 0;
           text-align: center;

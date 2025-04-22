@@ -30,7 +30,7 @@ const CategoryIndicator = styled(Box)(({ selected }) => ({
   width: "3px",
   height: selected ? "32px" : "0",
   background: selected
-    ? "linear-gradient(180deg, #00897B 0%, #4DB6AC 100%)"
+    ? "var(--sideBar)"
     : "transparent",
   borderRadius: "0 4px 4px 0",
   position: "absolute",
@@ -49,18 +49,22 @@ const StyledCategoryIcon = styled(Box)(({ selected }) => ({
   height: "36px",
   borderRadius: "12px",
   backgroundColor: selected
-    ? "rgba(0, 137, 123, 0.15)"
-    : "rgba(178, 223, 219, 0.08)",
-  color: selected ? "#00897B" : "#26A69A",
+    ? "var(--light-teal)"
+    : "var(--bg_color)",
+  color: selected ? "var(--dark-teal)" : "var(--text-medium)",
   transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
   transform: selected ? "scale(1)" : "scale(0.95)",
   boxShadow: selected
-    ? "0 2px 8px rgba(0, 137, 123, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.1)"
+    ? "0 2px 8px rgba(0, 137, 123, 0.15)"
     : "none",
   "& .MuiSvgIcon-root": {
     fontSize: "22px",
     transition: "all 0.3s ease",
-    filter: selected ? "drop-shadow(0 2px 3px rgba(0, 137, 123, 0.2))" : "none",
+    color: "inherit",
+  },
+  "&:hover": {
+    backgroundColor: "var(--light-teal)",
+    color: "var(--dark-teal)",
   },
   "&:hover .MuiSvgIcon-root": {
     transform: "scale(1.1) rotate(5deg)",
@@ -79,15 +83,15 @@ const CategoryButton = styled(Box)(({ selected }) => ({
   position: "relative",
   transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
   borderRadius: "16px",
-  backgroundColor: selected ? "rgba(0, 137, 123, 0.08)" : "transparent",
+  backgroundColor: selected ? "var(--light-teal)" : "transparent",
   backdropFilter: selected ? "blur(8px)" : "none",
   boxShadow: selected
-    ? "0 4px 12px rgba(0, 137, 123, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.1)"
+    ? "0 4px 12px rgba(0, 137, 123, 0.12)"
     : "none",
   width: "56px",
   height: "64px",
   "&:hover": {
-    backgroundColor: "rgba(0, 137, 123, 0.05)",
+    backgroundColor: "var(--light-teal)",
     transform: "translateY(-2px)",
     boxShadow: "0 6px 16px rgba(0, 137, 123, 0.15)",
     "& .category-icon": {
@@ -96,7 +100,7 @@ const CategoryButton = styled(Box)(({ selected }) => ({
     "& .category-label": {
       opacity: 1,
       transform: "translateY(0)",
-      color: "#00796B",
+      color: "var(--dark-teal)",
     },
   },
 }));
@@ -205,21 +209,21 @@ const VerticalIcons = ({
 
   // Get color based on category name (consistent coloring)
   const getCategoryColor = (name) => {
-    if (name === "all") return "#00796B";
+    if (name === "all") return "var(--dark-teal)";
 
     // Generate consistent colors based on string hashing
     const hash = name
       .split("")
       .reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const colors = [
-      "#00796B", // teal 700
-      "#00897B", // teal 600
-      "#009688", // teal 500
-      "#00897B", // teal 600
-      "#00796B", // teal 700
-      "#00695C", // teal 800
-      "#00796B", // teal 700
-      "#00897B", // teal 600
+      "var(--dark-teal)",      // dark teal
+      "var(--primary-teal)",   // primary teal
+      "var(--light-teal)",     // light teal
+      "var(--primary-teal)",   // primary teal
+      "var(--dark-teal)",      // dark teal
+      "var(--dark-green)",     // dark green instead of darker-teal
+      "var(--dark-teal)",      // dark teal
+      "var(--primary-teal)",   // primary teal
     ];
 
     return colors[hash % colors.length];
@@ -230,14 +234,14 @@ const VerticalIcons = ({
       sx={{
         width: { xs: "70px", sm: "100px" },
         height: "100vh",
-        backgroundColor: "#ffffff",
+        backgroundColor: "var(--bg_color)",
         boxShadow: "0 0 20px rgba(0, 0, 0, 0.07)",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         py: 3,
         position: "relative",
-        borderRight: "1px solid rgba(0, 0, 0, 0.06)",
+        borderRight: "1px solid var(--light-teal)",
         overflowY: "auto",
         overflowX: "hidden",
         WebkitOverflowScrolling: "touch",
@@ -250,11 +254,11 @@ const VerticalIcons = ({
           background: "transparent",
         },
         "&::-webkit-scrollbar-thumb": {
-          background: "rgba(0, 137, 123, 0.2)",
+          background: "var(--light-teal)",
           borderRadius: "4px",
         },
         "&::-webkit-scrollbar-thumb:hover": {
-          background: "rgba(0, 137, 123, 0.4)",
+          background: "var(--primary-teal)",
         },
       }}
     >
@@ -284,17 +288,17 @@ const VerticalIcons = ({
             sx={{
               position: "relative",
               padding: "6px 12px",
-              background: "linear-gradient(135deg, rgba(0, 137, 123, 0.08), rgba(0, 150, 136, 0.05))",
+              background: "var(--light-teal)",
               borderRadius: "8px",
-              boxShadow: "0 2px 8px rgba(0, 137, 123, 0.1)",
-              border: "1px solid rgba(0, 137, 123, 0.08)",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+              border: "1px solid var(--primary-teal)",
               "&::before": {
                 content: '""',
                 position: "absolute",
                 inset: 0,
                 borderRadius: "8px",
                 padding: "1px",
-                background: "linear-gradient(135deg, rgba(0, 137, 123, 0.2), rgba(0, 150, 136, 0.1))",
+                background: "var(--gradient-mixed)",
                 WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
                 WebkitMaskComposite: "xor",
                 maskComposite: "exclude",
@@ -304,7 +308,7 @@ const VerticalIcons = ({
             <Typography
               variant="caption"
               sx={{
-                color: "#00796B",
+                color: "var(--dark-teal)",
                 fontWeight: 600,
                 fontSize: isMobile ? "10px" : "11px",
                 letterSpacing: "0.5px",
@@ -340,14 +344,14 @@ const VerticalIcons = ({
           >
             <CategoryIndicator selected={selectedCategory === "all"} />
             <StyledCategoryIcon selected={selectedCategory === "all"}>
-              <AutoAwesomeRoundedIcon />
+              <AutoAwesomeRoundedIcon sx={{ color: "inherit" }} />
             </StyledCategoryIcon>
             <Typography
               className="category-label"
               variant="caption"
               sx={{
                 mt: 0.5,
-                color: selectedCategory === "all" ? "#00796B" : "#26A69A",
+                color: selectedCategory === "all" ? "var(--dark-teal)" : "var(--text-medium)",
                 fontWeight: selectedCategory === "all" ? 600 : 500,
                 fontSize: isMobile ? "8px" : "10px",
               }}
@@ -386,7 +390,7 @@ const VerticalIcons = ({
                   transform: "scale(0.95)",
                 },
                 "&:hover": {
-                  backgroundColor: "rgba(0, 137, 123, 0.05)",
+                  backgroundColor: "var(--light-teal)",
                 },
               }}
             >
@@ -401,7 +405,7 @@ const VerticalIcons = ({
                   touchAction: "manipulation",
                 }}
               >
-                <CategoryRoundedIcon />
+                <CategoryRoundedIcon sx={{ color: "inherit" }} />
               </StyledCategoryIcon>
               <Typography
                 className="category-label"
@@ -410,8 +414,8 @@ const VerticalIcons = ({
                   mt: 0.5,
                   color:
                     selectedCategory === category.name
-                      ? "#00796B"
-                      : "#26A69A",
+                      ? "var(--dark-teal)"
+                      : "var(--text-medium)",
                   fontWeight: selectedCategory === category.name ? 600 : 500,
                   fontSize: isMobile ? "8px" : "10px",
                   maxWidth: "90%",
@@ -435,8 +439,7 @@ const VerticalIcons = ({
           sx={{
             width: "40px",
             height: "1px",
-            background:
-              "linear-gradient(90deg, transparent, rgba(0, 137, 123, 0.2), transparent)",
+            background: "var(--gradient-teal)",
             my: 2,
           }}
         />
@@ -464,10 +467,10 @@ const VerticalIcons = ({
             }}
             sx={{
               background: filterEpdOnly
-                ? "linear-gradient(135deg, rgba(0, 121, 107, 0.08), rgba(0, 150, 136, 0.05))"
+                ? "var(--light-teal)"
                 : "transparent",
               border: filterEpdOnly
-                ? "1px solid rgba(0, 137, 123, 0.08)"
+                ? `1px solid var(--primary-teal)`
                 : "none",
               mt: 0,
             }}
@@ -477,19 +480,19 @@ const VerticalIcons = ({
               selected={filterEpdOnly}
               sx={{
                 background: filterEpdOnly
-                  ? "rgba(0, 137, 123, 0.12)"
-                  : "rgba(178, 223, 219, 0.08)",
-                color: filterEpdOnly ? "#4DB6AC" : "#26A69A",
+                  ? "var(--light-teal)"
+                  : "var(--bg_color)",
+                color: filterEpdOnly ? "var(--dark-teal)" : "var(--text-medium)",
               }}
             >
-              <TravelExploreIcon />
+              <TravelExploreIcon sx={{ color: "inherit" }} />
             </StyledCategoryIcon>
             <Typography
               className="category-label"
               variant="caption"
               sx={{
                 mt: 0.5,
-                color: filterEpdOnly ? "#00796B" : "#26A69A",
+                color: filterEpdOnly ? "var(--dark-teal)" : "var(--text-medium)",
                 fontWeight: filterEpdOnly ? 600 : 500,
                 fontSize: isMobile ? "8px" : "10px",
               }}
@@ -522,19 +525,20 @@ const VerticalIcons = ({
           top: "10px",
           left: "10px",
           zIndex: 11000,
-          backgroundColor: "white",
+          backgroundColor: "var(--bg_color)",
           padding: "12px",
           boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
           "&:hover": {
-            backgroundColor: "white",
+            backgroundColor: "var(--light-teal)",
           },
           "&:active": {
             transform: "scale(0.95)",
           },
           touchAction: "manipulation",
+          color: "var(--dark-teal)",
         }}
       >
-        <MenuRoundedIcon />
+        <MenuRoundedIcon sx={{ color: "inherit" }} />
       </IconButton>
 
       {/* Drawer for mobile view */}
@@ -555,9 +559,11 @@ const VerticalIcons = ({
             top: 0,
             left: 0,
             height: "100%",
+            background: "var(--bg_color)"
           },
           "& .MuiBackdrop-root": {
-            backgroundColor: "rgba(0, 0, 0, 0.3)",
+            backgroundColor: "var(--upload_bg)",
+            opacity: 0.7,
             zIndex: 10999,
           },
         }}
