@@ -116,7 +116,7 @@ const VerticalIcons = ({
   filterEpdOnly,
 }) => {
   const { loading, error, allProducts } = useProducts();
-  const { setSearchQuery } = useSearch();
+  const { setSearchQuery, clearSearchQuery } = useSearch();
   const [errorState, setErrorState] = useState("");
   const [topCategories, setTopCategories] = useState([]);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -190,7 +190,8 @@ const VerticalIcons = ({
     toggleSidebar();
 
     // Clear the search query when a category is selected
-    setSearchQuery("");
+    // Don't call clearSearchQuery here - it will be triggered by the effect in SearchBar
+    // that watches for changes in selectedCategory
 
     // If user clicks on a category, make sure EPD filter is turned off
     // to show all markers from both APIs
@@ -199,6 +200,22 @@ const VerticalIcons = ({
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
+  };
+
+  // Add or update the EPD icon click handler to clear search query
+  const handleEpdIconClick = () => {
+    // Toggle the EPD filter
+    setFilterEpdOnly(!filterEpdOnly);
+    
+    // Clear the search query when toggling EPD filter
+    // Don't call clearSearchQuery here - it will be triggered by the effect in SearchBar
+    // that watches for changes in filterEpdOnly
+    
+    // Force sidebar to show Products view
+    setSelectedSidebar("Products");
+    
+    // Always open sidebar when EPD filter is toggled
+    toggleSidebar();
   };
 
   // Get first letter of category name for the avatar
@@ -449,13 +466,7 @@ const VerticalIcons = ({
         >
           <CategoryButton
             selected={filterEpdOnly}
-            onClick={() => {
-              setFilterEpdOnly(!filterEpdOnly);
-              setSearchQuery("");
-              setSelectedCategory("all");
-              toggleSidebar();
-              setSelectedSidebar("Products");
-            }}
+            onClick={handleEpdIconClick}
             sx={{
               background: filterEpdOnly
                 ? "var(--light-teal)"

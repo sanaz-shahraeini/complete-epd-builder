@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
   TextField,
@@ -32,7 +32,7 @@ import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import { useSearch } from "../../useContexts/SearchContext";
 import { useProducts } from "../../useContexts/ProductsContext";
 
-const SearchBar = ({ mapRef }) => {
+const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
   const [icon, setIcon] = useState(<PublicIcon sx={{ color: "#384029" }} />);
   const [openModal, setOpenModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -52,6 +52,7 @@ const SearchBar = ({ mapRef }) => {
     searchQuery: contextSearchQuery,
     isLoading,
     markerSelected,
+    clearSearchQuery,
   } = useSearch();
 
   // Synchronize local state with context
@@ -59,6 +60,41 @@ const SearchBar = ({ mapRef }) => {
     setSearchQuery(contextSearchQuery);
     setShowResults(contextSearchQuery.length > 0);
   }, [contextSearchQuery]);
+
+  // Add a prop changes detection - this will run once when props change
+  const prevFilterEpdOnly = useRef(filterEpdOnly);
+  const prevSelectedCategory = useRef(selectedCategory);
+  const isInitialRender = useRef(true);
+  
+  useEffect(() => {
+    // Skip the first render to prevent clearing on component mount
+    if (isInitialRender.current) {
+      isInitialRender.current = false;
+      // Update refs with initial values
+      prevFilterEpdOnly.current = filterEpdOnly;
+      prevSelectedCategory.current = selectedCategory;
+      return;
+    }
+    
+    // Only clear search if these props actually changed from previous values
+    if (prevFilterEpdOnly.current !== filterEpdOnly || 
+        prevSelectedCategory.current !== selectedCategory) {
+      console.log('Filter change detected. Clearing search.', { 
+        filterEpdOnly, 
+        selectedCategory,
+        prevFilterEpdOnly: prevFilterEpdOnly.current,
+        prevSelectedCategory: prevSelectedCategory.current
+      });
+      
+      clearSearchQuery();
+      setSearchQuery(""); // Ensure local state is also cleared
+      setShowResults(false);
+      
+      // Update refs with current values
+      prevFilterEpdOnly.current = filterEpdOnly;
+      prevSelectedCategory.current = selectedCategory;
+    }
+  }, [filterEpdOnly, selectedCategory, clearSearchQuery]);
 
   const filteredProducts = searchResults || [];
 

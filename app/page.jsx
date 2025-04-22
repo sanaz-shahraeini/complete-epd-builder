@@ -173,7 +173,7 @@ const IndexPage = () => {
                 width: "100%"
               }}
             >
-              <SearchBar mapRef={mapRef} />
+              <SearchBar mapRef={mapRef} filterEpdOnly={filterEpdOnly} selectedCategory={selectedCategory} />
             </Box>
 
             {/* Main Content */}

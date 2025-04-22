@@ -18,6 +18,7 @@ import Sidebar from "./Sidebar";
 import FilteredInfoSection from "./FilteredInfoSection";
 import ImageIcon from "@mui/icons-material/Image";
 import ViewInArIcon from "@mui/icons-material/ViewInAr";
+import { useSearch } from "../../useContexts/SearchContext";
 
 const MainSidebar = ({
   selected,
@@ -42,6 +43,7 @@ const MainSidebar = ({
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPriority, setSelectedPriority] = useState("Top products");
   const sidebarRef = useRef(null);
+  const { setSearchQuery, clearSearchQuery } = useSearch();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -166,15 +168,22 @@ const MainSidebar = ({
   const handlePriorityChange = (event) => {
     event.stopPropagation();
     const newPriority = event.target.value;
-    setSelectedPriority(newPriority);
-
-    // Reset any filters when changing priority
-    if (newPriority === "Top products" && filterEpdOnly) {
-      setFilterEpdOnly(false);
+    
+    // Only update if actually changing
+    if (newPriority !== selectedPriority) {
+      setSelectedPriority(newPriority);
+  
+      // Reset any filters when changing priority
+      if (newPriority === "Top products" && filterEpdOnly) {
+        setFilterEpdOnly(false);
+      }
+  
+      // Show loading state while fetching new products
+      setIsLoading(true);
+  
+      // Clear search query when priority changes
+      clearSearchQuery();
     }
-
-    // Show loading state while fetching new products
-    setIsLoading(true);
   };
 
   // Remove a specific filter

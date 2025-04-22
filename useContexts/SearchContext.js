@@ -12,6 +12,15 @@ export function SearchProvider({ children }) {
   const [markerSelected, setMarkerSelected] = useState(false);
   const { regularProducts, allProducts } = useProducts();
 
+  // Add a dedicated function to clear search query
+  const clearSearchQuery = () => {
+    // Only update state if there's something to clear
+    if (searchQuery !== "" || searchResults.length > 0) {
+      setSearchQuery("");
+      setSearchResults([]);
+    }
+  };
+
   useEffect(() => {
     if (!searchQuery.trim()) {
       setSearchResults([]);
@@ -150,6 +159,7 @@ export function SearchProvider({ children }) {
     isLoading,
     markerSelected,
     setMarkerSelected,
+    clearSearchQuery,
   };
 
   return (
