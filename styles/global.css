@@ -4,7 +4,7 @@
 @tailwind utilities;
 
 /* Import other style files */
-@import "./css/colors.css"; */
+@import "./css/colors.css";
 
 /* Dialog styling for SignInForm component
 .SignInDialog {
