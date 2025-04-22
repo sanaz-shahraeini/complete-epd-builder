@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   AppBar,
   Toolbar,
@@ -50,20 +50,71 @@ const Header = () => {
     setSelectedLanguage(event.target.value);
   };
 
-  // Function to open the sidebar by simulating a click on a category button in VerticalIcons
+  // Function to dispatch a global event to show all markers and trigger sidebar
   const openSidebar = () => {
-    // Find the first category button and click it
-    const categoryButtons = document.querySelectorAll(".category-button");
-    if (categoryButtons && categoryButtons.length > 0) {
-      categoryButtons[0].click();
-    } else {
-      // Fallback - find any button in VerticalIcons
-      const verticalIconButtons = document.querySelectorAll("[data-category]");
-      if (verticalIconButtons && verticalIconButtons.length > 0) {
-        verticalIconButtons[0].click();
+    // Create and dispatch a custom event that the app is already listening for
+    const event = new CustomEvent('showAllMarkers', { 
+      detail: { source: 'headerMenu' } 
+    });
+    window.dispatchEvent(event);
+    
+    // Add a small delay to ensure the event is processed before we try to click
+    setTimeout(() => {
+      // Try several methods to find and click a sidebar trigger element
+      
+      // Method 1: Find any styled category button (most reliable)
+      const allButtons = document.querySelectorAll('[class*="CategoryButton"]');
+      if (allButtons && allButtons.length > 0) {
+        console.log('Found CategoryButton, clicking...');
+        allButtons[0].click();
+        return;
       }
-    }
+      
+      // Method 2: Try to find the "All" categories button 
+      const allCategoryButtons = Array.from(document.querySelectorAll('button, [role="button"]'))
+        .filter(el => el.textContent.includes('All'));
+      if (allCategoryButtons && allCategoryButtons.length > 0) {
+        console.log('Found All button, clicking...');
+        allCategoryButtons[0].click();
+        return;
+      }
+      
+      // Method 3: Try to find buttons in the VerticalIcons component
+      const verticalIconsContainer = document.querySelector('[class*="VerticalIcons"]');
+      if (verticalIconsContainer) {
+        const buttons = verticalIconsContainer.querySelectorAll('button, [role="button"]');
+        if (buttons && buttons.length > 0) {
+          console.log('Found VerticalIcons button, clicking...');
+          buttons[0].click();
+          return;
+        }
+      }
+
+      // Method 4: Brute force approach - try to click the first div that might be a button in the sidebar
+      const sidebarButtons = document.querySelectorAll('[class*="sidebar"] div[role="button"]');
+      if (sidebarButtons && sidebarButtons.length > 0) {
+        console.log('Found sidebar button, clicking...');
+        sidebarButtons[0].click();
+        return;
+      }
+      
+      console.log('Could not find any suitable button to click');
+    }, 100);
   };
+
+  // Add a keyboard shortcut for easier testing
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ctrl+Shift+O to open sidebar (for testing)
+      if (e.ctrlKey && e.shiftKey && e.key === 'O') {
+        console.log('Keyboard shortcut pressed, opening sidebar');
+        openSidebar();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
   
   return (
     <AppBar
