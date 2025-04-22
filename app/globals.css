@@ -5,11 +5,32 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --font-size-base: 16px;
+  --font-size-small: 14px;
+  --font-size-smaller: 13px;
 }
 
 html {
-  font-size: 16px; /* Set base font size explicitly */
-  -webkit-text-size-adjust: 100%; /* Prevent automatic font size adjustment in browsers */
+  font-size: 16px !important; /* Set base font size explicitly */
+  -webkit-text-size-adjust: 100% !important; /* Prevent automatic font size adjustment in browsers */
+  text-size-adjust: 100% !important; /* Standard property */
+}
+
+/* Override Material UI typography at its root */
+.MuiTypography-root {
+  font-size: var(--font-size-base) !important;
+}
+
+.MuiTypography-h6 {
+  font-size: var(--font-size-base) !important;
+}
+
+.MuiTypography-body1 {
+  font-size: var(--font-size-small) !important;
+}
+
+.MuiTypography-body2 {
+  font-size: var(--font-size-smaller) !important;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,7 +43,8 @@ html {
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: 'Poppins', Arial, Helvetica, sans-serif; /* Explicitly set font family */
+  font-family: 'Poppins', Arial, Helvetica, sans-serif !important; /* Explicitly set font family */
+  font-size: var(--font-size-base) !important;
 }
 
 @layer utilities {

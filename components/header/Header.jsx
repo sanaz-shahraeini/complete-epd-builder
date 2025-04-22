@@ -79,14 +79,16 @@ const Header = () => {
           flex: '0 0 auto'
         }}>
           <Typography
-            variant="h6"
+            component="div"
+            className="header-title"
             sx={{
               fontWeight: 600,
               color: 'var(--dark-teal)',
               letterSpacing: "0.5px",
               display: "flex",
               alignItems: "center",
-              fontSize: "1rem",
+              fontSize: "16px !important",
+              lineHeight: 1.2,
             }}
           >
             <Box
@@ -102,11 +104,19 @@ const Header = () => {
                 mr: 1.5,
               }}
             >
-              <Typography sx={{ color: "white", fontWeight: 700, fontSize: "14px" }}>
+              <Typography 
+                component="span"
+                sx={{ 
+                  color: "white", 
+                  fontWeight: 700, 
+                  fontSize: "13px !important",
+                  lineHeight: 1
+                }}
+              >
                 EPD
               </Typography>
             </Box>
-            Map Platform
+            <span style={{ whiteSpace: 'nowrap' }}>Map Platform</span>
           </Typography>
         </Box>
 

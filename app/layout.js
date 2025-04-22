@@ -14,6 +14,25 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+        <style dangerouslySetInnerHTML={{ __html: `
+          html {
+            font-size: 16px !important;
+          }
+          
+          .MuiTypography-h6 {
+            font-size: 1rem !important;
+          }
+          
+          .header-title {
+            font-size: 16px !important;
+          }
+          
+          @media screen and (min-width: 0px) {
+            :root {
+              --mui-typography-h6-fontSize: 16px;
+            }
+          }
+        `}} />
       </head>
       <body>
         <AppRouterCacheProvider options={{ enableCssLayer: false }}>

@@ -25,21 +25,47 @@ const theme = createTheme({
   typography: {
     fontFamily: poppins.style.fontFamily,
     h6: {
-      fontSize: '1rem',
+      fontSize: '16px !important',
       fontWeight: 600,
+      lineHeight: 1.2,
+    },
+    h5: {
+      fontSize: '18px !important',
+      lineHeight: 1.3,
     },
     body1: {
-      fontSize: '0.875rem',
+      fontSize: '14px !important',
+      lineHeight: 1.5,
     },
     body2: {
-      fontSize: '0.8125rem',
+      fontSize: '13px !important',
+      lineHeight: 1.5,
     },
     button: {
       textTransform: 'none',
-      fontSize: '0.875rem',
+      fontSize: '14px !important',
+      lineHeight: 1.5,
+    },
+    subtitle1: {
+      fontSize: '15px !important',
+      lineHeight: 1.4,
+    },
+    subtitle2: {
+      fontSize: '14px !important',
+      lineHeight: 1.4,
     },
   },
   components: {
+    MuiTypography: {
+      styleOverrides: {
+        root: {
+          fontFamily: poppins.style.fontFamily,
+        },
+        h6: {
+          fontSize: '16px !important',
+        },
+      },
+    },
     MuiAlert: {
       styleOverrides: {
         root: ({ ownerState }) => ({
