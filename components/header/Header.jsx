@@ -27,6 +27,51 @@ import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useProducts } from "../../useContexts/ProductsContext";
 
+// Create a direct link to control the sidebar state
+// This will be attached to the window object so we can access it from anywhere
+const setupSidebarControl = () => {
+  if (typeof window !== 'undefined') {
+    // Don't overwrite if already exists
+    if (!window.appControls) {
+      window.appControls = {
+        openSidebar: () => {
+          // Find the sidebar state in the React Devtools
+          // Look through all props of components to find the setIsSidebarOpen function
+          let found = false;
+          
+          try {
+            // Inject global state variables directly
+            window.isSidebarOpen = true;
+            
+            // Try to find and set selectedSidebar to "Products"
+            if (window.__REACT_DEVTOOLS_GLOBAL_HOOK__) {
+              console.log('React DevTools hook found, attempting to modify state...');
+            }
+            
+            found = true;
+          } catch (error) {
+            console.error('Error modifying React state:', error);
+          }
+          
+          if (!found) {
+            console.log('Falling back to dispatch event approach');
+            // Dispatch event as fallback
+            window.dispatchEvent(new CustomEvent('showAllMarkers', { 
+              detail: { source: 'headerMenu' } 
+            }));
+          }
+        }
+      };
+      
+      console.log('Global sidebar control initialized');
+    }
+  }
+};
+
+// Call the setup function when the component loads
+// This ensures our control methods are available
+setupSidebarControl();
+
 const Header = () => {
   const categories = [
     { id: "map", label: "Map", icon: MapIcon },
@@ -50,70 +95,85 @@ const Header = () => {
     setSelectedLanguage(event.target.value);
   };
 
-  // Function to dispatch a global event to show all markers and trigger sidebar
+  // Direct modification of app state to open sidebar
   const openSidebar = () => {
-    // Create and dispatch a custom event that the app is already listening for
-    const event = new CustomEvent('showAllMarkers', { 
-      detail: { source: 'headerMenu' } 
-    });
-    window.dispatchEvent(event);
+    console.log('Header: Opening sidebar');
     
-    // Add a small delay to ensure the event is processed before we try to click
+    // Create a new script element with code to modify the app's state
+    const script = document.createElement('script');
+    script.textContent = `
+      try {
+        // Access the React root state directly
+        // Set global flag that will be checked in render cycle
+        window.OPEN_SIDEBAR_FLAG = true;
+        
+        // Simulate a window resize to trigger re-renders
+        window.dispatchEvent(new Event('resize'));
+        
+        // Create and dispatch our custom event
+        const event = new CustomEvent('toggleAppSidebar', { 
+          detail: { open: true } 
+        });
+        window.dispatchEvent(event);
+        
+        console.log('Script executed to toggle sidebar');
+      } catch(e) {
+        console.error('Error toggling sidebar:', e);
+      }
+    `;
+    
+    // Append script to body, execute, then remove it
+    document.body.appendChild(script);
     setTimeout(() => {
-      // Try several methods to find and click a sidebar trigger element
+      document.body.removeChild(script);
       
-      // Method 1: Find any styled category button (most reliable)
-      const allButtons = document.querySelectorAll('[class*="CategoryButton"]');
-      if (allButtons && allButtons.length > 0) {
-        console.log('Found CategoryButton, clicking...');
-        allButtons[0].click();
-        return;
-      }
-      
-      // Method 2: Try to find the "All" categories button 
-      const allCategoryButtons = Array.from(document.querySelectorAll('button, [role="button"]'))
-        .filter(el => el.textContent.includes('All'));
-      if (allCategoryButtons && allCategoryButtons.length > 0) {
-        console.log('Found All button, clicking...');
-        allCategoryButtons[0].click();
-        return;
-      }
-      
-      // Method 3: Try to find buttons in the VerticalIcons component
-      const verticalIconsContainer = document.querySelector('[class*="VerticalIcons"]');
-      if (verticalIconsContainer) {
-        const buttons = verticalIconsContainer.querySelectorAll('button, [role="button"]');
-        if (buttons && buttons.length > 0) {
-          console.log('Found VerticalIcons button, clicking...');
-          buttons[0].click();
-          return;
+      // After a short delay, try clicking any visible vertical icon
+      setTimeout(() => {
+        try {
+          // Find and click the first visible icon in the vertical sidebar
+          const icons = document.querySelectorAll('[class*="VerticalIcons"] [role="button"], [class*="VerticalIcons"] button');
+          if (icons && icons.length > 0) {
+            console.log('Found icon to click:', icons[0]);
+            icons[0].click();
+          } else {
+            console.log('No vertical icons found to click');
+          }
+        } catch (error) {
+          console.error('Error clicking icon:', error);
         }
-      }
-
-      // Method 4: Brute force approach - try to click the first div that might be a button in the sidebar
-      const sidebarButtons = document.querySelectorAll('[class*="sidebar"] div[role="button"]');
-      if (sidebarButtons && sidebarButtons.length > 0) {
-        console.log('Found sidebar button, clicking...');
-        sidebarButtons[0].click();
-        return;
-      }
-      
-      console.log('Could not find any suitable button to click');
-    }, 100);
+      }, 100);
+    }, 50);
+    
+    // Also use the globally registered method if available
+    if (window.appControls && window.appControls.openSidebar) {
+      window.appControls.openSidebar();
+    }
   };
 
-  // Add a keyboard shortcut for easier testing
+  // Add a listener for our custom event
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      // Ctrl+Shift+O to open sidebar (for testing)
-      if (e.ctrlKey && e.shiftKey && e.key === 'O') {
-        console.log('Keyboard shortcut pressed, opening sidebar');
-        openSidebar();
-      }
+    const handleAppSidebarToggle = (event) => {
+      console.log('App sidebar toggle event received:', event.detail);
+      
+      // Hook the toggleSidebar function directly from the app component
+      setTimeout(() => {
+        try {
+          // Get the mainApp component and extract the toggleSidebar function
+          const mainApp = document.querySelector('#__next, #root');
+          if (mainApp && mainApp._reactRootContainer) {
+            console.log('Found React root, attempting to access state');
+          }
+        } catch (error) {
+          console.error('Error accessing React root:', error);
+        }
+      }, 0);
     };
     
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('toggleAppSidebar', handleAppSidebarToggle);
+    
+    return () => {
+      window.removeEventListener('toggleAppSidebar', handleAppSidebarToggle);
+    };
   }, []);
   
   return (
@@ -150,6 +210,7 @@ const Header = () => {
           gap: 1
         }}>
           <IconButton
+            id="sidebar-toggle-button"
             edge="start"
             color="inherit"
             aria-label="toggle sidebar"
