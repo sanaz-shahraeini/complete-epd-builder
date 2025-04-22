@@ -144,10 +144,10 @@ const Header = () => {
                   onClick={() => setSelectedCategory(category.id)}
                   sx={{
                     color: isSelected ? 'var(--dark-teal)' : 'var(--text-medium)',
-                    fontWeight: 500,
+                    fontWeight: 400,
                     px: 2.5,
                     py: 1.5,
-                    fontSize: "0.875rem",
+                    fontSize: "0.8rem",
                     backgroundColor: "transparent",
                     borderRadius: "4px",
                     display: "flex",
