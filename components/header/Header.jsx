@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   AppBar,
   Toolbar,
@@ -15,6 +15,12 @@ import {
   Select,
   MenuItem,
   Badge,
+  Drawer,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Divider,
 } from "@mui/material";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
@@ -25,52 +31,9 @@ import ApartmentIcon from "@mui/icons-material/Apartment";
 import DevicesIcon from "@mui/icons-material/Devices";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import MenuIcon from "@mui/icons-material/Menu";
+import CloseIcon from "@mui/icons-material/Close";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { useProducts } from "../../useContexts/ProductsContext";
-
-// Create a direct link to control the sidebar state
-// This will be attached to the window object so we can access it from anywhere
-const setupSidebarControl = () => {
-  if (typeof window !== 'undefined') {
-    // Don't overwrite if already exists
-    if (!window.appControls) {
-      window.appControls = {
-        openSidebar: () => {
-          // Find the sidebar state in the React Devtools
-          // Look through all props of components to find the setIsSidebarOpen function
-          let found = false;
-          
-          try {
-            // Inject global state variables directly
-            window.isSidebarOpen = true;
-            
-            // Try to find and set selectedSidebar to "Products"
-            if (window.__REACT_DEVTOOLS_GLOBAL_HOOK__) {
-              console.log('React DevTools hook found, attempting to modify state...');
-            }
-            
-            found = true;
-          } catch (error) {
-            console.error('Error modifying React state:', error);
-          }
-          
-          if (!found) {
-            console.log('Falling back to dispatch event approach');
-            // Dispatch event as fallback
-            window.dispatchEvent(new CustomEvent('showAllMarkers', { 
-              detail: { source: 'headerMenu' } 
-            }));
-          }
-        }
-      };
-      
-      console.log('Global sidebar control initialized');
-    }
-  }
-};
-
-// Call the setup function when the component loads
-// This ensures our control methods are available
-setupSidebarControl();
 
 const Header = () => {
   const categories = [
@@ -90,316 +53,398 @@ const Header = () => {
   const isLargeScreen = useMediaQuery(theme.breakpoints.up("lg"));
   const [selectedLanguage, setSelectedLanguage] = useState("en");
   const [selectedCategory, setSelectedCategory] = useState(categories[2].id);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
   const handleLanguageChange = (event) => {
     setSelectedLanguage(event.target.value);
   };
 
-  // Direct modification of app state to open sidebar
-  const openSidebar = () => {
-    console.log('Header: Opening sidebar');
-    
-    // Create a new script element with code to modify the app's state
-    const script = document.createElement('script');
-    script.textContent = `
-      try {
-        // Access the React root state directly
-        // Set global flag that will be checked in render cycle
-        window.OPEN_SIDEBAR_FLAG = true;
-        
-        // Simulate a window resize to trigger re-renders
-        window.dispatchEvent(new Event('resize'));
-        
-        // Create and dispatch our custom event
-        const event = new CustomEvent('toggleAppSidebar', { 
-          detail: { open: true } 
-        });
-        window.dispatchEvent(event);
-        
-        console.log('Script executed to toggle sidebar');
-      } catch(e) {
-        console.error('Error toggling sidebar:', e);
-      }
-    `;
-    
-    // Append script to body, execute, then remove it
-    document.body.appendChild(script);
-    setTimeout(() => {
-      document.body.removeChild(script);
-      
-      // After a short delay, try clicking any visible vertical icon
-      setTimeout(() => {
-        try {
-          // Find and click the first visible icon in the vertical sidebar
-          const icons = document.querySelectorAll('[class*="VerticalIcons"] [role="button"], [class*="VerticalIcons"] button');
-          if (icons && icons.length > 0) {
-            console.log('Found icon to click:', icons[0]);
-            icons[0].click();
-          } else {
-            console.log('No vertical icons found to click');
-          }
-        } catch (error) {
-          console.error('Error clicking icon:', error);
-        }
-      }, 100);
-    }, 50);
-    
-    // Also use the globally registered method if available
-    if (window.appControls && window.appControls.openSidebar) {
-      window.appControls.openSidebar();
-    }
+  const toggleMobileDrawer = () => {
+    setMobileDrawerOpen(!mobileDrawerOpen);
   };
 
-  // Add a listener for our custom event
-  useEffect(() => {
-    const handleAppSidebarToggle = (event) => {
-      console.log('App sidebar toggle event received:', event.detail);
-      
-      // Hook the toggleSidebar function directly from the app component
-      setTimeout(() => {
-        try {
-          // Get the mainApp component and extract the toggleSidebar function
-          const mainApp = document.querySelector('#__next, #root');
-          if (mainApp && mainApp._reactRootContainer) {
-            console.log('Found React root, attempting to access state');
-          }
-        } catch (error) {
-          console.error('Error accessing React root:', error);
-        }
-      }, 0);
-    };
-    
-    window.addEventListener('toggleAppSidebar', handleAppSidebarToggle);
-    
-    return () => {
-      window.removeEventListener('toggleAppSidebar', handleAppSidebarToggle);
-    };
-  }, []);
-  
-  return (
-    <AppBar
-      position="fixed"
-      elevation={0}
+  const handleCategorySelect = (category) => {
+    setSelectedCategory(category);
+    setMobileDrawerOpen(false);
+  };
+
+  // Custom mobile drawer
+  const mobileDrawer = (
+    <Drawer
+      anchor="left"
+      open={mobileDrawerOpen}
+      onClose={toggleMobileDrawer}
       sx={{
-        backgroundColor: 'var(--bg_color)',
-        backdropFilter: "blur(10px)",
-        borderBottom: '1px solid var(--upload_bg)',
-        color: 'var(--text-dark)',
-        zIndex: 1100,
-        height: "64px",
+        "& .MuiDrawer-paper": {
+          width: "280px",
+          backgroundColor: "var(--bg_color)",
+          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
+          borderRight: "1px solid var(--upload_bg)",
+        },
       }}
     >
-      <Toolbar 
-        sx={{ 
-          justifyContent: "space-between", 
-          minHeight: "64px",
-          px: { xs: 1, sm: 2, md: 4 },
-          position: 'relative',
-          gap: { xs: 1, md: 2, lg: 6 },
-          maxWidth: '1800px',
-          margin: '0 auto',
-          width: '100%'
-        }}
-      >
-        {/* Left side - Logo/Brand and menu button */}
-        <Box sx={{ 
-          display: "flex", 
-          alignItems: "center", 
-          minWidth: { xs: 'auto', md: '200px' },
-          flex: '0 0 auto',
-          gap: 1
-        }}>
-          <IconButton
-            id="sidebar-toggle-button"
-            edge="start"
-            color="inherit"
-            aria-label="toggle sidebar"
-            onClick={openSidebar}
-            sx={{ 
-              mr: 1, 
-              display: { lg: 'none' } 
-            }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography
-            component="div"
-            className="header-title"
+      <Box sx={{ p: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Box
+            component="span"
             sx={{
-              fontWeight: 600,
-              color: 'var(--dark-teal)',
-              letterSpacing: "0.5px",
+              width: 32,
+              height: 24,
+              background: 'var(--gradient-teal)',
+              borderRadius: "6px",
               display: "flex",
               alignItems: "center",
-              fontSize: "16px !important",
-              lineHeight: 1.2,
+              justifyContent: "center",
             }}
           >
-            <Box
+            <Typography 
               component="span"
-              sx={{
-                width: 38,
-                height: 28,
-                background: 'var(--gradient-teal)',
-                borderRadius: "8px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                mr: 1.5,
+              sx={{ 
+                color: "white", 
+                fontWeight: 700, 
+                fontSize: "12px !important",
+                lineHeight: 1
               }}
             >
-              <Typography 
-                component="span"
-                sx={{ 
-                  color: "white", 
-                  fontWeight: 700, 
-                  fontSize: "13px !important",
-                  lineHeight: 1
-                }}
-              >
-                EPD
-              </Typography>
-            </Box>
-            <span style={{ whiteSpace: 'nowrap' }}>Map Platform</span>
+              EPD
+            </Typography>
+          </Box>
+          <Typography 
+            sx={{ 
+              fontWeight: 600, 
+              color: 'var(--dark-teal)', 
+              fontSize: '16px' 
+            }}
+          >
+            Map Platform
           </Typography>
         </Box>
-
-        {/* Center - Navigation (large screens only) */}
-        {isLargeScreen && (
-          <Box
-            sx={{
-              position: 'absolute',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              display: "flex",
-              gap: { md: '12px', lg: '24px' },
-              alignItems: 'center',
-              justifyContent: 'center',
-              flex: '1 1 auto',
-              maxWidth: { md: '800px', lg: '1000px' },
-              width: '100%',
+        <IconButton
+          onClick={toggleMobileDrawer}
+          sx={{ color: 'var(--text-medium)' }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </Box>
+      
+      <Divider sx={{ borderColor: 'var(--upload_bg)' }} />
+      
+      {/* Category list */}
+      <Box sx={{ p: 2 }}>
+        <Typography sx={{ fontWeight: 600, color: 'var(--text-medium)', fontSize: '12px', mb: 1, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          Categories
+        </Typography>
+        
+        <List sx={{ p: 0 }}>
+          {categories.map((category) => {
+            const Icon = category.icon;
+            const isSelected = selectedCategory === category.id;
+            
+            return (
+              <ListItem 
+                button
+                key={category.id}
+                onClick={() => handleCategorySelect(category.id)}
+                sx={{ 
+                  borderRadius: '8px',
+                  mb: 0.5,
+                  backgroundColor: isSelected ? 'var(--light-teal)' : 'transparent',
+                  '&:hover': { backgroundColor: 'var(--light-teal)' }
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 40 }}>
+                  <Icon sx={{ color: isSelected ? 'var(--dark-teal)' : 'var(--text-medium)' }} />
+                </ListItemIcon>
+                <ListItemText 
+                  primary={category.label} 
+                  primaryTypographyProps={{ 
+                    fontWeight: isSelected ? 600 : 500, 
+                    color: isSelected ? 'var(--dark-teal)' : 'var(--text-dark)',
+                    fontSize: '14px'
+                  }} 
+                />
+              </ListItem>
+            );
+          })}
+        </List>
+      </Box>
+      
+      <Divider sx={{ borderColor: 'var(--upload_bg)' }} />
+      
+      {/* Options */}
+      <List sx={{ p: 2 }}>
+        <ListItem 
+          button
+          sx={{ 
+            borderRadius: '8px',
+            mb: 0.5,
+            '&:hover': { backgroundColor: 'var(--light-teal)' }
+          }}
+        >
+          <ListItemIcon sx={{ minWidth: 40 }}>
+            <AccountCircleIcon sx={{ color: 'var(--text-medium)' }} />
+          </ListItemIcon>
+          <ListItemText 
+            primary="My Account" 
+            primaryTypographyProps={{ 
+              fontWeight: 500, 
+              color: 'var(--text-dark)',
+              fontSize: '14px'
             }}
-          >
-            {categories.map((category) => {
-              const Icon = category.icon;
-              const isSelected = selectedCategory === category.id;
-              return (
-                <Button
-                  key={category.id}
-                  size="small"
-                  onClick={() => setSelectedCategory(category.id)}
-                  sx={{
-                    color: isSelected ? 'var(--dark-teal)' : 'var(--text-medium)',
-                    fontWeight: 500,
-                    px: { md: 2, lg: 3 },
-                    py: 1.5,
-                    fontSize: { md: "0.875rem" },
-                    backgroundColor: "transparent",
-                    borderRadius: "4px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: { md: "8px" },
-                    textTransform: 'none',
-                    minWidth: 'auto',
-                    width: 'auto',
-                    justifyContent: 'center',
-                    position: 'relative',
-                    whiteSpace: 'nowrap',
-                    "&::after": isSelected ? {
-                      content: '""',
-                      position: 'absolute',
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      height: '2px',
-                      backgroundColor: 'var(--primary-teal)',
-                      borderRadius: '2px'
-                    } : {},
-                    "&:hover": {
-                      backgroundColor: 'var(--light-teal)',
-                    },
-                  }}
-                >
-                  <Icon
-                    sx={{
-                      fontSize: "20px",
-                      color: isSelected ? 'var(--dark-teal)' : 'var(--text-medium)',
-                    }}
-                  />
-                  {category.label}
-                </Button>
-              );
-            })}
-          </Box>
-        )}
-
-        {/* For tablet screens - Simplified nav */}
-        {!isLargeScreen && !isMobile && (
+          />
+        </ListItem>
+        
+        <ListItem 
+          button
+          sx={{ 
+            borderRadius: '8px',
+            mb: 0.5,
+            '&:hover': { backgroundColor: 'var(--light-teal)' }
+          }}
+        >
+          <ListItemIcon sx={{ minWidth: 40 }}>
+            <SearchIcon sx={{ color: 'var(--text-medium)' }} />
+          </ListItemIcon>
+          <ListItemText 
+            primary="Search" 
+            primaryTypographyProps={{ 
+              fontWeight: 500, 
+              color: 'var(--text-dark)',
+              fontSize: '14px'
+            }}
+          />
+        </ListItem>
+      </List>
+      
+      <Box sx={{ p: 2, mt: 'auto' }}>
+        <Button 
+          variant="outlined"
+          fullWidth
+          sx={{
+            borderColor: 'var(--light-teal)',
+            color: 'var(--dark-teal)',
+            textTransform: 'none',
+            '&:hover': {
+              borderColor: 'var(--primary-teal)',
+              backgroundColor: 'var(--light-teal)'
+            }
+          }}
+        >
+          Language: {selectedLanguage === 'en' ? 'English' : selectedLanguage === 'de' ? 'Deutsch' : 'Français'}
+        </Button>
+      </Box>
+    </Drawer>
+  );
+  
+  return (
+    <>
+      {mobileDrawer}
+      <AppBar
+        position="fixed"
+        elevation={0}
+        sx={{
+          backgroundColor: 'var(--bg_color)',
+          backdropFilter: "blur(10px)",
+          borderBottom: '1px solid var(--upload_bg)',
+          color: 'var(--text-dark)',
+          zIndex: 1100,
+          height: "64px",
+        }}
+      >
+        <Toolbar 
+          sx={{ 
+            justifyContent: "space-between", 
+            minHeight: "64px",
+            px: { xs: 1, sm: 2, md: 4 },
+            position: 'relative',
+            gap: { xs: 1, md: 2, lg: 6 },
+            maxWidth: '1800px',
+            margin: '0 auto',
+            width: '100%'
+          }}
+        >
+          {/* Left side - Logo/Brand and menu button */}
           <Box sx={{ 
             display: "flex", 
-            alignItems: "center",
-            justifyContent: "center",
-            flex: '1 1 auto',
+            alignItems: "center", 
+            minWidth: { xs: 'auto', md: '200px' },
+            flex: '0 0 auto',
+            gap: 1
           }}>
-            <Button
-              size="small"
-              variant={selectedCategory === "map" ? "contained" : "text"}
-              onClick={() => setSelectedCategory("map")}
-              sx={{
-                mr: 1,
-                color: selectedCategory === "map" ? '#fff' : 'var(--text-medium)',
-                backgroundColor: selectedCategory === "map" ? 'var(--primary-teal)' : 'transparent',
-                '&:hover': {
-                  backgroundColor: selectedCategory === "map" ? 'var(--dark-teal)' : 'var(--light-teal)',
-                }
-              }}
-            >
-              <MapIcon sx={{ fontSize: 20, mr: 0.5 }} />
-              Map
-            </Button>
-            <Button
-              size="small"
-              variant={selectedCategory !== "map" ? "contained" : "text"}
-              onClick={openSidebar}
-              sx={{
-                color: selectedCategory !== "map" ? '#fff' : 'var(--text-medium)',
-                backgroundColor: selectedCategory !== "map" ? 'var(--primary-teal)' : 'transparent',
-                '&:hover': {
-                  backgroundColor: selectedCategory !== "map" ? 'var(--dark-teal)' : 'var(--light-teal)',
-                }
-              }}
-            >
-              Products
-            </Button>
-          </Box>
-        )}
-
-        {/* Right side - Actions */}
-        <Box sx={{ 
-          display: "flex", 
-          alignItems: "center", 
-          minWidth: { xs: 'auto', md: '200px' }, 
-          justifyContent: 'flex-end',
-          gap: { xs: 1, sm: 1.5, md: 2 },
-          flex: '0 0 auto'
-        }}>
-          {!loading && !isMobile && (
             <IconButton
-              size="small"
-              sx={{
-                backgroundColor: 'var(--upload_bg)',
-                "&:hover": { 
-                  backgroundColor: 'var(--bg_color)',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
-                },
+              edge="start"
+              color="inherit"
+              aria-label="open drawer"
+              onClick={toggleMobileDrawer}
+              sx={{ 
+                mr: 1, 
+                display: { lg: 'none' } 
               }}
             >
-              <SearchIcon fontSize="small" sx={{ color: 'var(--text-medium)' }} />
+              <MenuIcon />
             </IconButton>
+            <Typography
+              component="div"
+              className="header-title"
+              sx={{
+                fontWeight: 600,
+                color: 'var(--dark-teal)',
+                letterSpacing: "0.5px",
+                display: "flex",
+                alignItems: "center",
+                fontSize: "16px !important",
+                lineHeight: 1.2,
+              }}
+            >
+              <Box
+                component="span"
+                sx={{
+                  width: 38,
+                  height: 28,
+                  background: 'var(--gradient-teal)',
+                  borderRadius: "8px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  mr: 1.5,
+                }}
+              >
+                <Typography 
+                  component="span"
+                  sx={{ 
+                    color: "white", 
+                    fontWeight: 700, 
+                    fontSize: "13px !important",
+                    lineHeight: 1
+                  }}
+                >
+                  EPD
+                </Typography>
+              </Box>
+              <span style={{ whiteSpace: 'nowrap' }}>Map Platform</span>
+            </Typography>
+          </Box>
+
+          {/* Center - Navigation (large screens only) */}
+          {isLargeScreen && (
+            <Box
+              sx={{
+                position: 'absolute',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                display: "flex",
+                gap: { md: '12px', lg: '24px' },
+                alignItems: 'center',
+                justifyContent: 'center',
+                flex: '1 1 auto',
+                maxWidth: { md: '800px', lg: '1000px' },
+                width: '100%',
+              }}
+            >
+              {categories.map((category) => {
+                const Icon = category.icon;
+                const isSelected = selectedCategory === category.id;
+                return (
+                  <Button
+                    key={category.id}
+                    size="small"
+                    onClick={() => setSelectedCategory(category.id)}
+                    sx={{
+                      color: isSelected ? 'var(--dark-teal)' : 'var(--text-medium)',
+                      fontWeight: 500,
+                      px: { md: 2, lg: 3 },
+                      py: 1.5,
+                      fontSize: { md: "0.875rem" },
+                      backgroundColor: "transparent",
+                      borderRadius: "4px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: { md: "8px" },
+                      textTransform: 'none',
+                      minWidth: 'auto',
+                      width: 'auto',
+                      justifyContent: 'center',
+                      position: 'relative',
+                      whiteSpace: 'nowrap',
+                      "&::after": isSelected ? {
+                        content: '""',
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        height: '2px',
+                        backgroundColor: 'var(--primary-teal)',
+                        borderRadius: '2px'
+                      } : {},
+                      "&:hover": {
+                        backgroundColor: 'var(--light-teal)',
+                      },
+                    }}
+                  >
+                    <Icon
+                      sx={{
+                        fontSize: "20px",
+                        color: isSelected ? 'var(--dark-teal)' : 'var(--text-medium)',
+                      }}
+                    />
+                    {category.label}
+                  </Button>
+                );
+              })}
+            </Box>
           )}
 
-          {!isMobile && (
-            <Tooltip title="Help">
+          {/* For tablet screens - Simplified nav */}
+          {!isLargeScreen && !isMobile && (
+            <Box sx={{ 
+              display: "flex", 
+              alignItems: "center",
+              justifyContent: "center",
+              flex: '1 1 auto',
+            }}>
+              <Button
+                size="small"
+                variant={selectedCategory === "map" ? "contained" : "text"}
+                onClick={() => setSelectedCategory("map")}
+                sx={{
+                  mr: 1,
+                  color: selectedCategory === "map" ? '#fff' : 'var(--text-medium)',
+                  backgroundColor: selectedCategory === "map" ? 'var(--primary-teal)' : 'transparent',
+                  '&:hover': {
+                    backgroundColor: selectedCategory === "map" ? 'var(--dark-teal)' : 'var(--light-teal)',
+                  }
+                }}
+              >
+                <MapIcon sx={{ fontSize: 20, mr: 0.5 }} />
+                Map
+              </Button>
+              <Button
+                size="small"
+                variant={selectedCategory !== "map" ? "contained" : "text"}
+                onClick={toggleMobileDrawer}
+                sx={{
+                  color: selectedCategory !== "map" ? '#fff' : 'var(--text-medium)',
+                  backgroundColor: selectedCategory !== "map" ? 'var(--primary-teal)' : 'transparent',
+                  '&:hover': {
+                    backgroundColor: selectedCategory !== "map" ? 'var(--dark-teal)' : 'var(--light-teal)',
+                  }
+                }}
+              >
+                Products
+              </Button>
+            </Box>
+          )}
+
+          {/* Right side - Actions */}
+          <Box sx={{ 
+            display: "flex", 
+            alignItems: "center", 
+            minWidth: { xs: 'auto', md: '200px' }, 
+            justifyContent: 'flex-end',
+            gap: { xs: 1, sm: 1.5, md: 2 },
+            flex: '0 0 auto'
+          }}>
+            {!loading && !isMobile && (
               <IconButton
                 size="small"
                 sx={{
@@ -408,15 +453,83 @@ const Header = () => {
                     backgroundColor: 'var(--bg_color)',
                     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
                   },
-                  display: { xs: 'none', sm: 'flex' }
                 }}
               >
-                <HelpOutlineIcon fontSize="small" sx={{ color: 'var(--text-medium)' }} />
+                <SearchIcon fontSize="small" sx={{ color: 'var(--text-medium)' }} />
+              </IconButton>
+            )}
+
+            {!isMobile && (
+              <Tooltip title="Help">
+                <IconButton
+                  size="small"
+                  sx={{
+                    backgroundColor: 'var(--upload_bg)',
+                    "&:hover": { 
+                      backgroundColor: 'var(--bg_color)',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+                    },
+                    display: { xs: 'none', sm: 'flex' }
+                  }}
+                >
+                  <HelpOutlineIcon fontSize="small" sx={{ color: 'var(--text-medium)' }} />
+                </IconButton>
+              </Tooltip>
+            )}
+
+            <Tooltip title="Notifications">
+              <IconButton
+                size="small"
+                sx={{
+                  backgroundColor: 'var(--upload_bg)',
+                  "&:hover": { 
+                    backgroundColor: 'var(--bg_color)',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+                  },
+                }}
+              >
+                <Badge color="error" variant="dot">
+                  <NotificationsNoneIcon fontSize="small" sx={{ color: 'var(--text-medium)' }} />
+                </Badge>
               </IconButton>
             </Tooltip>
-          )}
 
-          <Tooltip title="Notifications">
+            {!isMobile && (
+              <FormControl
+                size="small"
+                sx={{
+                  minWidth: 100,
+                  ml: 0.5,
+                  display: { xs: 'none', md: 'block' },
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: 'var(--upload_bg)',
+                    borderRadius: "4px",
+                    "& fieldset": { border: "none" },
+                    "&:hover": {
+                      backgroundColor: 'var(--bg_color)',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+                    },
+                  },
+                }}
+              >
+                <Select
+                  value={selectedLanguage}
+                  onChange={handleLanguageChange}
+                  sx={{
+                    "& .MuiSelect-select": {
+                      py: 1,
+                      pr: 3,
+                      pl: 1.5,
+                    },
+                  }}
+                >
+                  <MenuItem value="en">English</MenuItem>
+                  <MenuItem value="de">Deutsch</MenuItem>
+                  <MenuItem value="fr">Français</MenuItem>
+                </Select>
+              </FormControl>
+            )}
+
             <IconButton
               size="small"
               sx={{
@@ -427,63 +540,12 @@ const Header = () => {
                 },
               }}
             >
-              <Badge color="error" variant="dot">
-                <NotificationsNoneIcon fontSize="small" sx={{ color: 'var(--text-medium)' }} />
-              </Badge>
+              <PersonOutlineIcon fontSize="small" sx={{ color: 'var(--text-medium)' }} />
             </IconButton>
-          </Tooltip>
-
-          {!isMobile && (
-            <FormControl
-              size="small"
-              sx={{
-                minWidth: 100,
-                ml: 0.5,
-                display: { xs: 'none', md: 'block' },
-                "& .MuiOutlinedInput-root": {
-                  backgroundColor: 'var(--upload_bg)',
-                  borderRadius: "4px",
-                  "& fieldset": { border: "none" },
-                  "&:hover": {
-                    backgroundColor: 'var(--bg_color)',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
-                  },
-                },
-              }}
-            >
-              <Select
-                value={selectedLanguage}
-                onChange={handleLanguageChange}
-                sx={{
-                  "& .MuiSelect-select": {
-                    py: 1,
-                    pr: 3,
-                    pl: 1.5,
-                  },
-                }}
-              >
-                <MenuItem value="en">English</MenuItem>
-                <MenuItem value="de">Deutsch</MenuItem>
-                <MenuItem value="fr">Français</MenuItem>
-              </Select>
-            </FormControl>
-          )}
-
-          <IconButton
-            size="small"
-            sx={{
-              backgroundColor: 'var(--upload_bg)',
-              "&:hover": { 
-                backgroundColor: 'var(--bg_color)',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
-              },
-            }}
-          >
-            <PersonOutlineIcon fontSize="small" sx={{ color: 'var(--text-medium)' }} />
-          </IconButton>
-        </Box>
-      </Toolbar>
-    </AppBar>
+          </Box>
+        </Toolbar>
+      </AppBar>
+    </>
   );
 };
 
