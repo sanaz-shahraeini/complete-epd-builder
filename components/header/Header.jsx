@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   AppBar,
   Toolbar,
@@ -50,28 +50,20 @@ const Header = () => {
     setSelectedLanguage(event.target.value);
   };
 
-  const toggleGlobalSidebar = () => {
-    // Create and dispatch a custom event to toggle the sidebar
-    // This integrates with the existing sidebar system
-    const event = new CustomEvent('toggleSidebar', {
-      detail: { source: 'headerMenu' }
-    });
-    window.dispatchEvent(event);
+  // Function to open the sidebar by simulating a click on a category button in VerticalIcons
+  const openSidebar = () => {
+    // Find the first category button and click it
+    const categoryButtons = document.querySelectorAll(".category-button");
+    if (categoryButtons && categoryButtons.length > 0) {
+      categoryButtons[0].click();
+    } else {
+      // Fallback - find any button in VerticalIcons
+      const verticalIconButtons = document.querySelectorAll("[data-category]");
+      if (verticalIconButtons && verticalIconButtons.length > 0) {
+        verticalIconButtons[0].click();
+      }
+    }
   };
-
-  // Listen for events that might change the sidebar state
-  useEffect(() => {
-    const handleSidebarStateChange = (event) => {
-      // Could update state here if needed
-      console.log("Sidebar state changed:", event.detail);
-    };
-
-    window.addEventListener('sidebarStateChanged', handleSidebarStateChange);
-    
-    return () => {
-      window.removeEventListener('sidebarStateChanged', handleSidebarStateChange);
-    };
-  }, []);
   
   return (
     <AppBar
@@ -110,7 +102,7 @@ const Header = () => {
             edge="start"
             color="inherit"
             aria-label="toggle sidebar"
-            onClick={toggleGlobalSidebar}
+            onClick={openSidebar}
             sx={{ 
               mr: 1, 
               display: { lg: 'none' } 
@@ -256,7 +248,7 @@ const Header = () => {
             <Button
               size="small"
               variant={selectedCategory !== "map" ? "contained" : "text"}
-              onClick={toggleGlobalSidebar}
+              onClick={openSidebar}
               sx={{
                 color: selectedCategory !== "map" ? '#fff' : 'var(--text-medium)',
                 backgroundColor: selectedCategory !== "map" ? 'var(--primary-teal)' : 'transparent',
