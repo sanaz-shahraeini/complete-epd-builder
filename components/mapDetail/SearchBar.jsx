@@ -288,7 +288,7 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
 
   const groupedByCountry = Array.isArray(productsForModal)
     ? productsForModal.reduce((acc, product) => {
-        const country = product.country || "Unknown";
+        const country = product.country || "Not Specified";
         if (!acc[country]) {
           acc[country] = [];
         }
@@ -791,7 +791,9 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
                 }}
               >
                 <PublicIcon sx={{ fontSize: isMobile ? 20 : 30 }} />
-                Products from {countryNames[page - 1] || "All Countries"}
+                {countryNames[page - 1] === "Not Specified" 
+                  ? "Products with Unspecified Location" 
+                  : `Products from ${countryNames[page - 1] || "All Countries"}`}
               </Typography>
               
               <IconButton
@@ -870,7 +872,7 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
                   fontSize: isMobile ? "14px" : "16px",
                 }}
               >
-                {countryNames.length} Countries
+                {countryNames.length} {countryNames.length === 1 ? "Country" : "Countries"}
               </Typography>
               <Typography
                 sx={{
