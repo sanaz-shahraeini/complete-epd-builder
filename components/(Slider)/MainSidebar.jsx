@@ -303,9 +303,8 @@ const MainSidebar = ({
                 color="success"
                 onClick={() => onSelect("Legend")}
                 sx={{
-                  width: "160%",
+                  width: "100%",
                   height: "40px",
-                  marginLeft: "-57%",
                   border: "none",
                   borderRadius: "20px",
                   background:
@@ -333,7 +332,7 @@ const MainSidebar = ({
                 color="success"
                 onClick={() => onSelect("Products")}
                 sx={{
-                  width: "160%",
+                  width: "100%",
                   height: "40px",
                   border: "none",
                   borderRadius: "20px",
