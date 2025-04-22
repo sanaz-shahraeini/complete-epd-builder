@@ -359,67 +359,119 @@ const MainSidebar = ({
 
         {/* Select Priority */}
         {selected === "Products" && (
-          <Grid container alignItems="center" sx={{ px: 4, my: 3 }}>
-            <Grid item xs={6} md={6}>
-              <Typography variant="body2">Select Priority</Typography>
-            </Grid>
-            <Grid item xs={6} md={6}>
-              <Select
-                value={selectedPriority}
-                onChange={handlePriorityChange}
-                onClick={(e) => e.stopPropagation()}
-                onClose={(e) => e.stopPropagation()}
-                MenuProps={{
-                  anchorOrigin: {
-                    vertical: "bottom",
-                    horizontal: "left",
-                  },
-                  transformOrigin: {
-                    vertical: "top",
-                    horizontal: "left",
-                  },
-                  PaperProps: {
-                    onClick: (e) => e.stopPropagation(),
-                    sx: {
-                      bgcolor: "#ffffff",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                    },
-                  },
-                }}
-                variant="outlined"
-                size="small"
-                fullWidth
-                sx={{
-                  bgcolor: "#ffffff",
-                  borderRadius: "20px",
-                  height: "42px",
-                  border: `1px solid var(--light-teal)`,
-                  "& .MuiSelect-select": {
+          <Box
+            sx={{
+              bgcolor: "white",
+              mx: 2,
+              my: 1.5,
+              p: 1.5,
+              borderRadius: "24px",
+              border: "1px solid var(--light-teal)",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.03)",
+            }}
+          >
+            <Grid container alignItems="center" spacing={1}>
+              <Grid item xs={5}>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    fontWeight: 500,
                     color: "var(--text-dark)",
-                  },
-                  "&:hover": {
-                    bgcolor: "var(--light-teal)",
-                  },
-                  "& fieldset": {
-                    border: "none",
-                  },
-                }}
-              >
-                <MenuItem
-                  value="Top products"
-                  onClick={(e) => e.stopPropagation()}
+                    pl: 1
+                  }}
                 >
-                  Top products
-                </MenuItem>
-                <MenuItem
-                  value="New arrivals"
+                  Select Priority
+                </Typography>
+              </Grid>
+              <Grid item xs={7}>
+                <Select
+                  value={selectedPriority}
+                  onChange={handlePriorityChange}
                   onClick={(e) => e.stopPropagation()}
+                  onClose={(e) => e.stopPropagation()}
+                  MenuProps={{
+                    anchorOrigin: {
+                      vertical: "bottom",
+                      horizontal: "left",
+                    },
+                    transformOrigin: {
+                      vertical: "top",
+                      horizontal: "left",
+                    },
+                    PaperProps: {
+                      onClick: (e) => e.stopPropagation(),
+                      sx: {
+                        bgcolor: "#ffffff",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                        borderRadius: "10px",
+                        mt: 0.5,
+                      },
+                    },
+                  }}
+                  variant="outlined"
+                  size="small"
+                  fullWidth
+                  IconComponent={(props) => (
+                    <span className={props.className} style={{ right: '8px' }}>
+                      ▼
+                    </span>
+                  )}
+                  displayEmpty
+                  sx={{
+                    bgcolor: "#ffffff",
+                    borderRadius: "20px",
+                    height: "42px",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                    "& .MuiSelect-select": {
+                      color: "var(--text-dark)",
+                      pl: 2,
+                      pr: 3,
+                      py: 1.2,
+                      display: 'flex',
+                      alignItems: 'center',
+                    },
+                    "&:hover": {
+                      bgcolor: "var(--light-teal)",
+                    },
+                    "& fieldset": {
+                      border: "1px solid var(--light-teal)",
+                      borderRadius: "20px",
+                    },
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "var(--primary-teal)",
+                    },
+                  }}
                 >
-                  New arrivals
-                </MenuItem>
-              </Select>
+                  <MenuItem
+                    value="Top products"
+                    onClick={(e) => e.stopPropagation()}
+                    sx={{ 
+                      borderRadius: "8px",
+                      mx: 0.5,
+                      "&:hover": {
+                        bgcolor: "var(--light-teal)",
+                      }
+                    }}
+                  >
+                    Top products
+                  </MenuItem>
+                  <MenuItem
+                    value="New arrivals"
+                    onClick={(e) => e.stopPropagation()}
+                    sx={{ 
+                      borderRadius: "8px",
+                      mx: 0.5,
+                      "&:hover": {
+                        bgcolor: "var(--light-teal)",
+                      }
+                    }}
+                  >
+                    New arrivals
+                  </MenuItem>
+                </Select>
+              </Grid>
             </Grid>
-          </Grid>
+          </Box>
         )}
 
         {/* Main Content with Scroll */}
