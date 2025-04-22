@@ -86,6 +86,7 @@ const Header = () => {
               letterSpacing: "0.5px",
               display: "flex",
               alignItems: "center",
+              fontSize: "1rem",
             }}
           >
             <Box

@@ -1,11 +1,12 @@
 'use client';
-import { Poppins} from 'next/font/google';
+import { Poppins } from 'next/font/google';
 import { createTheme } from '@mui/material/styles';
 
 const poppins = Poppins({
-  weight: ['300', '400', '500'],
+  weight: ['300', '400', '500', '600', '700'],
   subsets: ['latin'],
   display: 'swap',
+  fallback: ['Arial', 'Helvetica', 'sans-serif'],
 });
 
 const theme = createTheme({
@@ -23,6 +24,20 @@ const theme = createTheme({
   },
   typography: {
     fontFamily: poppins.style.fontFamily,
+    h6: {
+      fontSize: '1rem',
+      fontWeight: 600,
+    },
+    body1: {
+      fontSize: '0.875rem',
+    },
+    body2: {
+      fontSize: '0.8125rem',
+    },
+    button: {
+      textTransform: 'none',
+      fontSize: '0.875rem',
+    },
   },
   components: {
     MuiAlert: {
