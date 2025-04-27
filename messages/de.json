@@ -58,6 +58,10 @@
     "invalidVerificationCode": "Ungültiger Verifizierungscode",
     "signInError": "Anmeldung fehlgeschlagen",
     "or": "ODER",
+    "success": {
+      "signInTitle": "Willkommen zurück!",
+      "signInMessage": "Sie haben sich erfolgreich bei Ihrem Konto angemeldet"
+    },
     "validation": {
       "email": {
         "required": "E-Mail ist erforderlich",

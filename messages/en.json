@@ -47,7 +47,9 @@
     "success": {
       "signedIn": "Successfully signed in",
       "codeSentAgain": "New verification code has been sent",
-      "verificationEmailSent": "Verification code sent to your email"
+      "verificationEmailSent": "Verification code sent to your email",
+      "signInTitle": "Welcome back!",
+      "signInMessage": "You have successfully signed in to your account"
     },
     "validation": {
       "username": {
@@ -71,6 +73,7 @@
       "networkError": "Network error occurred",
       "invalidCredentials": "Invalid username or password",
       "unknown": "An unknown error occurred",
+      "unknownError": "An unexpected error occurred. Please try again later.",
       "emailError": "Failed to send verification code",
       "codeError": "Invalid verification code",
       "resendError": "Failed to resend verification code",
@@ -519,9 +522,10 @@
       "country": "Country"
     },
     "status": {
-      "loading": "Loading products...",
-      "noProducts": "No products found",
-      "noSearchResults": "No products found matching your search"
+      "noProducts": "No products...",
+      "noUsers": "No users found",
+      "loading": "Loading...",
+      "error": "Error loading products. Please try again later."
     },
     "pagination": {
       "show": "Show",

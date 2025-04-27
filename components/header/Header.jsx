@@ -37,6 +37,10 @@ import ViewInArIcon from "@mui/icons-material/ViewInAr";
 import GridViewIcon from "@mui/icons-material/GridView";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import { useProducts } from "../../useContexts/ProductsContext";
+import { useSession } from "next-auth/react";
+import { useRouter } from "@/i18n/navigation";
+import { useLocale } from "next-intl";
+import { ROUTES } from "@/i18n/navigation";
 
 const Header = () => {
   const categories = [
@@ -61,17 +65,44 @@ const Header = () => {
   ];
   
   const { loading } = useProducts();
+  const { status } = useSession();
+  const router = useRouter();
+  const locale = useLocale();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
   const isLargeScreen = useMediaQuery(theme.breakpoints.up("lg"));
-  const [selectedLanguage, setSelectedLanguage] = useState("en");
   const [selectedCategory, setSelectedCategory] = useState(categories[2].id);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [selectedSidebarCategory, setSelectedSidebarCategory] = useState("all");
 
   const handleLanguageChange = (event) => {
-    setSelectedLanguage(event.target.value);
+    const newLocale = event.target.value;
+    
+    // Get the current path
+    const pathname = window.location.pathname;
+    
+    // Extract segments after /epd/[locale]/
+    const segments = pathname.split('/');
+    
+    // Find the current locale index
+    const localeIndex = segments.findIndex((segment, index) => 
+      index > 0 && (segment === 'en' || segment === 'de' || segment === 'fr')
+    );
+    
+    if (localeIndex !== -1) {
+      // Replace the locale segment
+      segments[localeIndex] = newLocale;
+      
+      // Reconstruct the path
+      const newPath = segments.join('/');
+      
+      // Navigate to the new path
+      router.push(newPath);
+    } else {
+      // If locale not found in the path, go to the homepage with new locale
+      router.push(`/epd/${newLocale}`);
+    }
   };
 
   const toggleMobileDrawer = () => {
@@ -85,6 +116,16 @@ const Header = () => {
   
   const handleSidebarCategorySelect = (category) => {
     setSelectedSidebarCategory(category);
+  };
+
+  const handleAvatarClick = () => {
+    if (status === "authenticated") {
+      // User is signed in, redirect to profile
+      router.push(ROUTES.DASHBOARD_ROUTES.PROFILE);
+    } else {
+      // User is not signed in, redirect to sign in page
+      router.push(ROUTES.AUTH.SIGNIN);
+    }
   };
 
   // Custom mobile drawer
@@ -255,12 +296,13 @@ const Header = () => {
             mb: 0.5,
             '&:hover': { backgroundColor: 'var(--light-teal)' }
           }}
+          onClick={handleAvatarClick}
         >
           <ListItemIcon sx={{ minWidth: 40 }}>
             <AccountCircleIcon sx={{ color: 'var(--text-medium)' }} />
           </ListItemIcon>
           <ListItemText 
-            primary="My Account" 
+            primary={status === "authenticated" ? "My Account" : "Sign In"} 
             primaryTypographyProps={{ 
               fontWeight: 500, 
               color: 'var(--text-dark)',
@@ -292,21 +334,33 @@ const Header = () => {
       </List>
       
       <Box sx={{ p: 2, mt: 'auto' }}>
-        <Button 
-          variant="outlined"
-          fullWidth
-          sx={{
-            borderColor: 'var(--light-teal)',
-            color: 'var(--dark-teal)',
-            textTransform: 'none',
-            '&:hover': {
-              borderColor: 'var(--primary-teal)',
-              backgroundColor: 'var(--light-teal)'
-            }
-          }}
-        >
-          Language: {selectedLanguage === 'en' ? 'English' : selectedLanguage === 'de' ? 'Deutsch' : 'Français'}
-        </Button>
+        <FormControl variant="outlined" fullWidth>
+          <Select
+            value={locale}
+            onChange={handleLanguageChange}
+            name="mobile-language"
+            sx={{
+              borderColor: 'var(--light-teal)',
+              color: 'var(--dark-teal)',
+              textTransform: 'none',
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'var(--light-teal)',
+              },
+              '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'var(--primary-teal)',
+              },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'var(--primary-teal)',
+              }
+            }}
+            displayEmpty
+            renderValue={() => `Language: ${locale === 'en' ? 'English' : locale === 'de' ? 'Deutsch' : 'Français'}`}
+          >
+            <MenuItem value="en">English</MenuItem>
+            <MenuItem value="de">Deutsch</MenuItem>
+            <MenuItem value="fr">Français</MenuItem>
+          </Select>
+        </FormControl>
       </Box>
     </Drawer>
   );
@@ -588,8 +642,9 @@ const Header = () => {
                 }}
               >
                 <Select
-                  value={selectedLanguage}
+                  value={locale}
                   onChange={handleLanguageChange}
+                  name="language"
                   sx={{
                     "& .MuiSelect-select": {
                       py: 1,
@@ -605,18 +660,21 @@ const Header = () => {
               </FormControl>
             )}
 
-            <IconButton
-              size="small"
-              sx={{
-                backgroundColor: 'var(--upload_bg)',
-                "&:hover": { 
-                  backgroundColor: 'var(--bg_color)',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
-                },
-              }}
-            >
-              <PersonOutlineIcon fontSize="small" sx={{ color: 'var(--text-medium)' }} />
-            </IconButton>
+            <Tooltip title={status === "authenticated" ? "My Account" : "Sign In"}>
+              <IconButton
+                size="small"
+                onClick={handleAvatarClick}
+                sx={{
+                  backgroundColor: 'var(--upload_bg)',
+                  "&:hover": { 
+                    backgroundColor: 'var(--bg_color)',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+                  },
+                }}
+              >
+                <PersonOutlineIcon fontSize="small" sx={{ color: 'var(--text-medium)' }} />
+              </IconButton>
+            </Tooltip>
           </Box>
         </Toolbar>
       </AppBar>

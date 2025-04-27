@@ -87,9 +87,9 @@ const MapComponent = forwardRef(
     // Combined loading state for all data fetching operations
     const isLoading = loading || productsLoading || processingData;
     const loadingMessage = productsLoading
-      ? "Loading product data..."
+      ? "Loading products..."
       : processingData
-      ? "Processing location data..."
+      ? "Processing locations..."
       : loading
       ? "Processing locations..."
       : "Loading map...";

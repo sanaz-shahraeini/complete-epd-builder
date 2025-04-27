@@ -30,17 +30,26 @@ export function middleware(request: NextRequest) {
     );
   }
 
-  // Detect infinite redirect loops - if URL contains a certain pattern that indicates
-  // we're in a loop, just serve the content without further redirection
-  if (pathname.includes("/epd/epd/") || pathname.match(/\/epd\/[^\/]+\/epd\//)) {
-    const correctedPath = pathname.replace(/\/epd\/+/g, '/epd/');
-    if (correctedPath !== pathname) {
-      // Fix the path if it has redundant /epd/ segments
+  // Fix paths with duplicate /epd/ segments (e.g., /epd/en/epd/en/signup)
+  const duplicateEpdPattern = /\/epd\/([^\/]+)\/epd\/([^\/]+)/;
+  if (duplicateEpdPattern.test(pathname)) {
+    // Extract segments to ensure we keep the locale
+    const match = pathname.match(duplicateEpdPattern);
+    if (match && match[1] === match[2]) {
+      // If the locales are the same, simply remove the duplicate part
+      const correctedPath = pathname.replace(`/epd/${match[1]}/epd/${match[2]}`, `/epd/${match[1]}`);
       return NextResponse.redirect(
         new URL(correctedPath, request.url)
       );
     }
-    return NextResponse.next();
+  }
+
+  // General case for multiple /epd/ segments
+  if (pathname.includes("/epd/epd/")) {
+    const correctedPath = pathname.replace(/\/epd\/+epd\/+/g, '/epd/');
+    return NextResponse.redirect(
+      new URL(correctedPath, request.url)
+    );
   }
 
   // Handle direct locale routes like /en/signin -> redirect to /epd/en/signin

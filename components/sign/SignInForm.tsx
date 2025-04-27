@@ -206,11 +206,12 @@ function SignInForm({
       console.log("Attempting sign-in with credentials");
       console.log("Callback URL:", callbackWithParams);
       
-      const apiUrl = buildApiUrl(API_ROUTES.AUTH.SIGNIN);
-      console.log("API URL for signin:", apiUrl);
-      console.log("API_ROUTES.AUTH.SIGNIN:", API_ROUTES.AUTH.SIGNIN);
+      // Use the specified API endpoint directly
+      const apiUrl = "https://epd-fullstack-project.vercel.app";
+      const signinUrl = `${apiUrl}/users/signin/`;
+      console.log("Using API URL for signin:", signinUrl);
 
-      const response = await fetch(apiUrl, {
+      const response = await fetch(signinUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -219,6 +220,8 @@ function SignInForm({
           username: values.username,
           password: values.password,
         }),
+        credentials: 'include',
+        mode: 'cors',
       });
 
       // Get response text first to check if it's valid JSON
@@ -288,11 +291,11 @@ function SignInForm({
           id: userProfile.id,
           username: userProfile.username,
           email: userProfile.email,
-          firstName: userProfile.first_name,
-          lastName: userProfile.last_name,
-          companyName: userProfile.company_name,
-          role: userProfile.user_type,
-          profilePicture: userProfile.profile?.profile_picture_url || "",
+          first_name: userProfile.first_name,
+          last_name: userProfile.last_name,
+          company_name: userProfile.company_name,
+          user_type: userProfile.user_type,
+          profile_picture_url: userProfile.profile?.profile_picture_url || "",
         };
 
         // Update user in store
@@ -342,7 +345,7 @@ function SignInForm({
     setLoading(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const apiUrl = "https://epd-fullstack-project.vercel.app";
       console.log("Using API URL:", apiUrl);
 
       if (!verificationSent) {
@@ -392,7 +395,7 @@ function SignInForm({
         // Step 2: Verify the email code
         console.log("Verifying email code...");
         const verificationResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/users/email-verification/verify/`,
+          `https://epd-fullstack-project.vercel.app/users/email-verification/verify/`,
           {
             method: "POST",
             headers: {
@@ -473,7 +476,7 @@ function SignInForm({
       setLoading(true);
       setMessage(null);
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const apiUrl = "https://epd-fullstack-project.vercel.app";
       const requestUrl = `${apiUrl}/users/email-verification/send/`;
       console.log("Resend code URL:", requestUrl);
 

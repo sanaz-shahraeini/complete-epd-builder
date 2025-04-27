@@ -30,36 +30,39 @@ interface AdminSidebarProps {
 export function AdminSidebar({ currentUser, onAddUser }: AdminSidebarProps) {
   const router = useRouter();
   const t = useTranslations();
-  const { users = [], isLoading } = useUsers(); // اطمینان از مقداردهی پیش‌فرض به `users`
+  const { users = [], isLoading } = useUsers(); // Use default empty array
   const [searchQuery, setSearchQuery] = useState("");
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
-  const pathname = usePathname(); // فقط یک بار مقداردهی شود
+  const pathname = usePathname();
 
   // بررسی مسیر `/product-portfolio/`
   // const isProductPortfolioPage = pathname?.startsWith("/input-data/");
 
-
-  const filteredUsers = users?.filter(
-    (user) =>
-      user.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email?.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
+  const filteredUsers = useMemo(() => {
+    // Add null checks on users array and user properties
+    return (users || []).filter(
+      (user) =>
+        user?.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user?.email?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [users, searchQuery]);
 
   const sortedUsers = useMemo(() => {
     return [...filteredUsers].sort((a, b) => {
-      const dateA = a.profile?.created_at ? new Date(a.profile.created_at) : new Date(0);
-      const dateB = b.profile?.created_at ? new Date(b.profile.created_at) : new Date(0);
+      const dateA = a?.profile?.created_at ? new Date(a.profile.created_at) : new Date(0);
+      const dateB = b?.profile?.created_at ? new Date(b.profile.created_at) : new Date(0);
       return dateB.getTime() - dateA.getTime();
     });
   }, [filteredUsers]);
 
   const isNewUser = (user: User) => {
-    const userIndex = sortedUsers.findIndex((u) => u.id === user.id);
+    if (!user?.id) return false;
+    const userIndex = sortedUsers.findIndex((u) => u?.id === user.id);
     return userIndex === 0 || userIndex === 1;
   };
 
   const getInitials = (user: User) => {
-    return user.username?.[0]?.toUpperCase() || "U";
+    return user?.username?.[0]?.toUpperCase() || "U";
   };
 
   const handleImageError = (userId: number) => {

@@ -221,12 +221,18 @@ export async function getUserProfile(): Promise<UserProfile> {
       throw new Error('No active session');
     }
 
-    const response = await fetch(buildApiUrl(API_ROUTES.AUTH.PROFILE), {
+    // Use the specified API endpoint directly
+    const apiUrl = "https://epd-fullstack-project.vercel.app";
+    const profileUrl = `${apiUrl}/users/profile/`;
+    console.log("Using API URL for profile:", profileUrl);
+
+    const response = await fetch(profileUrl, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       credentials: 'include',
+      mode: 'cors',
     });
 
     if (!response.ok) {
@@ -264,24 +270,27 @@ export async function getUserProfile(): Promise<UserProfile> {
 // Get company users
 export async function getCompanyUsers(): Promise<UserProfile[]> {
   try {
-    const session = await getNextAuthSession()
-    console.log('Session in getCompanyUsers:', session)
+    // Use localStorage to get the access token directly, like getUserProfile does
+    const accessToken = localStorage.getItem('accessToken');
+    console.log('Access token in getCompanyUsers:', accessToken ? 'Found' : 'Not found')
     
-    if (!session?.accessToken) {
-      console.error('No access token found')
+    if (!accessToken) {
+      console.error('No access token found in localStorage')
       throw new Error('Not authenticated')
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-    const url = `${baseUrl}/users/company/`
+    // Use the explicitly specified URL for company users
+    const url = 'https://epd-fullstack-project.vercel.app/users/company/'
     console.log('Fetching company users from:', url)
     
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
+        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
+      credentials: 'include',
+      mode: 'cors',
     })
 
     if (!response.ok) {
@@ -291,12 +300,8 @@ export async function getCompanyUsers(): Promise<UserProfile[]> {
         statusText: response.statusText,
         errorText,
         url,
-        headers: {
-          ...response.headers,
-          Authorization: 'Bearer [REDACTED]' // Don't log the actual token
-        }
       })
-      throw new Error(`Failed to fetch company users: ${response.status} ${response.statusText} - ${errorText}`)
+      throw new Error(`Failed to fetch company users: ${response.status} ${response.statusText}`)
     }
 
     const data = await response.json()
@@ -313,62 +318,66 @@ export async function getCompanyUsers(): Promise<UserProfile[]> {
     }
   } catch (error) {
     console.error('Error in getCompanyUsers:', error)
-    throw error
+    // Return empty array instead of throwing to prevent UI errors
+    return []
   }
 }
 
 // Update user profile
 export async function updateUserProfile(data: Partial<UserProfile>) {
-  const session = await getNextAuthSession()
-  console.log('Session in updateUserProfile:', session)
-  
-  if (!session?.accessToken) {
-    console.error('No access token in session')
-    throw new Error('Not authenticated')
-  }
+  try {
+    // Use localStorage to get the access token directly, like getUserProfile does
+    const accessToken = localStorage.getItem('accessToken');
+    console.log('Access token in updateUserProfile:', accessToken ? 'Found' : 'Not found')
+    
+    if (!accessToken) {
+      console.error('No access token found in localStorage')
+      throw new Error('Not authenticated')
+    }
 
-  const formData = new FormData()
-  
-  // Handle profile fields separately
-  if (data.profile) {
-    // Handle file upload
-    if (data.profile && data.profile.profile_picture && (data.profile.profile_picture as any) instanceof File) {
-      console.log('Appending profile picture to form data')
-      formData.append('profile.profile_picture', data.profile.profile_picture)
+    const formData = new FormData()
+    
+    // Handle profile fields separately
+    if (data.profile) {
+      // Handle file upload
+      if (data.profile && data.profile.profile_picture && (data.profile.profile_picture as any) instanceof File) {
+        console.log('Appending profile picture to form data')
+        formData.append('profile.profile_picture', data.profile.profile_picture)
+      }
+      
+      // Handle other profile fields
+      Object.entries(data.profile).forEach(([key, value]) => {
+        if (key !== 'profile_picture' && value !== undefined) {
+          console.log(`Appending profile.${key} to form data:`, value)
+          formData.append(`profile.${key}`, value.toString())
+        }
+      })
+
+      // Remove profile from data to avoid double processing
+      const { profile, ...restData } = data
+      data = restData
     }
     
-    // Handle other profile fields
-    Object.entries(data.profile).forEach(([key, value]) => {
-      if (key !== 'profile_picture' && value !== undefined) {
-        console.log(`Appending profile.${key} to form data:`, value)
-        formData.append(`profile.${key}`, value.toString())
+    // Handle other fields
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined) {
+        console.log(`Appending ${key} to form data:`, value)
+        formData.append(key, value.toString())
       }
     })
 
-    // Remove profile from data to avoid double processing
-    const { profile, ...restData } = data
-    data = restData
-  }
-  
-  // Handle other fields
-  Object.entries(data).forEach(([key, value]) => {
-    if (value !== undefined) {
-      console.log(`Appending ${key} to form data:`, value)
-      formData.append(key, value.toString())
-    }
-  })
+    const url = `${API_BASE_URL}/users/profile/`
+    console.log('Updating profile at:', url)
+    console.log('Form data entries:', Array.from(formData.entries()))
 
-  const url = `${process.env.NEXT_PUBLIC_API_URL}/users/profile/`
-  console.log('Updating profile at:', url)
-  console.log('Form data entries:', Array.from(formData.entries()))
-
-  try {
     const response = await fetch(url, {
       method: 'PUT',
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
+        'Authorization': `Bearer ${accessToken}`,
         // Don't set Content-Type header when using FormData
       },
+      credentials: 'include',
+      mode: 'cors',
       body: formData
     })
     
@@ -391,23 +400,27 @@ export async function updateUserProfile(data: Partial<UserProfile>) {
 
 // Change password
 export async function changePassword(currentPassword: string, newPassword: string) {
-  const session = await getNextAuthSession()
-  console.log('Session in changePassword:', session)
-  
-  if (!session?.accessToken) {
-    throw new Error('Not authenticated')
-  }
-
-  const url = `${API_BASE_URL}/users/change-password/`
-  console.log('Changing password at URL:', url)
-  
   try {
+    // Use localStorage to get the access token directly, like getUserProfile does
+    const accessToken = localStorage.getItem('accessToken');
+    console.log('Access token in changePassword:', accessToken ? 'Found' : 'Not found')
+    
+    if (!accessToken) {
+      console.error('No access token found in localStorage')
+      throw new Error('Not authenticated')
+    }
+
+    const url = `${API_BASE_URL}/users/change-password/`
+    console.log('Changing password at URL:', url)
+    
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
+        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
+      credentials: 'include',
+      mode: 'cors',
       body: JSON.stringify({
         current_password: currentPassword,
         new_password: newPassword,

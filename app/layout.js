@@ -2,12 +2,33 @@
 import * as React from "react";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
 import { ThemeProvider } from "@mui/material/styles";
-import CssBaseline from "@mui/material/CssBaseline";
 import theme from "../theme"
 import "./globals.css";
 import "../styles/css/colors.css";
+import "leaflet/dist/leaflet.css";
+import { SessionProvider } from "next-auth/react";
+import { NextIntlClientProvider } from "next-intl";
+import { locales, defaultLocale } from "../i18n/navigation";
 
 export default function RootLayout({ children }) {
+  const [messages, setMessages] = React.useState({});
+  const locale = defaultLocale;
+
+  // Load messages for the current locale
+  React.useEffect(() => {
+    const loadMessages = async () => {
+      try {
+        const loadedMessages = await import(`../messages/${locale}.json`).then(module => module.default);
+        setMessages(loadedMessages);
+      } catch (error) {
+        console.error(`Failed to load messages for locale ${locale}:`, error);
+        setMessages({});
+      }
+    };
+    
+    loadMessages();
+  }, [locale]);
+
   return (
     <html lang="en" dir="ltr">
       <head>
@@ -38,8 +59,11 @@ export default function RootLayout({ children }) {
       <body>
         <AppRouterCacheProvider options={{ enableCssLayer: false }}>
           <ThemeProvider theme={theme}>
-            <CssBaseline />
-            {children}
+            <SessionProvider>
+              <NextIntlClientProvider locale={locale} messages={messages} timeZone="UTC">
+                {children}
+              </NextIntlClientProvider>
+            </SessionProvider>
           </ThemeProvider>
         </AppRouterCacheProvider>
       </body>

@@ -2,7 +2,7 @@
 
 import React from "react";
 
-const Loading = ({ fullScreen = false, message = "Loading data..." }) => {
+const Loading = ({ fullScreen = false, message = "Loading" }) => {
   const containerStyle = fullScreen
     ? {
         position: "fixed",
