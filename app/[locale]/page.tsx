@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import { useUserStore } from "@/lib/store/user";
 import { useTranslations } from "next-intl";
 
-export default function SignInPage() {
+export default function LocalePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const setShowSignInModal = useUserStore((state) => state.setShowSignInModal);
@@ -19,12 +19,14 @@ export default function SignInPage() {
       return;
     }
 
-    // Show sign-in modal
+    // Show sign-in modal for unauthenticated users
     setShowSignInModal(true);
-
-    // Redirect to home page after showing modal
-    router.replace("/epd/en");
   }, [status, router, setShowSignInModal]);
 
-  return null; // No UI needed as we're using a modal
+  // You can add a loading state or some content here if needed
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      {/* Add your landing page content here */}
+    </div>
+  );
 } 

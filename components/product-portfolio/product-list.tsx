@@ -26,6 +26,7 @@ import ProductPortfolio from "@/components/product-portfolio/product-grid";
 import Loading from "@/app/epd/loading";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useUserStore } from "@/lib/store/user";
 
 interface GeoData {
   geo: string;
@@ -182,6 +183,8 @@ export default function ProductListComponent() {
   const fetchProducts = useCallback(async () => {
     if (!session?.accessToken) return;
 
+    const { setShowSignInModal } = useUserStore.getState();
+
     try {
       setIsLoading(true);
       setError(null);
@@ -203,7 +206,8 @@ export default function ProductListComponent() {
 
       if (!response.ok) {
         if (response.status === 401) {
-          router.push("/signin");
+          // Show sign-in modal instead of redirecting
+          setShowSignInModal(true);
           return;
         }
         throw new Error(`API Error (${response.status})`);

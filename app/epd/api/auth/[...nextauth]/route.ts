@@ -317,9 +317,9 @@ export const nextAuthOptions: ExtendedNextAuthOptions = {
     },
   },
   pages: {
-    signIn: "/signin",
-    error: "/error",
-    signOut: "/api/auth/signout", // Corrected signout page path
+    signIn: "/epd/en",
+    error: "/epd/en/error",
+    signOut: "/epd/en",
   },
   events: {
     async signOut(message) {

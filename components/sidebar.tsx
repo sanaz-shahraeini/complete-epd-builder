@@ -13,6 +13,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useEffect } from 'react'
 import { ImImage } from 'react-icons/im'
 import Image from 'next/image'
+import { useLocale } from "next-intl"
+import { useRouter as useNextRouter } from "@/i18n/navigation"
+import { germanToEnglishPaths } from "@/lib/i18n-paths"
 
 interface SidebarProps {
   className?: string;
@@ -31,8 +34,12 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
 function SidebarContent({ isMobile, onMobileClose }: { isMobile?: boolean; onMobileClose?: () => void }) {
   const router = useRouter()
   const pathname = usePathname()
-  const n = useTranslations('navigation')
+  const locale = useLocale()
   const { user, clearUser } = useUserStore()
+  const { setShowSignInModal } = useUserStore((state: any) => ({ 
+    setShowSignInModal: state.setShowSignInModal 
+  }))
+  const n = useTranslations('Navigation')
 
   console.log('Current user in sidebar:', user)
 
@@ -46,28 +53,14 @@ function SidebarContent({ isMobile, onMobileClose }: { isMobile?: boolean; onMob
   }, [user])
 
   const isLinkActive = (path: string) => {
-    if (!pathname) return false;
+    // Handle potential pathname differences between dev and production
+    let currentPath = pathname;
     
-    // Map German paths to their English equivalents for checking
-    const germanToEnglishPaths = {
-      '/dashboard/posteingang': '/dashboard/inbox',
-      '/dashboard/profil': '/dashboard/profile',
-      '/dashboard/epd-vorschau': '/dashboard/epd-preview'
-    };
-
-    // Get the current path without locale prefix
-    const currentPath = pathname.replace(/^\/[a-z]{2}/, '');
-    
-    // Special handling for administrative section
-    if (path === '/dashboard/profile') {
-      // Consider profile, inbox, and EPD pages as part of administrative section
-      return currentPath.includes('/dashboard/profile') || 
-             currentPath.includes('/dashboard/inbox') ||
-             currentPath.includes('/dashboard/epd') ||
-             currentPath.includes('/dashboard/epd-preview') ||
-             currentPath.includes('/dashboard/profil') ||
-             currentPath.includes('/dashboard/posteingang') ||
-             currentPath.includes('/dashboard/epd-vorschau');
+    // Remove locale prefix if present
+    if (currentPath.startsWith(`/${locale}/`)) {
+      currentPath = currentPath.slice(locale.length + 2);
+    } else if (currentPath.startsWith(`/epd/${locale}/`)) {
+      currentPath = currentPath.slice(locale.length + 6);
     }
 
     // Check if current path matches either English or German version
@@ -111,28 +104,37 @@ function SidebarContent({ isMobile, onMobileClose }: { isMobile?: boolean; onMob
       // Clear the user data from the store
       clearUser()
       
-      // Get current locale before signing out
-      const currentLocale = pathname.split('/')[1] || 'en';
+      // Clear tokens from local storage
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+      }
       
       // Perform logout with explicit configuration
       await signOut({
-        redirect: true,
-        callbackUrl: `/${currentLocale}/signin`
+        redirect: false
       });
+      
+      // Show sign-in modal after logout
+      setShowSignInModal(true);
+      
+      // Redirect to the home page
+      router.push('/');
       
     } catch (error) {
       console.error('Logout process failed:', error);
       
-      // Fallback redirect methods
-      try {
-        // Method 1: Direct API call
-        await fetch('/api/auth/signout', { method: 'POST' });
-      } catch (apiError) {
-        console.error('Signout API call failed:', apiError);
+      // Clear tokens from local storage (in case the signOut failed)
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
       }
       
-      // Method 2: Force redirect
-      window.location.href = `/${currentLocale}/signin`;
+      // Show sign-in modal even if logout failed
+      setShowSignInModal(true);
+      
+      // Redirect to the home page
+      router.push('/');
     }
   };
 

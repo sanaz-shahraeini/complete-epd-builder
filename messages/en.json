@@ -12,6 +12,23 @@
     "title": "Welcome to EPD Builder",
     "description": "Create and manage Environmental Product Declarations"
   },
+  "Navigation": {
+    "userName": "User Name",
+    "companyName": "Company Name",
+    "productPortfolio": "Product Portfolio",
+    "projectManagement": "Project Management",
+    "administrative": "Administrative",
+    "epdPreview": "EPD Preview",
+    "requests": "Requests",
+    "profile": "Profile",
+    "settings": "Settings",
+    "signOut": "Sign Out",
+    "logout": "Logout",
+    "myEPDs": "My EPDs",
+    "inbox": "Inbox",
+    "dataDirectory": "Data Directory",
+    "myProfile": "My Profile"
+  },
   "SignIn": {
     "title": "Sign In",
     "description": "Sign in to your account",

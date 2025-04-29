@@ -15,7 +15,8 @@ import {
   IoKeyOutline,
   IoGridOutline,
   IoAtCircleOutline,
-  IoLayersOutline
+  IoLayersOutline,
+  IoAlertCircle
 } from "react-icons/io5";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -68,49 +69,61 @@ interface InputFieldProps {
   isCheckingEmail?: boolean;
 }
 
-const InputField: React.FC<InputFieldProps> = ({ 
+const InputField = ({ 
   name, 
   label, 
-  type = "text", 
+  type, 
   icon, 
-  formik,
-  isCheckingUsername,
+  formik, 
+  isCheckingUsername, 
   isCheckingEmail 
-}) => (
-  <div className="space-y-2">
-    <Label htmlFor={name}>{label}</Label>
-    <div className="relative">
-      <Input
-        id={name}
-        name={name}
-        type={type}
-        value={formik.values[name]}
-        onChange={formik.handleChange}
-        onBlur={formik.handleBlur}
-        className={cn(
-          "pl-10",
-          formik.touched[name] && formik.errors[name] ? "border-red-500" : ""
-        )}
-      />
-      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        {icon}
-      </div>
-      {((name === 'username' && isCheckingUsername) || (name === 'email' && isCheckingEmail)) && (
-        <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-          <svg className="animate-spin h-5 w-5 text-teal-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
+}: InputFieldProps) => {
+  const t = useTranslations("SignUp");
+
+  return (
+    <div className="space-y-1">
+      <Label 
+        htmlFor={name} 
+        className="text-sm font-medium text-gray-800 dark:text-gray-200"
+      >
+        {label}
+      </Label>
+      <div className="relative">
+        <Input
+          id={name}
+          name={name}
+          type={type}
+          value={formik.values[name]}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          placeholder={`${t('enter')} ${label.toLowerCase()}`}
+          className={cn(
+            "pl-10 text-gray-900 dark:text-white border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950",
+            formik.touched[name] && formik.errors[name] && "border-red-500"
+          )}
+        />
+        <div className="absolute left-3 top-3">
+          {icon}
         </div>
+        {(name === 'username' && isCheckingUsername) && (
+          <div className="absolute right-3 top-3">
+            <div className="animate-spin h-4 w-4 border-2 border-teal-500 border-t-transparent rounded-full"></div>
+          </div>
+        )}
+        {(name === 'email' && isCheckingEmail) && (
+          <div className="absolute right-3 top-3">
+            <div className="animate-spin h-4 w-4 border-2 border-teal-500 border-t-transparent rounded-full"></div>
+          </div>
+        )}
+      </div>
+      {formik.touched[name] && formik.errors[name] && (
+        <p className="text-sm text-red-500 mt-1">
+          {formik.errors[name] as string}
+        </p>
       )}
     </div>
-    {formik.touched[name] && formik.errors[name] && (
-      <div className="text-sm text-red-500 mt-1">
-        {formik.errors[name] as string}
-      </div>
-    )}
-  </div>
-);
+  );
+};
 
 function SignUpForm({ open, onClose, setShowSignIn, setShowSignUp }: SignUpFormProps) {
   const router = useRouter();
@@ -428,8 +441,8 @@ function SignUpForm({ open, onClose, setShowSignIn, setShowSignUp }: SignUpFormP
   }
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] p-0 max-h-[90vh] overflow-hidden">
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent className="sm:max-w-[600px] p-0 max-h-[90vh] overflow-hidden bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 mt-8">
         <div className="px-6 py-6 space-y-6">
           <div className="text-center space-y-2">
             <div className="flex justify-center mb-4">
@@ -437,39 +450,38 @@ function SignUpForm({ open, onClose, setShowSignIn, setShowSignUp }: SignUpFormP
                 <IoPersonOutline className="w-6 h-6 text-teal-600" />
               </div>
             </div>
-            <DialogTitle className="text-2xl font-semibold tracking-tight">
+            <DialogTitle className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">
               {t("title")}
             </DialogTitle>
-            <p className="text-sm text-muted-foreground">
-              {t("description")}
-            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-300">{t("description")}</p>
           </div>
 
           {message && (
-            <Alert 
+            <Alert
               variant={message.type === "error" ? "destructive" : "default"}
               className={cn(
                 "border-l-4",
-                message.type === "error" 
+                message.type === "error"
                   ? "border-l-red-500"
                   : "border-l-teal-600"
               )}
             >
-              <AlertDescription>{message.text}</AlertDescription>
+              <IoAlertCircle className="h-4 w-4" />
+              <span className="ml-2">{message.text}</span>
             </Alert>
           )}
 
           <Tabs defaultValue={activeTab} onValueChange={handleTabChange} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 sticky top-0 bg-background z-10">
+            <TabsList className="grid w-full grid-cols-2 sticky top-0 bg-gray-100 dark:bg-gray-800 z-10">
               <TabsTrigger 
                 value="regular" 
-                className="data-[state=active]:bg-teal-50 data-[state=active]:text-teal-700"
+                className="data-[state=active]:bg-teal-50 data-[state=active]:text-teal-700 text-gray-700 dark:text-gray-300 data-[state=active]:dark:bg-teal-900 data-[state=active]:dark:text-teal-100"
               >
                 {t("tabs.regular")}
               </TabsTrigger>
               <TabsTrigger 
                 value="company" 
-                className="data-[state=active]:bg-teal-50 data-[state=active]:text-teal-700"
+                className="data-[state=active]:bg-teal-50 data-[state=active]:text-teal-700 text-gray-700 dark:text-gray-300 data-[state=active]:dark:bg-teal-900 data-[state=active]:dark:text-teal-100"
               >
                 {t("tabs.company")}
               </TabsTrigger>
@@ -586,8 +598,8 @@ function SignUpForm({ open, onClose, setShowSignIn, setShowSignUp }: SignUpFormP
                 </div>
                 <Button
                   type="submit"
-                  className="w-full bg-teal-600 hover:bg-teal-700 text-white"
-                  disabled={loading || isCheckingUsername || isCheckingEmail}
+                  className="w-full bg-teal-600 hover:bg-teal-700 text-white mt-6"
+                  disabled={loading || Object.keys(formik.errors).length > 0 || !formik.dirty}
                 >
                   {loading ? (
                     <div className="flex items-center space-x-2">
@@ -625,15 +637,15 @@ function SignUpForm({ open, onClose, setShowSignIn, setShowSignUp }: SignUpFormP
           </Button>
 
           <div className="text-center text-sm">
-            <span className="text-muted-foreground">
-              {t("alreadyAccount")}{" "}
-            </span>
+            <span className="text-gray-600 dark:text-gray-300">{t("alreadyAccount")} </span>
             <Button
               type="button"
               variant="link"
-              className="p-0 h-auto text-teal-600 hover:underline"
-              onClick={() => setShowSignIn(true)}
-              disabled={loading}
+              className="p-0 h-auto text-teal-600 dark:text-teal-400"
+              onClick={() => {
+                setShowSignUp(false);
+                setShowSignIn(true);
+              }}
             >
               {t("signIn")}
             </Button>

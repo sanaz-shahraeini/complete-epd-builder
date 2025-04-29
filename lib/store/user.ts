@@ -16,15 +16,18 @@ interface User {
 
 interface UserStore {
   user: User | null
+  showSignInModal: boolean
   setUser: (user: User) => void
   clearUser: () => void
   updateUser: (updates: Partial<User>) => void
+  setShowSignInModal: (show: boolean) => void
 }
 
 export const useUserStore = create<UserStore>()(
   persist(
     (set) => ({
       user: null,
+      showSignInModal: false,
       setUser: (user) => {
         console.log('Setting user in store:', user)
         set({ user })
@@ -38,6 +41,10 @@ export const useUserStore = create<UserStore>()(
         set((state) => ({
           user: state.user ? { ...state.user, ...updates } : null,
         }))
+      },
+      setShowSignInModal: (show) => {
+        console.log('Setting showSignInModal:', show)
+        set({ showSignInModal: show })
       },
     }),
     {

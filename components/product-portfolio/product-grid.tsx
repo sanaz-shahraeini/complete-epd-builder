@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import dynamic from "next/dynamic";
+import { useUserStore } from "@/lib/store/user";
 
 interface Product {
   id: number;
@@ -114,6 +115,8 @@ const ProductPortfolio = dynamic(() => Promise.resolve(({ searchTerm = "" }: { s
   const fetchProducts = useCallback(async () => {
     if (!session?.accessToken) return;
 
+    const { setShowSignInModal } = useUserStore.getState();
+
     try {
       setIsLoading(true);
       setError(null);
@@ -134,7 +137,8 @@ const ProductPortfolio = dynamic(() => Promise.resolve(({ searchTerm = "" }: { s
 
       if (!response.ok) {
         if (response.status === 401) {
-          router.push("/signin");
+          // Show sign-in modal instead of redirecting
+          setShowSignInModal(true);
           return;
         }
         throw new Error(`API Error (${response.status})`);

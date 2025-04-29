@@ -16,12 +16,10 @@ import { cn } from "@/lib/utils"
 import { useRouter } from '@/i18n/navigation'
 import { getUserProfile, updateUserProfile, type UserProfile, changePassword } from "@/lib/api/auth"
 import { useToast } from "@/components/ui/use-toast"
-import { useState, useEffect, useRef } from "react"
-
+import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { signOut, useSession } from "next-auth/react"
 import { useUserStore } from '@/lib/store/user'
 import { useUsers } from "@/lib/context/UsersContext"
-
 
 const tabs = ["myEPDs", "inbox", "dataDirectory", "myProfile"] as const
 
@@ -240,6 +238,12 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const mobileMenuRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
+  const { data: session, status } = useSession()
+  const user = useUserStore((state) => state.user)
+  const { setShowSignInModal } = useUserStore()
+
+  // Initialize form data state
   const [formData, setFormData] = useState<{
     id: number;
     first_name: string;
@@ -277,72 +281,87 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
   const t = useTranslations()
   const n = useTranslations('navigation')
   const p = useTranslations('Profile')
-  const router = useRouter()
-  const { updateUser } = useUserStore()
-  const { data: session } = useSession()
-  const user = useUserStore((state) => state.user)
 
-  // Initialize component
+  // Handle authentication check
   useEffect(() => {
-    let isSubscribed = true
-
-    const initializeComponent = async () => {
-      try {
-        setIsLoading(true)
-        const profile = await getUserProfile()
-        
-        if (!isSubscribed) return
-        
-        if (profile) {
-          const profileData = {
-            id: profile.id,
-            first_name: profile.first_name || "",
-            last_name: profile.last_name || "",
-            email: profile.email || "",
-            country: profile.country || "",
-            city: profile.profile?.city || "", // Fix: Access city from profile.profile
-            company_name: profile.company_name || "",
-            user_type: profile.user_type || "regular",
-            profile_picture: undefined
-          }
-
-          setFormData(profileData)
-          setOriginalProfile(profile)
-
-          if (profile.profile?.profile_picture_url) {
-            const timestamp = new Date().getTime()
-            const newAvatarUrl = `${profile.profile.profile_picture_url}?t=${timestamp}`
-            setAvatarUrl(newAvatarUrl)
-            setAvatarKey(prev => prev + 1)
-          }
-        }
-      } catch (error) {
-        console.error('Error initializing component:', error)
-        toast({
-          description: (
-            <div className="flex items-center gap-2 p-1">
-              <AlertCircle className="h-4 w-4 text-red-500" />
-              <p>{p('errors.profileFetchFailed')}</p>
-            </div>
-          ),
-          className: "fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-sm bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm text-black dark:text-white border border-gray-200/20 dark:border-gray-700/30 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-lg",
-        })
-      } finally {
-        if (isSubscribed) {
-          setIsLoading(false)
-          setMounted(true)
-        }
-      }
+    if (status === 'unauthenticated') {
+      setShowSignInModal(true)
+      router.replace('/epd/en')
     }
+  }, [status, router, setShowSignInModal])
 
-    if (!mounted) {
+  // Memoize the initialization function
+  const initializeComponent = useCallback(async () => {
+    if (!session?.user || !mounted) return;
+    
+    try {
+      setIsLoading(true)
+      const profile = await getUserProfile()
+      
+      if (!profile) {
+        router.replace('/epd/en')
+        return
+      }
+      
+      const profileData = {
+        id: profile.id,
+        first_name: profile.first_name || "",
+        last_name: profile.last_name || "",
+        email: profile.email || "",
+        country: profile.country || "",
+        city: profile.profile?.city || "",
+        company_name: profile.company_name || "",
+        user_type: profile.user_type || "regular",
+        profile_picture: undefined
+      }
+
+      setFormData(profileData)
+      setOriginalProfile(profile)
+
+      if (profile.profile?.profile_picture_url) {
+        const timestamp = new Date().getTime()
+        const newAvatarUrl = `${profile.profile.profile_picture_url}?t=${timestamp}`
+        setAvatarUrl(newAvatarUrl)
+        setAvatarKey(prev => prev + 1)
+      }
+    } catch (error) {
+      console.error('Error initializing component:', error)
+      if (error instanceof Error && error.message.includes('token_not_valid')) {
+        await signOut({ redirect: false })
+        setShowSignInModal(true)
+        router.replace('/epd/en')
+        return
+      }
+      toast({
+        description: (
+          <div className="flex items-center gap-2 p-1">
+            <AlertCircle className="h-4 w-4 text-red-500" />
+            <p>{p('errors.profileFetchFailed')}</p>
+          </div>
+        ),
+        className: "fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-sm bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm text-black dark:text-white border border-gray-200/20 dark:border-gray-700/30 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-lg",
+      })
+    } finally {
+      setIsLoading(false)
+      setMounted(true)
+    }
+  }, [session?.user, mounted, p, toast, router])
+
+  // Initialize component when session is available
+  useEffect(() => {
+    if (status === 'authenticated' && !mounted) {
       initializeComponent()
     }
+  }, [status, mounted, initializeComponent])
 
-    return () => {
-      isSubscribed = false
-    }
-  }, [mounted, toast, p])
+  // Show loading state while checking authentication
+  if (status === 'loading' || !mounted) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+      </div>
+    )
+  }
 
   const fetchUserProfile = async () => {
     try {
@@ -536,9 +555,10 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
           ),
           className: "fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-sm bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm text-black dark:text-white border border-gray-200/20 dark:border-gray-700/30 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-lg",
         })
-        // Sign out and redirect to sign in
-        await signOut({ redirect: true, callbackUrl: '/signin' })
-        return
+        
+        // Sign out without redirect, then show sign-in modal
+        await signOut({ redirect: false });
+        return;
       }
 
       // Handle database connection errors

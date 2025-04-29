@@ -86,7 +86,7 @@ export function PasswordSignInForm({ callbackUrl = '/dashboard/profile' }: Props
 
         // Use Next.js router for navigation with locale
         const locale = params?.locale || 'en';
-        const redirectUrl = callbackUrl.startsWith('/') ? `/${locale}${callbackUrl}` : callbackUrl;
+        const redirectUrl = callbackUrl.startsWith('/') ? `/epd/${locale}${callbackUrl}` : callbackUrl;
         router.push(redirectUrl);
       } else {
         throw new Error('No authentication tokens received');

@@ -55,6 +55,9 @@ export function MessageList({ onSelectMessage }: MessageListProps) {
     content: "",
   });
   const user = useUserStore((state) => state.user);
+  const { setShowSignInModal } = useUserStore((state: any) => ({ 
+    setShowSignInModal: state.setShowSignInModal 
+  }));
   const { data: session, status } = useSession();
   const router = useRouter();
 
@@ -64,12 +67,13 @@ export function MessageList({ onSelectMessage }: MessageListProps) {
   useEffect(() => {
     // Only fetch messages when authenticated and initial fetch not done yet
     if (status === "unauthenticated") {
-      router.push("/signin");
+      // Show sign-in modal instead of redirecting
+      setShowSignInModal(true);
     } else if (status === "authenticated" && !isInitialFetchDone) {
       fetchMessages();
       setIsInitialFetchDone(true);
     }
-  }, [status, router, isInitialFetchDone]);
+  }, [status, router, isInitialFetchDone, setShowSignInModal]);
 
   const fetchMessages = async (url?: string) => {
     // Prevent concurrent fetches
@@ -90,7 +94,8 @@ export function MessageList({ onSelectMessage }: MessageListProps) {
 
       if (!response.ok) {
         if (response.status === 401) {
-          router.push("/signin");
+          // Show sign-in modal instead of redirecting
+          setShowSignInModal(true);
           return;
         }
         const errorData = await response.json().catch(() => ({}));
@@ -201,7 +206,8 @@ export function MessageList({ onSelectMessage }: MessageListProps) {
 
       if (!response.ok) {
         if (response.status === 401) {
-          router.push("/signin");
+          // Show sign-in modal instead of redirecting
+          setShowSignInModal(true);
           return;
         }
         throw new Error("Failed to mark message as read");

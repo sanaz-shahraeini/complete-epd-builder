@@ -62,7 +62,7 @@ function SignInForm({
   const router = useRouter();
   const t = useTranslations("SignIn");
   const locale = useLocale();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [authMethod, setAuthMethod] = useState<"password" | "email">(
     "password"
   );
@@ -73,6 +73,19 @@ function SignInForm({
   const [isMounted, setIsMounted] = useState(false);
   const { setUser } = useUserStore();
   const { toast } = useToast();
+
+  // Check for inconsistent authentication state on mount
+  useEffect(() => {
+    if (isMounted && status === "authenticated" && session) {
+      // If session exists but no tokens in localStorage, sign out
+      const accessToken = localStorage.getItem('accessToken');
+      if (!accessToken) {
+        console.log("SignInForm: Inconsistent auth state detected - session exists but no token");
+        // Sign out without redirecting
+        signOut({ redirect: false });
+      }
+    }
+  }, [isMounted, session, status]);
 
   // Define Zod schema for form validation
   const SignInSchema = z
@@ -196,8 +209,11 @@ function SignInForm({
     setLoading(true);
 
     try {
-      // Create a clean callback URL with noredirect parameter to prevent loops
-      const cleanCallbackUrl = `/epd/${locale}${callbackUrl.split("?")[0].replace(/^\/epd\/[^\/]+/, '')}`;
+      // Fix: Only prepend /epd/${locale} if not already present
+      let cleanCallbackUrl = callbackUrl;
+      if (!cleanCallbackUrl.startsWith(`/epd/${locale}`)) {
+        cleanCallbackUrl = `/epd/${locale}${cleanCallbackUrl.startsWith('/') ? '' : '/'}${cleanCallbackUrl.replace(/^\//, '')}`;
+      }
       const callbackWithParams = new URL(
         cleanCallbackUrl,
         window.location.origin
@@ -282,6 +298,20 @@ function SignInForm({
 
   const handleSuccessfulSignIn = async (shouldRedirect = true, callbackUrl = '') => {
     try {
+      // Ensure access and refresh tokens are in localStorage
+      const accessToken = localStorage.getItem('accessToken');
+      const refreshToken = localStorage.getItem('refreshToken');
+      
+      if (!accessToken || !refreshToken) {
+        console.error("Missing tokens in localStorage during handleSuccessfulSignIn");
+        setMessage({
+          type: "error",
+          text: t("errors.authenticationFailed"),
+        });
+        setLoading(false);
+        return;
+      }
+      
       // Fetch user profile using the token
       const userProfile = await getUserProfile();
       console.log("Fetched user profile after sign in:", userProfile);
@@ -418,13 +448,17 @@ function SignInForm({
         console.log("Verification successful:", verificationData);
 
         // Step 3: Sign in with the tokens from verification
+        let redirectUrl = callbackUrl;
+        if (!redirectUrl.startsWith(`/epd/${locale}`)) {
+          redirectUrl = `/epd/${locale}${redirectUrl.startsWith('/') ? '' : '/'}${redirectUrl.replace(/^\//, '')}`;
+        }
         const result = await signIn("credentials", {
           redirect: false,
           access: verificationData.access,
           refresh: verificationData.refresh,
           email: verificationData.email,
           type: "token",
-          callbackUrl: `/${locale}/dashboard/profile`,
+          callbackUrl: redirectUrl,
         });
 
         if (result?.error) {
@@ -432,8 +466,8 @@ function SignInForm({
           throw new Error(result.error);
         }
 
-        // Use the shared success handler
-        await handleSuccessfulSignIn();
+        // Use the shared success handler with the correct path
+        await handleSuccessfulSignIn(true, redirectUrl);
       }
     } catch (error) {
       console.error("Email verification error:", error);
@@ -449,8 +483,13 @@ function SignInForm({
   const handleGoogleSignIn = async () => {
     try {
       setLoading(true);
+      // Fix: Only prepend /epd/${locale} if not already present
+      let redirectUrl = callbackUrl;
+      if (!redirectUrl.startsWith(`/epd/${locale}`)) {
+        redirectUrl = `/epd/${locale}${redirectUrl.startsWith('/') ? '' : '/'}${redirectUrl.replace(/^\//, '')}`;
+      }
       await signIn("google", {
-        callbackUrl: `/${locale}/dashboard/profile`,
+        callbackUrl: redirectUrl,
         redirect: false,
       });
     } catch (error) {
@@ -542,14 +581,19 @@ function SignInForm({
 
     return (
       <div className="space-y-2">
-        <Label htmlFor={name}>{label}</Label>
+        <Label htmlFor={name} className="block mb-2 text-gray-800 dark:text-gray-200 font-medium">
+          {label}
+        </Label>
         <div className="relative">
           <Input
             id={name}
             type={type}
             disabled={disabled}
             placeholder={t(placeholderKeys[name])}
-            className={cn("pl-10", errors[name] && "border-red-500")}
+            className={cn(
+              "pl-10 text-gray-900 dark:text-white border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950", 
+              errors[name] && "border-red-500"
+            )}
             {...register(name)}
           />
           <div className="absolute left-3 top-3 h-5 w-5 text-teal-500">
@@ -565,7 +609,7 @@ function SignInForm({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="sm:max-w-[425px] p-0 max-h-[90vh] overflow-hidden">
+      <DialogContent className="sm:max-w-[425px] p-0 max-h-[90vh] overflow-hidden bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 mt-8">
         <div className="px-6 py-6 space-y-6">
           <div className="text-center space-y-2">
             <div className="flex justify-center mb-4">
@@ -573,10 +617,10 @@ function SignInForm({
                 <IoPersonOutline className="w-6 h-6 text-teal-600" />
               </div>
             </div>
-            <DialogTitle className="text-2xl font-semibold tracking-tight">
+            <DialogTitle className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">
               {t("title")}
             </DialogTitle>
-            <p className="text-sm text-muted-foreground">{t("description")}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300">{t("description")}</p>
           </div>
 
           {message && (
@@ -600,16 +644,16 @@ function SignInForm({
             value={authMethod}
             onValueChange={handleAuthMethodChange}
           >
-            <TabsList className="grid w-full grid-cols-2 bg-background">
+            <TabsList className="grid w-full grid-cols-2 bg-gray-100 dark:bg-gray-800">
               <TabsTrigger
                 value="password"
-                className="data-[state=active]:bg-teal-50 data-[state=active]:text-teal-700"
+                className="data-[state=active]:bg-teal-50 data-[state=active]:text-teal-700 text-gray-700 dark:text-gray-300 data-[state=active]:dark:bg-teal-900 data-[state=active]:dark:text-teal-100"
               >
                 {t("signInWithPassword")}
               </TabsTrigger>
               <TabsTrigger
                 value="email"
-                className="data-[state=active]:bg-teal-50 data-[state=active]:text-teal-700"
+                className="data-[state=active]:bg-teal-50 data-[state=active]:text-teal-700 text-gray-700 dark:text-gray-300 data-[state=active]:dark:bg-teal-900 data-[state=active]:dark:text-teal-100"
               >
                 {t("signInWithEmail")}
               </TabsTrigger>
@@ -623,7 +667,7 @@ function SignInForm({
                   noValidate
                 >
                   <div>
-                    <Label htmlFor="username" className="block mb-2">
+                    <Label htmlFor="username" className="block mb-2 text-gray-800 dark:text-gray-200 font-medium">
                       {t("username")}
                     </Label>
                     <div className="relative">
@@ -633,21 +677,21 @@ function SignInForm({
                         placeholder={t("placeholders.username")}
                         {...register("username")}
                         className={cn(
-                          "w-full pl-10",
+                          "w-full pl-10 text-gray-900 dark:text-white border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950",
                           errors.username && "border-destructive"
                         )}
                       />
-                      <IoPersonOutline className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                      <IoPersonOutline className="absolute left-3 top-1/2 transform -translate-y-1/2 text-teal-500" />
                     </div>
                     {errors.username && (
-                      <p className="text-destructive text-sm mt-1">
+                      <p className="text-destructive text-sm mt-1 text-red-500">
                         {errors.username.message}
                       </p>
                     )}
                   </div>
 
                   <div>
-                    <Label htmlFor="password" className="block mb-2">
+                    <Label htmlFor="password" className="block mb-2 text-gray-800 dark:text-gray-200 font-medium">
                       {t("password")}
                     </Label>
                     <div className="relative">
@@ -657,14 +701,14 @@ function SignInForm({
                         placeholder={t("placeholders.password")}
                         {...register("password")}
                         className={cn(
-                          "w-full pl-10",
+                          "w-full pl-10 text-gray-900 dark:text-white border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950",
                           errors.password && "border-destructive"
                         )}
                       />
-                      <IoKeyOutline className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                      <IoKeyOutline className="absolute left-3 top-1/2 transform -translate-y-1/2 text-teal-500" />
                     </div>
                     {errors.password && (
-                      <p className="text-destructive text-sm mt-1">
+                      <p className="text-destructive text-sm mt-1 text-red-500">
                         {errors.password.message}
                       </p>
                     )}
@@ -690,7 +734,7 @@ function SignInForm({
                     <Separator className="w-full" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-2 text-muted-foreground">
+                    <span className="bg-white dark:bg-gray-900 px-2 text-gray-600 dark:text-gray-400">
                       {t("or")}
                     </span>
                   </div>
@@ -699,7 +743,7 @@ function SignInForm({
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full"
+                  className="w-full border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200"
                   onClick={handleGoogleSignIn}
                   disabled={true}
                 >
@@ -730,7 +774,7 @@ function SignInForm({
                         <IoKeyOutline />
                       )}
                       <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">
+                        <span className="text-gray-600 dark:text-gray-300">
                           {countdown > 0 ? (
                             <>
                               {t("codeExpiresIn")} {Math.floor(countdown / 60)}:
@@ -743,7 +787,7 @@ function SignInForm({
                         <Button
                           type="button"
                           variant="link"
-                          className="p-0 h-auto text-teal-600"
+                          className="p-0 h-auto text-teal-600 dark:text-teal-400"
                           onClick={handleResendCode}
                           disabled={loading || countdown > 0}
                         >
@@ -776,7 +820,7 @@ function SignInForm({
                   </Button>
 
                   {verificationSent && (
-                    <p className="text-sm text-muted-foreground text-center">
+                    <p className="text-sm text-gray-600 dark:text-gray-300 text-center">
                       {t("checkEmail")}
                     </p>
                   )}
@@ -786,11 +830,11 @@ function SignInForm({
           </Tabs>
 
           <div className="text-center text-sm">
-            <span className="text-muted-foreground">{t("noAccount")} </span>
+            <span className="text-gray-600 dark:text-gray-300">{t("noAccount")} </span>
             <Button
               type="button"
               variant="link"
-              className="p-0 h-auto text-teal-600"
+              className="p-0 h-auto text-teal-600 dark:text-teal-400"
               onClick={() => setShowSignUp(true)}
             >
               {t("createAccount")}

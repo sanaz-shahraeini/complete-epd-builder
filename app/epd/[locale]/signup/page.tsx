@@ -21,11 +21,11 @@ const SignUpPage = () => {
   }, []);
 
   const handleClose = () => {
-    router.push(`/${locale}`);
+    router.push(`/epd/${locale}`);
   };
 
   const handleSignInClick = () => {
-    router.push(`/${locale}/signin${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ''}`);
+    router.push(`/epd/${locale}/signin${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ''}`);
   };
 
   const handleShowSignUp = () => {

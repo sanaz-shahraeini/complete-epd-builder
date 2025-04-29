@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   AppBar,
   Toolbar,
@@ -11,9 +11,6 @@ import {
   useTheme,
   Tooltip,
   Button,
-  FormControl,
-  Select,
-  MenuItem,
   Badge,
   Drawer,
   List,
@@ -37,46 +34,129 @@ import ViewInArIcon from "@mui/icons-material/ViewInAr";
 import GridViewIcon from "@mui/icons-material/GridView";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import { useProducts } from "../../useContexts/ProductsContext";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
 import { ROUTES } from "@/i18n/navigation";
+import dynamic from 'next/dynamic';
+import { useUserStore } from "@/lib/store/user";
+
+// Dynamically import forms with no SSR to avoid translation errors during server rendering
+const SignInForm = dynamic(() => import("@/components/sign/SignInForm"), { ssr: false });
+const SignUpForm = dynamic(() => import("@/components/sign/SignUpForm"), { ssr: false });
+
+// Define constants outside component to prevent re-creation on each render
+const CATEGORIES = [
+  { id: "map", label: "Map", icon: MapIcon },
+  {
+    id: "construction",
+    label: "Construction Products",
+    icon: ConstructionIcon,
+  },
+  { id: "building", label: "Building Products", icon: ApartmentIcon },
+  { id: "electronic", label: "Electronic Products", icon: DevicesIcon },
+];
+
+// Sidebar categories based on the image
+const SIDEBAR_CATEGORIES = [
+  { id: "all", label: "All", icon: GridViewIcon },
+  { id: "norm", label: "Norm...", icon: FormatListBulletedIcon },
+  { id: "beton", label: "Beton...", icon: ViewInArIcon },
+  { id: "baur", label: "Baur...", icon: ViewInArIcon },
+  { id: "o2build", label: "O2 Buil...", icon: ViewInArIcon },
+  { id: "epd", label: "EPD", icon: ViewInArIcon },
+];
 
 const Header = () => {
-  const categories = [
-    { id: "map", label: "Map", icon: MapIcon },
-    {
-      id: "construction",
-      label: "Construction Products",
-      icon: ConstructionIcon,
-    },
-    { id: "building", label: "Building Products", icon: ApartmentIcon },
-    { id: "electronic", label: "Electronic Products", icon: DevicesIcon },
-  ];
-  
-  // Sidebar categories based on the image
-  const sidebarCategories = [
-    { id: "all", label: "All", icon: GridViewIcon },
-    { id: "norm", label: "Norm...", icon: FormatListBulletedIcon },
-    { id: "beton", label: "Beton...", icon: ViewInArIcon },
-    { id: "baur", label: "Baur...", icon: ViewInArIcon },
-    { id: "o2build", label: "O2 Buil...", icon: ViewInArIcon },
-    { id: "epd", label: "EPD", icon: ViewInArIcon },
-  ];
-  
   const { loading } = useProducts();
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const locale = useLocale();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
-  const isLargeScreen = useMediaQuery(theme.breakpoints.up("lg"));
-  const [selectedCategory, setSelectedCategory] = useState(categories[2].id);
+  const [mounted, setMounted] = useState(false);
+  
+  // Move all media queries inside useEffect to prevent hydration mismatch
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [isTabletScreen, setIsTabletScreen] = useState(false);
+  const [isLargeScreen, setIsLargeScreen] = useState(true);
+  
+  // State initialization
+  const [selectedCategory, setSelectedCategory] = useState(CATEGORIES[2].id);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [selectedSidebarCategory, setSelectedSidebarCategory] = useState("all");
+  const [showSignInForm, setShowSignInForm] = useState(false);
+  const [showSignUpForm, setShowSignUpForm] = useState(false);
+  const [formsLoaded, setFormsLoaded] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  // Get showSignInModal from user store - only after mounting
+  const showSignInModal = useUserStore((state) => state.showSignInModal);
+  const setShowSignInModal = useUserStore((state) => state.setShowSignInModal);
 
-  const handleLanguageChange = (event) => {
+  // Handle media queries after mount
+  useEffect(() => {
+    setMounted(true);
+    
+    const handleResize = () => {
+      setIsSmallScreen(window.matchMedia(theme.breakpoints.down("sm").replace("@media ", "")).matches);
+      setIsTabletScreen(window.matchMedia(theme.breakpoints.between("sm", "md").replace("@media ", "")).matches);
+      setIsLargeScreen(window.matchMedia(theme.breakpoints.up("lg").replace("@media ", "")).matches);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [theme.breakpoints]);
+  
+  // Monitor authentication status
+  useEffect(() => {
+    // Check and set the authentication status based on NextAuth session
+    const checkAuthentication = async () => {
+      if (status === "authenticated" && session && session.user) {
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
+      }
+    };
+    
+    checkAuthentication();
+  }, [session, status]);
+  
+  useEffect(() => {
+    // Pre-load the forms
+    Promise.all([
+      import("@/components/sign/SignInForm"),
+      import("@/components/sign/SignUpForm")
+    ]).then(() => {
+      setFormsLoaded(true);
+    });
+    
+    // Check for authentication tokens in local storage
+    if (typeof window !== 'undefined') {
+      const accessToken = localStorage.getItem('accessToken');
+      // Only update state if needed to avoid infinite loop
+      if (!accessToken && isAuthenticated) {
+        setIsAuthenticated(false);
+      }
+    }
+    
+    // Fix: Empty dependency array to run only once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  
+  // Add separate effect for authentication changes
+  useEffect(() => {
+    // Check for authentication tokens in local storage
+    if (typeof window !== 'undefined') {
+      const accessToken = localStorage.getItem('accessToken');
+      // Only update state if needed to avoid infinite loop
+      if (!accessToken && isAuthenticated) {
+        setIsAuthenticated(false);
+      }
+    }
+  }, [isAuthenticated]);
+
+  const handleLanguageChange = useCallback((event) => {
     const newLocale = event.target.value;
     
     // Get the current path
@@ -103,30 +183,58 @@ const Header = () => {
       // If locale not found in the path, go to the homepage with new locale
       router.push(`/epd/${newLocale}`);
     }
-  };
+  }, [router]);
 
-  const toggleMobileDrawer = () => {
-    setMobileDrawerOpen(!mobileDrawerOpen);
-  };
+  const toggleMobileDrawer = useCallback(() => {
+    setMobileDrawerOpen(prev => !prev);
+  }, []);
 
-  const handleCategorySelect = (category) => {
+  const handleCategorySelect = useCallback((category) => {
     setSelectedCategory(category);
     setMobileDrawerOpen(false);
-  };
+  }, []);
   
-  const handleSidebarCategorySelect = (category) => {
+  const handleSidebarCategorySelect = useCallback((category) => {
     setSelectedSidebarCategory(category);
-  };
+  }, []);
 
-  const handleAvatarClick = () => {
-    if (status === "authenticated") {
-      // User is signed in, redirect to profile
+  const handleAvatarClick = useCallback((event) => {
+    event.preventDefault(); // Prevent default navigation
+    
+    // Check for valid access token in localStorage first
+    const accessToken = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    
+    // Only consider the user authenticated if both NextAuth session exists AND local storage token exists
+    const isReallyAuthenticated = status === "authenticated" && session && session.user && accessToken;
+    
+    if (isReallyAuthenticated) {
+      // User is signed in with valid token, redirect to profile with proper path structure
+      // Use ROUTES constant from i18n/navigation to ensure proper path
       router.push(ROUTES.DASHBOARD_ROUTES.PROFILE);
     } else {
-      // User is not signed in, redirect to sign in page
-      router.push(ROUTES.AUTH.SIGNIN);
+      // Session is invalid or token is missing, show sign in modal
+      // If we have a session but no token, sign out to clean up the inconsistent state
+      if (status === "authenticated" && session && session.user && !accessToken) {
+        // Clean up the session without redirecting
+        signOut({ redirect: false }).then(() => {
+          if (!showSignInForm) {
+            setShowSignInForm(true);
+          }
+        });
+      } else if (!showSignInForm) {
+        // Only set to true if it's not already true
+        setShowSignInForm(true);
+      }
     }
-  };
+  }, [status, session, router, showSignInForm]);
+  
+  const handleCloseSignInForm = useCallback(() => {
+    setShowSignInForm(false);
+  }, []);
+  
+  const handleCloseSignUpForm = useCallback(() => {
+    setShowSignUpForm(false);
+  }, []);
 
   // Custom mobile drawer
   const mobileDrawer = (
@@ -196,7 +304,7 @@ const Header = () => {
         </Typography>
         
         <List sx={{ p: 0 }}>
-          {sidebarCategories.map((category) => {
+          {SIDEBAR_CATEGORIES.map((category) => {
             const Icon = category.icon;
             const isSelected = selectedSidebarCategory === category.id;
             
@@ -252,7 +360,7 @@ const Header = () => {
         </Typography>
         
         <List sx={{ p: 0 }}>
-          {categories.map((category) => {
+          {CATEGORIES.map((category) => {
             const Icon = category.icon;
             const isSelected = selectedCategory === category.id;
             
@@ -334,37 +442,54 @@ const Header = () => {
       </List>
       
       <Box sx={{ p: 2, mt: 'auto' }}>
-        <FormControl variant="outlined" fullWidth>
-          <Select
+        <div style={{
+          border: "1px solid var(--light-teal)",
+          borderRadius: "4px",
+          padding: "8px 16px",
+          width: "100%",
+          position: "relative"
+        }}>
+          <select
             value={locale}
             onChange={handleLanguageChange}
             name="mobile-language"
-            sx={{
-              borderColor: 'var(--light-teal)',
-              color: 'var(--dark-teal)',
-              textTransform: 'none',
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'var(--light-teal)',
-              },
-              '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'var(--primary-teal)',
-              },
-              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'var(--primary-teal)',
-              }
+            style={{
+              backgroundColor: "transparent",
+              border: "none",
+              width: "100%",
+              fontSize: "14px",
+              color: "var(--dark-teal)",
+              padding: "4px 0",
+              outline: "none",
+              appearance: "none",
+              cursor: "pointer"
             }}
-            displayEmpty
-            renderValue={() => `Language: ${locale === 'en' ? 'English' : locale === 'de' ? 'Deutsch' : 'Français'}`}
           >
-            <MenuItem value="en">English</MenuItem>
-            <MenuItem value="de">Deutsch</MenuItem>
-            <MenuItem value="fr">Français</MenuItem>
-          </Select>
-        </FormControl>
+            <option value="en">Language: English</option>
+            <option value="de">Language: Deutsch</option>
+            <option value="fr">Language: Français</option>
+          </select>
+          <div style={{
+            position: "absolute",
+            right: "12px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            pointerEvents: "none"
+          }}>
+            <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+        </div>
       </Box>
     </Drawer>
   );
   
+  // Only render content after mounting to prevent hydration mismatch
+  if (!mounted) {
+    return null; // or a loading skeleton that matches server-side render
+  }
+
   return (
     <>
       {mobileDrawer}
@@ -470,7 +595,7 @@ const Header = () => {
                 width: '100%',
               }}
             >
-              {categories.map((category) => {
+              {CATEGORIES.map((category) => {
                 const Icon = category.icon;
                 const isSelected = selectedCategory === category.id;
                 return (
@@ -524,7 +649,7 @@ const Header = () => {
           )}
 
           {/* For tablet screens - Simplified nav */}
-          {!isLargeScreen && !isMobile && (
+          {!isLargeScreen && !isSmallScreen && (
             <Box sx={{ 
               display: "flex", 
               alignItems: "center",
@@ -573,7 +698,7 @@ const Header = () => {
             gap: { xs: 1, sm: 1.5, md: 2 },
             flex: '0 0 auto'
           }}>
-            {!loading && !isMobile && (
+            {!loading && !isSmallScreen && (
               <IconButton
                 size="small"
                 sx={{
@@ -588,7 +713,7 @@ const Header = () => {
               </IconButton>
             )}
 
-            {!isMobile && (
+            {!isSmallScreen && (
               <Tooltip title="Help">
                 <IconButton
                   size="small"
@@ -623,44 +748,50 @@ const Header = () => {
               </IconButton>
             </Tooltip>
 
-            {!isMobile && (
-              <FormControl
-                size="small"
-                sx={{
+            {!isSmallScreen && (
+              <div
+                style={{
                   minWidth: 100,
-                  ml: 0.5,
-                  display: { xs: 'none', md: 'block' },
-                  "& .MuiOutlinedInput-root": {
-                    backgroundColor: 'var(--upload_bg)',
-                    borderRadius: "4px",
-                    "& fieldset": { border: "none" },
-                    "&:hover": {
-                      backgroundColor: 'var(--bg_color)',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
-                    },
-                  },
+                  marginLeft: 8,
+                  display: 'block',
+                  position: 'relative'
                 }}
               >
-                <Select
+                <select
                   value={locale}
                   onChange={handleLanguageChange}
                   name="language"
-                  sx={{
-                    "& .MuiSelect-select": {
-                      py: 1,
-                      pr: 3,
-                      pl: 1.5,
-                    },
+                  style={{
+                    backgroundColor: 'var(--upload_bg)',
+                    borderRadius: "4px",
+                    border: "none",
+                    padding: "8px 28px 8px 12px",
+                    appearance: "none",
+                    cursor: "pointer",
+                    fontSize: "14px",
+                    color: "var(--text-medium)",
+                    width: "100%"
                   }}
                 >
-                  <MenuItem value="en">English</MenuItem>
-                  <MenuItem value="de">Deutsch</MenuItem>
-                  <MenuItem value="fr">Français</MenuItem>
-                </Select>
-              </FormControl>
+                  <option value="en">English</option>
+                  <option value="de">Deutsch</option>
+                  <option value="fr">Français</option>
+                </select>
+                <div style={{
+                  position: "absolute",
+                  right: "8px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  pointerEvents: "none"
+                }}>
+                  <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+              </div>
             )}
 
-            <Tooltip title={status === "authenticated" ? "My Account" : "Sign In"}>
+            <Tooltip title={isAuthenticated ? "My Account" : "Sign In"}>
               <IconButton
                 size="small"
                 onClick={handleAvatarClick}
@@ -678,8 +809,38 @@ const Header = () => {
           </Box>
         </Toolbar>
       </AppBar>
+      
+      {mounted && (
+        <>
+          <div style={{ display: 'none' }}>
+            <SignInForm open={false} onClose={() => {}} setShowSignUp={() => {}} />
+            <SignUpForm open={false} onClose={() => {}} setShowSignIn={() => {}} setShowSignUp={() => {}} />
+          </div>
+          
+          <SignInForm
+            open={showSignInForm && formsLoaded}
+            onClose={handleCloseSignInForm}
+            setShowSignUp={(show) => {
+              setShowSignInForm(false);
+              setShowSignUpForm(show);
+            }}
+            callbackUrl={ROUTES.DASHBOARD_ROUTES.PROFILE}
+          />
+          
+          <SignUpForm
+            open={showSignUpForm && formsLoaded}
+            onClose={handleCloseSignUpForm}
+            setShowSignIn={(show) => {
+              setShowSignUpForm(false);
+              setShowSignInForm(show);
+            }}
+            setShowSignUp={setShowSignUpForm}
+          />
+        </>
+      )}
     </>
   );
 };
 
-export default Header;
+// Export with improved memoization 
+export default React.memo(Header);

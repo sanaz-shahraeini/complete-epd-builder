@@ -20,6 +20,21 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Handle root locale paths (e.g., /en, /de)
+  const isRootLocalePath = new RegExp(`^/(${locales.join("|")})/?$`);
+  if (isRootLocalePath.test(pathname)) {
+    return NextResponse.next();
+  }
+
+  // Check for and fix double locale in path (e.g., /epd/en/en/...)
+  const doubleLocalePattern = new RegExp(`^/epd/(${locales.join("|")})/(${locales.join("|")})`);
+  if (doubleLocalePattern.test(pathname)) {
+    const correctedPath = pathname.replace(doubleLocalePattern, `/epd/$1`);
+    return NextResponse.redirect(
+      new URL(correctedPath, request.url)
+    );
+  }
+
   // Detect and redirect API routes with locale prefixes
   // e.g., /epd/en/api/auth/error -> /api/auth/error
   const localeApiMatch = new RegExp(`^/epd/(${locales.join("|")})/api/`);
@@ -52,9 +67,9 @@ export function middleware(request: NextRequest) {
     );
   }
 
-  // Handle direct locale routes like /en/signin -> redirect to /epd/en/signin
+  // Handle direct locale routes
   const directLocaleMatch = new RegExp(`^/(${locales.join("|")})/`);
-  if (directLocaleMatch.test(pathname)) {
+  if (directLocaleMatch.test(pathname) && !pathname.startsWith(`/${defaultLocale}`)) {
     const segments = pathname.split('/');
     const locale = segments[1];
     const newPath = `/epd${pathname}`;
@@ -74,10 +89,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Handle /epd or /epd-builder root paths
-  if (pathname === "/epd" || pathname === "/epd-builder") {
+  // Handle /epd root path
+  if (pathname === "/epd") {
     return NextResponse.redirect(
-      new URL(`/epd/${defaultLocale}/signin`, request.url)
+      new URL(`/epd/${defaultLocale}`, request.url)
     );
   }
 
