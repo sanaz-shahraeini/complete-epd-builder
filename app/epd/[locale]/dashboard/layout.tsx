@@ -24,20 +24,57 @@ export default function DashboardLayout({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isAdminSidebarOpen, setIsAdminSidebarOpen] = useState(false)
   const locale = useLocale()
-  console.log('Current locale:', locale)
+  const [isProfilePage, setIsProfilePage] = useState(false)
+  const [userDataFetched, setUserDataFetched] = useState(false)
 
+  // Check if we're on the profile page to prevent update loops
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const userData = await getUserProfile()
-        setUser(userData)
-      } catch (error) {
-        console.error('Failed to fetch user data', error)
-      }
+    // Check location based on window object to avoid dependency on router
+    if (typeof window !== 'undefined') {
+      const isProfile = window.location.pathname.includes('/dashboard/profile');
+      setIsProfilePage(isProfile);
+      console.log('Is profile page:', isProfile);
+    }
+  }, []);
+
+  // Fetch user data only if needed and not on profile page
+  useEffect(() => {
+    // Skip effect if we're on the profile page or already fetched data
+    if (isProfilePage || userDataFetched) {
+      return;
     }
 
-    fetchUserData()
-  }, [setUser])
+    let isMounted = true;
+    const controller = new AbortController();
+    
+    const fetchUserData = async () => {
+      try {
+        if (!user && isMounted) {
+          console.log('Fetching user data from dashboard layout');
+          const userData = await getUserProfile();
+          
+          if (isMounted) {
+            setUser(userData);
+            setUserDataFetched(true);
+          }
+        } else if (user) {
+          // Already have user data
+          setUserDataFetched(true);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user data', error);
+        // Mark as fetched even on error to prevent loops
+        setUserDataFetched(true);
+      }
+    };
+
+    fetchUserData();
+    
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
+  }, [user, isProfilePage, userDataFetched]); // Add dependencies to prevent stale state
 
   return (
     <UsersProvider>

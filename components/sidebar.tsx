@@ -10,7 +10,7 @@ import { useTranslations } from 'next-intl'
 import { signOut } from "next-auth/react"
 import { useUserStore } from '@/lib/store/user'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { ImImage } from 'react-icons/im'
 import Image from 'next/image'
 import { useLocale } from "next-intl"
@@ -35,41 +35,54 @@ function SidebarContent({ isMobile, onMobileClose }: { isMobile?: boolean; onMob
   const router = useRouter()
   const pathname = usePathname()
   const locale = useLocale()
-  const { user, clearUser } = useUserStore()
-  const { setShowSignInModal } = useUserStore((state: any) => ({ 
-    setShowSignInModal: state.setShowSignInModal 
+  
+  // Use a reducer pattern to minimize store subscriptions
+  const userState = useUserStore((state) => ({
+    user: state.user,
+    clearUser: state.clearUser,
+    setShowSignInModal: state.setShowSignInModal
   }))
+  const { setShowSignInModal } = userState
   const n = useTranslations('Navigation')
 
-  console.log('Current user in sidebar:', user)
+  // Skip circular update on profile page
+  const isProfilePage = pathname?.includes('/dashboard/profile')
+  
+  // Use useRef to avoid re-renders from console logs
+  const logRef = useRef({
+    logged: false
+  })
 
   useEffect(() => {
-    if (user) {
+    // Skip effect for profile page
+    if (isProfilePage) {
+      return
+    }
+    
+    // Log only once to prevent update loops
+    if (!logRef.current.logged && userState.user) {
+      logRef.current.logged = true
       console.log('User data in sidebar:', {
-        name: `${user.first_name} ${user.last_name}`,
-        picture: user.profile_picture_url
+        name: `${userState.user.first_name} ${userState.user.last_name}`,
+        picture: userState.user.profile_picture_url
       })
     }
-  }, [user])
+  }, [userState.user, isProfilePage])
+
+  useEffect(() => {
+    if (userState.user) {
+      console.log('Current user in sidebar:', userState.user)
+    }
+  }, [userState.user])
 
   const isLinkActive = (path: string) => {
     // Handle potential pathname differences between dev and production
-    let currentPath = pathname;
+    if (!pathname) return false;
     
-    // Remove locale prefix if present
-    if (currentPath.startsWith(`/${locale}/`)) {
-      currentPath = currentPath.slice(locale.length + 2);
-    } else if (currentPath.startsWith(`/epd/${locale}/`)) {
-      currentPath = currentPath.slice(locale.length + 6);
-    }
-
-    // Check if current path matches either English or German version
-    return currentPath === path || 
-           currentPath === germanToEnglishPaths[path as keyof typeof germanToEnglishPaths] ||
-           Object.entries(germanToEnglishPaths).find(([de, en]) => 
-             (currentPath.includes(de) && path.includes(en)) || 
-             (currentPath.includes(en) && path.includes(de))
-           ) !== undefined;
+    const sanitizedPathname = pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
+    const sanitizedPath = path.endsWith('/') ? path.slice(0, -1) : path;
+    
+    return sanitizedPathname === sanitizedPath || sanitizedPathname.startsWith(`${sanitizedPath}/`);
   };
 
   const getLinkClassName = (path: string) => {
@@ -83,26 +96,29 @@ function SidebarContent({ isMobile, onMobileClose }: { isMobile?: boolean; onMob
     }`
   }
 
-  const handleLogout = async (e: React.MouseEvent) => {
+  const handleLogout = async () => {
     try {
-      // Prevent default navigation
-      e.preventDefault();
-      e.stopPropagation();
+      if (isMobile && onMobileClose) {
+        onMobileClose()
+      }
       
-      // Log initial logout attempt
-      console.log('Logout initiated', { 
-        isMobile, 
-        pathname, 
-        onMobileClose: !!onMobileClose 
+      // Get the current path for analytics
+      const currentPath = pathname || '/';
+
+      // Log the user's navigation path before logout
+      console.log('User navigation before logout:', {
+        path: currentPath,
+        locale: currentPath.split('/')[2] || locale,
+        timestamp: new Date().toISOString(),
       });
 
-      // Close mobile menu if it's open
-      if (onMobileClose) {
-        onMobileClose()
+      // Log any query parameters
+      if (typeof window !== 'undefined') {
+        console.log('URL search params:', window.location.search);
       }
 
       // Clear the user data from the store
-      clearUser()
+      userState.clearUser()
       
       // Clear tokens from local storage
       if (typeof window !== 'undefined') {
@@ -140,6 +156,11 @@ function SidebarContent({ isMobile, onMobileClose }: { isMobile?: boolean; onMob
 
   // Add event listener to capture any potential issues
   useEffect(() => {
+    // Skip for profile page
+    if (isProfilePage) {
+      return
+    }
+    
     const logoutButton = document.querySelector('button[type="button"]');
     if (logoutButton) {
       const handleClick = (e: Event) => {
@@ -156,7 +177,7 @@ function SidebarContent({ isMobile, onMobileClose }: { isMobile?: boolean; onMob
         logoutButton.removeEventListener('click', handleClick);
       };
     }
-  }, [isMobile, pathname]);
+  }, [isMobile, pathname, isProfilePage]);
 
   return (
     <div className="flex flex-col h-full relative">
@@ -175,29 +196,28 @@ function SidebarContent({ isMobile, onMobileClose }: { isMobile?: boolean; onMob
       {/* User Info */}
       <div className={`${isMobile ? 'p-4' : 'p-4'} flex items-center space-x-3`}>
         <Avatar className="w-8 h-8">
-          {user?.profile_picture_url ? (
+          {userState.user?.profile_picture_url ? (
             <AvatarImage 
-              src={user.profile_picture_url}
-              alt={`${user.first_name} ${user.last_name}`}
+              src={userState.user.profile_picture_url}
+              alt={`${userState.user.first_name} ${userState.user.last_name}`}
               className="object-cover"
               onError={(e) => {
-                console.error('Avatar image failed to load:', e)
                 const target = e.target as HTMLImageElement
                 target.style.display = 'none'
               }}
             />
           ) : (
             <AvatarFallback className="bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
-              {user?.first_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || '👤'}
+              {userState.user?.first_name?.[0]?.toUpperCase() || userState.user?.email?.[0]?.toUpperCase() || '👤'}
             </AvatarFallback>
           )}
         </Avatar>
         <div>
           <div className="font-medium text-gray-900 dark:text-gray-100">
-            {user ? `${user.first_name} ${user.last_name}` : n('userName')}
+            {userState.user ? `${userState.user.first_name} ${userState.user.last_name}` : n('userName')}
           </div>
           <div className="text-sm text-gray-500 dark:text-gray-400">
-            {user?.company_name || n('companyName')}
+            {userState.user?.company_name || n('companyName')}
           </div>
         </div>
       </div>

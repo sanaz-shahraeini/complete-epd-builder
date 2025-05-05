@@ -210,6 +210,7 @@ const MapComponent = forwardRef(
                 geo: product.geo,
                 geoMapped: product.geoMapped,
                 productId: product.id || product.uid,
+                pdf_url: product.pdf_url || null,
               };
             })
             .filter((location) => location !== null);
@@ -931,6 +932,23 @@ const MapComponent = forwardRef(
                         {location.refYear && location.refYear !== "all" && (
                           <p>
                             <strong>EPD Year:</strong> {location.refYear}
+                          </p>
+                        )}
+                        {location.pdf_url && (
+                          <p>
+                            <strong>EPD Document:</strong>{" "}
+                            <a 
+                              href={location.pdf_url} 
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ 
+                                color: '#00796b', 
+                                textDecoration: 'underline',
+                                fontWeight: 'bold'
+                              }}
+                            >
+                              Download PDF
+                            </a>
                           </p>
                         )}
                       </>

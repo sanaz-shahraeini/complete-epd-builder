@@ -84,10 +84,18 @@ export function PasswordSignInForm({ callbackUrl = '/dashboard/profile' }: Props
           description: t("success.signedIn"),
         });
 
-        // Use Next.js router for navigation with locale
+        // Hardcode the correct redirect URL with /epd prefix
+        // This ensures we always go to the correct dashboard path
         const locale = params?.locale || 'en';
-        const redirectUrl = callbackUrl.startsWith('/') ? `/epd/${locale}${callbackUrl}` : callbackUrl;
-        router.push(redirectUrl);
+        
+        // Create an absolute URL with the current origin to avoid malformed URLs
+        const origin = window.location.origin; // e.g. http://localhost:3000
+        const redirectUrl = `${origin}/epd/${locale}/dashboard/profile`;
+        
+        console.log('Redirecting after sign-in to:', redirectUrl);
+        
+        // Force a hard navigation to ensure the correct URL
+        window.location.href = redirectUrl;
       } else {
         throw new Error('No authentication tokens received');
       }

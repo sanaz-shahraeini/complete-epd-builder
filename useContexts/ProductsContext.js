@@ -8,7 +8,7 @@ export const ProductsContext = createContext();
 export const ProductsProvider = ({ children }) => {
   const [products, setProducts] = useState([]);
   const [allProducts, setAllProducts] = useState([]); // For map display
-  const [regularProducts, setRegularProducts] = useState([]); // For search functionality
+  const [regularProducts, setRegularProducts] = useState([]); // For search function
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);

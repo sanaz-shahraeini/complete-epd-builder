@@ -156,6 +156,18 @@ const Header = () => {
     }
   }, [isAuthenticated]);
 
+  // Add effect to sync showSignInModal from store with local showSignInForm state
+  useEffect(() => {
+    if (showSignInModal) {
+      // When the global showSignInModal is set to true, set the local state as well
+      console.log('showSignInModal is true, setting showSignInForm to true');
+      setShowSignInForm(true);
+      
+      // Reset the global state to avoid future side effects
+      setShowSignInModal(false);
+    }
+  }, [showSignInModal, setShowSignInModal]);
+
   const handleLanguageChange = useCallback((event) => {
     const newLocale = event.target.value;
     
@@ -201,32 +213,23 @@ const Header = () => {
   const handleAvatarClick = useCallback((event) => {
     event.preventDefault(); // Prevent default navigation
     
-    // Check for valid access token in localStorage first
-    const accessToken = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-    
-    // Only consider the user authenticated if both NextAuth session exists AND local storage token exists
-    const isReallyAuthenticated = status === "authenticated" && session && session.user && accessToken;
-    
-    if (isReallyAuthenticated) {
-      // User is signed in with valid token, redirect to profile with proper path structure
-      // Use ROUTES constant from i18n/navigation to ensure proper path
-      router.push(ROUTES.DASHBOARD_ROUTES.PROFILE);
+    // Check authentication status
+    if (status === "authenticated" && session?.user) {
+      // User is authenticated, navigate to profile
+      console.log('User is authenticated, navigating to profile');
+      
+      // Direct browser to profile page using window.location to avoid React rendering issues
+      // This bypasses the Next.js Router which might cause the rendering loop
+      window.location.href = `/epd/${locale}/dashboard/profile`;
     } else {
-      // Session is invalid or token is missing, show sign in modal
-      // If we have a session but no token, sign out to clean up the inconsistent state
-      if (status === "authenticated" && session && session.user && !accessToken) {
-        // Clean up the session without redirecting
-        signOut({ redirect: false }).then(() => {
-          if (!showSignInForm) {
-            setShowSignInForm(true);
-          }
-        });
-      } else if (!showSignInForm) {
-        // Only set to true if it's not already true
-        setShowSignInForm(true);
-      }
+      // User is not authenticated, show sign-in modal
+      console.log('User is not authenticated, showing sign-in modal');
+      setShowSignInForm(true);
+      
+      // Also set global sign-in modal state
+      setShowSignInModal(true);
     }
-  }, [status, session, router, showSignInForm]);
+  }, [status, session, locale, setShowSignInModal]);
   
   const handleCloseSignInForm = useCallback(() => {
     setShowSignInForm(false);

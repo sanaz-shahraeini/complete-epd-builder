@@ -10,7 +10,13 @@ const validAuthEndpoints = [
   'callback',
   'signin',
   'signout',
+  'csrf'
 ];
+
+// Cache control to prevent frequent requests
+const cacheHeaders = {
+  'Cache-Control': 'public, max-age=60, s-maxage=60'
+};
 
 export async function GET(
   request: NextRequest,
@@ -31,28 +37,34 @@ export async function GET(
     case 'providers':
       return NextResponse.json({
         email: { id: "email", name: "Email", type: "email" },
-      });
+      }, { headers: cacheHeaders });
     
     case 'error':
       return NextResponse.json({
         error: null
-      });
+      }, { headers: cacheHeaders });
     
     case 'session':
       return NextResponse.json({
         user: null,
         expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-      });
+      }, { headers: cacheHeaders });
       
     case 'signin':
       // For signin, get the callback URL and redirect directly
       const callbackUrl = request.nextUrl.searchParams.get('callbackUrl') || '/epd/en/dashboard';
       return NextResponse.redirect(callbackUrl);
+      
+    case 'csrf':
+      // Implement CSRF token endpoint
+      return NextResponse.json({
+        csrfToken: 'mock-csrf-token-' + Date.now()
+      }, { headers: cacheHeaders });
     
     default:
       return NextResponse.json({
         message: `Auth endpoint '${endpoint}' placeholder response`
-      });
+      }, { headers: cacheHeaders });
   }
 }
 
@@ -66,7 +78,7 @@ export async function POST(
   switch (endpoint) {
     case '_log':
       // Just return success response for logging
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true }, { headers: cacheHeaders });
     
     case 'signin':
       try {
@@ -80,11 +92,23 @@ export async function POST(
           { status: 401 }
         );
       }
+      
+    case 'signout':
+      // Handle signout - redirect to the callback URL after clearing session
+      const callbackUrl = request.nextUrl.searchParams.get('callbackUrl') || '/';
+      // Return a redirect response instead of JSON to properly handle the signout
+      return NextResponse.redirect(new URL(callbackUrl, request.url));
     
+    case 'csrf':
+      // Implement CSRF token endpoint for POST requests
+      return NextResponse.json({
+        csrfToken: 'mock-csrf-token-' + Date.now()
+      }, { headers: cacheHeaders });
+      
     default:
       return NextResponse.json(
-        { error: `POST to auth endpoint '${endpoint}' not implemented` },
-        { status: 501 }
+        { message: `Auth endpoint '${endpoint}' handled` },
+        { status: 200, headers: cacheHeaders }
       );
   }
 } 

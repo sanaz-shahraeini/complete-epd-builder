@@ -344,9 +344,15 @@ function SignInForm({
 
         // Redirect to dashboard if needed
         if (shouldRedirect) {
-          const redirectPath = callbackUrl || `/epd/${locale}/dashboard/profile`;
-          console.log("Redirecting to:", redirectPath);
-          router.push(redirectPath);
+          // Create an absolute URL with the current origin to avoid malformed URLs
+          const origin = window.location.origin; // e.g. http://localhost:3000
+          const dashboardPath = `/epd/${locale}/dashboard/profile`;
+          const absoluteUrl = `${origin}${dashboardPath}`;
+          
+          console.log("Redirecting to absolute URL:", absoluteUrl);
+          
+          // Use window.location.href for a hard redirect to ensure correct URL
+          window.location.href = absoluteUrl;
         }
       }
     } catch (error) {
