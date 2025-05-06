@@ -45,6 +45,11 @@ const useMap = dynamic(
   { ssr: false }
 );
 
+const useMapEvents = dynamic(
+  () => import("react-leaflet").then((mod) => mod.useMapEvents),
+  { ssr: false }
+);
+
 const MapComponent = forwardRef(
   (
     {
@@ -124,6 +129,90 @@ const MapComponent = forwardRef(
             
             // Clear any selected markers or highlights
             setSelectedLocation(null);
+          }
+        },
+        // Add zoom methods that work directly with the Leaflet map
+        zoomIn: (zoomLevel = 1) => {
+          console.log("Zoom in method called on map ref");
+          if (mapRef.current) {
+            try {
+              // Check if direct zoomIn method exists
+              if (typeof mapRef.current.zoomIn === 'function') {
+                mapRef.current.zoomIn(zoomLevel);
+                console.log("Used zoomIn method");
+                return true;
+              } 
+              // Fallback to setView if zoomIn isn't available
+              else if (typeof mapRef.current._zoom === 'number' && typeof mapRef.current.setView === 'function') {
+                const currentZoom = mapRef.current._zoom;
+                const newZoom = currentZoom + zoomLevel;
+                const center = mapRef.current.getCenter();
+                
+                mapRef.current.setView(center, newZoom);
+                console.log("Used setView method with _zoom");
+                return true;
+              }
+            } catch (error) {
+              console.error("Error zooming in:", error);
+            }
+          }
+          return false;
+        },
+        zoomOut: (zoomLevel = 1) => {
+          console.log("Zoom out method called on map ref");
+          if (mapRef.current) {
+            try {
+              // Check if direct zoomOut method exists
+              if (typeof mapRef.current.zoomOut === 'function') {
+                mapRef.current.zoomOut(zoomLevel);
+                console.log("Used zoomOut method");
+                return true;
+              } 
+              // Fallback to setView if zoomOut isn't available
+              else if (typeof mapRef.current._zoom === 'number' && typeof mapRef.current.setView === 'function') {
+                const currentZoom = mapRef.current._zoom;
+                const newZoom = currentZoom - zoomLevel;
+                const center = mapRef.current.getCenter();
+                
+                mapRef.current.setView(center, newZoom);
+                console.log("Used setView method with _zoom");
+                return true;
+              }
+            } catch (error) {
+              console.error("Error zooming out:", error);
+            }
+          }
+          return false;
+        },
+        getZoom: () => {
+          if (mapRef.current) {
+            if (typeof mapRef.current.getZoom === 'function') {
+              return mapRef.current.getZoom();
+            }
+            if (typeof mapRef.current._zoom === 'number') {
+              return mapRef.current._zoom;
+            }
+          }
+          return null;
+        },
+        // Add this debug method to help diagnose issues
+        getMapInfo: () => {
+          if (!mapRef.current) return { error: "No map instance available" };
+          
+          try {
+            return {
+              hasZoomIn: typeof mapRef.current.zoomIn === 'function',
+              hasZoomOut: typeof mapRef.current.zoomOut === 'function',
+              hasGetZoom: typeof mapRef.current.getZoom === 'function',
+              hasSetZoom: typeof mapRef.current.setZoom === 'function',
+              hasSetView: typeof mapRef.current.setView === 'function',
+              hasGetCenter: typeof mapRef.current.getCenter === 'function',
+              _zoom: typeof mapRef.current._zoom === 'number' ? mapRef.current._zoom : 'NA',
+              actualZoom: typeof mapRef.current.getZoom === 'function' ? mapRef.current.getZoom() : 'NA',
+              mapType: mapRef.current.constructor ? mapRef.current.constructor.name : 'unknown'
+            };
+          } catch (error) {
+            return { error: error.message };
           }
         }
       }),
@@ -322,6 +411,32 @@ const MapComponent = forwardRef(
           typeof map.setView === "function"
         ) {
           mapRef.current = map;
+          
+          // Store map instance in window for global access
+          if (typeof window !== 'undefined') {
+            window.mapInstance = map;
+            console.log("Map instance stored in window.mapInstance");
+            // Log some methods to verify it's the correct Leaflet instance
+            console.log("Available map methods:", {
+              zoomIn: typeof map.zoomIn === 'function',
+              zoomOut: typeof map.zoomOut === 'function',
+              setView: typeof map.setView === 'function',
+              getZoom: typeof map.getZoom === 'function',
+              setZoom: typeof map.setZoom === 'function'
+            });
+            
+            // Add custom methods for easier access
+            if (typeof map.setZoom !== 'function' && typeof map.setView === 'function' && typeof map.getCenter === 'function') {
+              console.log("Adding custom setZoom method to map instance");
+              map.setZoom = function(newZoom) {
+                const center = this.getCenter();
+                this.setView(center, newZoom);
+                console.log("Custom setZoom called with zoom level:", newZoom);
+                return this;
+              };
+            }
+          }
+          
           try {
             const center = map.getCenter();
             if (center) {
@@ -377,13 +492,9 @@ const MapComponent = forwardRef(
       }, {});
     };
 
-    const distributeCircles = (lat, lng, count, zoom) => {
-      var maxRadius = 2;
-      if (zoom > 5) {
-        maxRadius = 2;
-      } else {
-        maxRadius = 2;
-      }
+    const distributeCircles = (lat, lng, count) => {
+      // Use a fixed radius that doesn't depend on zoom
+      const maxRadius = 2;
       const angleStep = (2 * Math.PI) / count; //angular distance
 
       return Array.from({ length: count }, (_, i) => {
@@ -409,8 +520,7 @@ const MapComponent = forwardRef(
           const distributedCoords = distributeCircles(
             centralLocation.lat,
             centralLocation.lng,
-            group.length,
-            zoom
+            group.length
           );
 
           return {
@@ -675,24 +785,8 @@ const MapComponent = forwardRef(
     );
 
     const getCircleRadius = (zoom) => {
-      // More responsive scaling based on zoom level
-      if (zoom <= 3) {
-        return 150000; // Very zoomed out - large circles
-      } else if (zoom <= 5) {
-        return 80000; // Zoomed out - medium-large circles
-      } else if (zoom <= 7) {
-        return 40000; // Country level - medium circles
-      } else if (zoom <= 9) {
-        return 20000; // Region level - medium-small circles
-      } else if (zoom <= 11) {
-        return 10000; // City level - small circles
-      } else if (zoom <= 13) {
-        return 5000; // Neighborhood level - smaller circles
-      } else if (zoom <= 15) {
-        return 2000; // Street level - very small circles
-      } else {
-        return 1000; // Maximum zoom - tiny circles
-      }
+      // Return fixed size circles regardless of zoom level
+      return 10000; // A fixed size that works well at all zoom levels
     };
 
     useEffect(() => {
@@ -821,7 +915,16 @@ const MapComponent = forwardRef(
               center={[30, -10]}
               zoom={3}
               style={{ height: "100vh", width: "100%" }}
-              ref={mapRef}
+              ref={(map) => {
+                if (map) {
+                  console.log("MapContainer ref callback");
+                  mapRef.current = map;
+                  if (typeof window !== 'undefined') {
+                    window.mapInstance = map;
+                    console.log("Map instance stored from MapContainer ref callback");
+                  }
+                }
+              }}
               maxBounds={[
                 [-90, -180],
                 [90, 180],
@@ -850,18 +953,463 @@ const MapComponent = forwardRef(
       );
     }
 
+    // This function will directly manipulate the Leaflet map
+    const handleDirectZoom = (direction) => {
+      if (!mapRef.current) return;
+      
+      console.log("Direct zoom called:", direction);
+      try {
+        if (direction === "in") {
+          if (typeof mapRef.current.zoomIn === 'function') {
+            mapRef.current.zoomIn(1);
+          } else {
+            // Get the internal Leaflet map object
+            const leafletMap = mapRef.current._zoom !== undefined ? mapRef.current : null;
+            if (leafletMap && typeof leafletMap.setView === 'function') {
+              const currentZoom = leafletMap._zoom;
+              const center = leafletMap.getCenter();
+              leafletMap.setView(center, currentZoom + 1);
+            }
+          }
+        } else if (direction === "out") {
+          if (typeof mapRef.current.zoomOut === 'function') {
+            mapRef.current.zoomOut(1);
+          } else {
+            // Get the internal Leaflet map object
+            const leafletMap = mapRef.current._zoom !== undefined ? mapRef.current : null;
+            if (leafletMap && typeof leafletMap.setView === 'function') {
+              const currentZoom = leafletMap._zoom;
+              const center = leafletMap.getCenter();
+              leafletMap.setView(center, currentZoom - 1);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error in direct zoom:", error);
+      }
+    };
+
+    const MapEvents = () => {
+      console.log("MapEvents component initializing");
+      
+      const leafletMap = useMapEvents({
+        load: () => {
+          console.log("Map load event fired");
+          // Store the map instance in window object and ref
+          if (typeof window !== 'undefined') {
+            // Store the actual map instance
+            window.mapInstance = leafletMap;
+            mapRef.current = leafletMap;
+            console.log("Map instance stored globally on load event");
+            
+            // Create a wrapper object with zoom methods instead of extending the map object
+            window.mapWrapper = {
+              map: leafletMap,
+              zoomIn: function(delta) {
+                try {
+                  if (typeof this.map.getZoom === 'function' && typeof this.map.setView === 'function') {
+                    const newZoom = this.map.getZoom() + (delta || 1);
+                    this.map.setView(this.map.getCenter(), newZoom);
+                    console.log("Wrapper zoomIn called, new zoom:", newZoom);
+                    return true;
+                  } else if (typeof this.map._zoom === 'number' && typeof this.map.setView === 'function') {
+                    // Fallback using internal _zoom property
+                    const newZoom = this.map._zoom + (delta || 1);
+                    this.map.setView(this.map.getCenter(), newZoom);
+                    console.log("Wrapper zoomIn called using _zoom, new zoom:", newZoom);
+                    return true;
+                  } else if (typeof this.map.zoomIn === 'function') {
+                    // Use native zoomIn if available
+                    this.map.zoomIn(delta || 1);
+                    console.log("Wrapper used native zoomIn");
+                    return true;
+                  }
+                  
+                  // Last resort: try to click the Leaflet control button
+                  const zoomInBtn = document.querySelector('.leaflet-control-zoom-in');
+                  if (zoomInBtn) {
+                    console.log("Clicking native Leaflet zoom-in button");
+                    zoomInBtn.click();
+                    return true;
+                  }
+                  
+                  return false;
+                } catch (error) {
+                  console.error("Error in wrapper zoomIn:", error);
+                  return false;
+                }
+              },
+              zoomOut: function(delta) {
+                try {
+                  if (typeof this.map.getZoom === 'function' && typeof this.map.setView === 'function') {
+                    const newZoom = this.map.getZoom() - (delta || 1);
+                    this.map.setView(this.map.getCenter(), newZoom);
+                    console.log("Wrapper zoomOut called, new zoom:", newZoom);
+                    return true;
+                  } else if (typeof this.map._zoom === 'number' && typeof this.map.setView === 'function') {
+                    // Fallback using internal _zoom property
+                    const newZoom = this.map._zoom - (delta || 1);
+                    this.map.setView(this.map.getCenter(), newZoom);
+                    console.log("Wrapper zoomOut called using _zoom, new zoom:", newZoom);
+                    return true;
+                  } else if (typeof this.map.zoomOut === 'function') {
+                    // Use native zoomOut if available
+                    this.map.zoomOut(delta || 1);
+                    console.log("Wrapper used native zoomOut");
+                    return true;
+                  }
+                  
+                  // Last resort: try to click the Leaflet control button
+                  const zoomOutBtn = document.querySelector('.leaflet-control-zoom-out');
+                  if (zoomOutBtn) {
+                    console.log("Clicking native Leaflet zoom-out button");
+                    zoomOutBtn.click();
+                    return true;
+                  }
+                  
+                  return false;
+                } catch (error) {
+                  console.error("Error in wrapper zoomOut:", error);
+                  return false;
+                }
+              },
+              getZoom: function() {
+                try {
+                  if (typeof this.map.getZoom === 'function') {
+                    return this.map.getZoom();
+                  } else if (typeof this.map._zoom === 'number') {
+                    return this.map._zoom;
+                  }
+                  return 3; // Default zoom level
+                } catch (error) {
+                  console.error("Error in wrapper getZoom:", error);
+                  return 3;
+                }
+              },
+              setView: function(center, zoom) {
+                try {
+                  if (typeof this.map.setView === 'function') {
+                    return this.map.setView(center, zoom);
+                  }
+                  return false;
+                } catch (error) {
+                  console.error("Error in wrapper setView:", error);
+                  return false;
+                }
+              },
+              getCenter: function() {
+                try {
+                  if (typeof this.map.getCenter === 'function') {
+                    return this.map.getCenter();
+                  }
+                  return [30, -10]; // Default center
+                } catch (error) {
+                  console.error("Error in wrapper getCenter:", error);
+                  return [30, -10];
+                }
+              }
+            };
+            
+            // Create a global control function if it doesn't exist yet
+            if (typeof window.controlMapZoom !== 'function') {
+              window.controlMapZoom = function(direction) {
+                console.log("Window controlMapZoom called:", direction);
+                try {
+                  if (window.mapWrapper) {
+                    if (direction === "in") {
+                      return window.mapWrapper.zoomIn(1);
+                    } else {
+                      return window.mapWrapper.zoomOut(1);
+                    }
+                  } else if (leafletMap) {
+                    // Direct leafletMap manipulation
+                    if (direction === "in") {
+                      if (typeof leafletMap.zoomIn === 'function') {
+                        leafletMap.zoomIn(1);
+                        return true;
+                      } else if (typeof leafletMap.getZoom === 'function' && typeof leafletMap.setView === 'function') {
+                        const currentZoom = leafletMap.getZoom();
+                        leafletMap.setView(leafletMap.getCenter(), currentZoom + 1);
+                        return true;
+                      }
+                    } else {
+                      if (typeof leafletMap.zoomOut === 'function') {
+                        leafletMap.zoomOut(1);
+                        return true;
+                      } else if (typeof leafletMap.getZoom === 'function' && typeof leafletMap.setView === 'function') {
+                        const currentZoom = leafletMap.getZoom();
+                        leafletMap.setView(leafletMap.getCenter(), currentZoom - 1);
+                        return true;
+                      }
+                    }
+                  }
+                  return false;
+                } catch (error) {
+                  console.error("Error in controlMapZoom:", error);
+                  return false;
+                }
+              };
+            }
+            
+            // Debug - log available methods
+            console.log("Available methods:", {
+              setView: typeof leafletMap.setView === 'function',
+              getCenter: typeof leafletMap.getCenter === 'function',
+              setZoom: typeof leafletMap.setZoom === 'function',
+              getZoom: typeof leafletMap.getZoom === 'function',
+              zoomIn: typeof leafletMap.zoomIn === 'function',
+              zoomOut: typeof leafletMap.zoomOut === 'function',
+              _zoom: typeof leafletMap._zoom === 'number' ? leafletMap._zoom : 'not available'
+            });
+          }
+        },
+        click: (e) => {
+          console.log("Map clicked at:", e.latlng);
+        },
+        zoom: () => {
+          console.log("Map zoom event fired");
+          
+          try {
+            const currentZoom = leafletMap.getZoom();
+            console.log("Map zoomed to level:", currentZoom);
+            
+            // Update the zoom in parent component state 
+            setZoom(currentZoom);
+            
+            // Dispatch a custom event that we can listen for
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('mapZoomed', { 
+                detail: { 
+                  zoom: currentZoom,
+                  timestamp: new Date().getTime()
+                } 
+              }));
+            }
+          } catch (error) {
+            console.error("Error in zoom event handler:", error);
+          }
+        },
+      });
+      
+      // Make map available globally for direct access by zoom buttons
+      useEffect(() => {
+        if (leafletMap) {
+          console.log("MapEvents useEffect - map available");
+          
+          // Store the actual Leaflet map instance
+          mapRef.current = leafletMap;
+          
+          // Also expose to window for debugging
+          if (typeof window !== 'undefined') {
+            window.mapInstance = leafletMap;
+            
+            // Create wrapper object with zoom methods if it doesn't exist yet
+            if (!window.mapWrapper) {
+              console.log("Creating mapWrapper in useEffect");
+              window.mapWrapper = {
+                map: leafletMap,
+                zoomIn: function(delta) {
+                  try {
+                    if (typeof this.map.getZoom === 'function' && typeof this.map.setView === 'function') {
+                      const newZoom = this.map.getZoom() + (delta || 1);
+                      this.map.setView(this.map.getCenter(), newZoom);
+                      console.log("Wrapper zoomIn called, new zoom:", newZoom);
+                      return true;
+                    } else if (typeof this.map._zoom === 'number' && typeof this.map.setView === 'function') {
+                      // Fallback using internal _zoom property
+                      const newZoom = this.map._zoom + (delta || 1);
+                      this.map.setView(this.map.getCenter(), newZoom);
+                      console.log("Wrapper zoomIn called using _zoom, new zoom:", newZoom);
+                      return true;
+                    } else if (typeof this.map.zoomIn === 'function') {
+                      // Use native zoomIn if available
+                      this.map.zoomIn(delta || 1);
+                      console.log("Wrapper used native zoomIn");
+                      return true;
+                    }
+                    
+                    // Last resort: try to click the Leaflet control button
+                    const zoomInBtn = document.querySelector('.leaflet-control-zoom-in');
+                    if (zoomInBtn) {
+                      console.log("Clicking native Leaflet zoom-in button");
+                      zoomInBtn.click();
+                      return true;
+                    }
+                    
+                    return false;
+                  } catch (error) {
+                    console.error("Error in wrapper zoomIn:", error);
+                    return false;
+                  }
+                },
+                zoomOut: function(delta) {
+                  try {
+                    if (typeof this.map.getZoom === 'function' && typeof this.map.setView === 'function') {
+                      const newZoom = this.map.getZoom() - (delta || 1);
+                      this.map.setView(this.map.getCenter(), newZoom);
+                      console.log("Wrapper zoomOut called, new zoom:", newZoom);
+                      return true;
+                    } else if (typeof this.map._zoom === 'number' && typeof this.map.setView === 'function') {
+                      // Fallback using internal _zoom property
+                      const newZoom = this.map._zoom - (delta || 1);
+                      this.map.setView(this.map.getCenter(), newZoom);
+                      console.log("Wrapper zoomOut called using _zoom, new zoom:", newZoom);
+                      return true;
+                    } else if (typeof this.map.zoomOut === 'function') {
+                      // Use native zoomOut if available
+                      this.map.zoomOut(delta || 1);
+                      console.log("Wrapper used native zoomOut");
+                      return true;
+                    }
+                    
+                    // Last resort: try to click the Leaflet control button
+                    const zoomOutBtn = document.querySelector('.leaflet-control-zoom-out');
+                    if (zoomOutBtn) {
+                      console.log("Clicking native Leaflet zoom-out button");
+                      zoomOutBtn.click();
+                      return true;
+                    }
+                    
+                    return false;
+                  } catch (error) {
+                    console.error("Error in wrapper zoomOut:", error);
+                    return false;
+                  }
+                },
+                getZoom: function() {
+                  try {
+                    if (typeof this.map.getZoom === 'function') {
+                      return this.map.getZoom();
+                    } else if (typeof this.map._zoom === 'number') {
+                      return this.map._zoom;
+                    }
+                    return 3; // Default zoom level
+                  } catch (error) {
+                    console.error("Error in wrapper getZoom:", error);
+                    return 3;
+                  }
+                },
+                setView: function(center, zoom) {
+                  try {
+                    if (typeof this.map.setView === 'function') {
+                      return this.map.setView(center, zoom);
+                    }
+                    return false;
+                  } catch (error) {
+                    console.error("Error in wrapper setView:", error);
+                    return false;
+                  }
+                },
+                getCenter: function() {
+                  try {
+                    if (typeof this.map.getCenter === 'function') {
+                      return this.map.getCenter();
+                    }
+                    return [30, -10]; // Default center
+                  } catch (error) {
+                    console.error("Error in wrapper getCenter:", error);
+                    return [30, -10];
+                  }
+                }
+              };
+            } else {
+              // Update the map reference in the existing wrapper
+              console.log("Updating existing mapWrapper with new map reference");
+              window.mapWrapper.map = leafletMap;
+            }
+            
+            // Create a global control function if it doesn't exist yet
+            if (typeof window.controlMapZoom !== 'function') {
+              window.controlMapZoom = function(direction) {
+                console.log("Window controlMapZoom called:", direction);
+                try {
+                  if (window.mapWrapper) {
+                    if (direction === "in") {
+                      return window.mapWrapper.zoomIn(1);
+                    } else {
+                      return window.mapWrapper.zoomOut(1);
+                    }
+                  } else if (leafletMap) {
+                    // Direct leafletMap manipulation
+                    if (direction === "in") {
+                      if (typeof leafletMap.zoomIn === 'function') {
+                        leafletMap.zoomIn(1);
+                        return true;
+                      } else if (typeof leafletMap.getZoom === 'function' && typeof leafletMap.setView === 'function') {
+                        const currentZoom = leafletMap.getZoom();
+                        leafletMap.setView(leafletMap.getCenter(), currentZoom + 1);
+                        return true;
+                      }
+                    } else {
+                      if (typeof leafletMap.zoomOut === 'function') {
+                        leafletMap.zoomOut(1);
+                        return true;
+                      } else if (typeof leafletMap.getZoom === 'function' && typeof leafletMap.setView === 'function') {
+                        const currentZoom = leafletMap.getZoom();
+                        leafletMap.setView(leafletMap.getCenter(), currentZoom - 1);
+                        return true;
+                      }
+                    }
+                  }
+                  return false;
+                } catch (error) {
+                  console.error("Error in controlMapZoom:", error);
+                  return false;
+                }
+              };
+            }
+            
+            console.log("Map instance stored in MapEvents useEffect");
+            
+            // Log detailed information about the map instance - safely
+            try {
+              const baseZoom = typeof leafletMap.getZoom === 'function' 
+                ? leafletMap.getZoom() 
+                : (typeof leafletMap._zoom === 'number' ? leafletMap._zoom : 'unknown');
+              console.log("Base zoom level:", baseZoom);
+            } catch (error) {
+              console.warn("Could not get zoom level:", error.message);
+            }
+          }
+        } else {
+          console.warn("Map instance not available in MapEvents useEffect");
+        }
+        
+        // Cleanup function
+        return () => {
+          console.log("MapEvents cleanup");
+          if (typeof window !== 'undefined') {
+            window.controlMapZoom = null;
+            window.mapWrapper = null;
+          }
+        };
+      }, [leafletMap]);
+      
+      return null;
+    };
+
     return (
       <>
         <MapContainer
           center={[30, -10]}
           zoom={3}
           style={{ height: "100vh", width: "100%" }}
-          ref={mapRef}
+          ref={(map) => {
+            if (map) {
+              console.log("MapContainer ref callback");
+              mapRef.current = map;
+              if (typeof window !== 'undefined') {
+                window.mapInstance = map;
+                console.log("Map instance stored from MapContainer ref callback");
+              }
+            }
+          }}
           maxBounds={[
             [-90, -180],
             [90, 180],
           ]}
         >
+          <MapEvents />
           <ZoomControl
             setZoom={setZoom}
             zoom={zoom}

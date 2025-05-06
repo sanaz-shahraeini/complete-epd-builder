@@ -30,6 +30,8 @@ export default function VerticalToggleButtons({
   selectedCategory,
   yearRange,
   isSidebarOpen,
+  mapRef,
+  controlMapZoom
 }) {
   const [view, setView] = useState("list");
   const [isClient, setIsClient] = useState(false);
@@ -50,12 +52,103 @@ export default function VerticalToggleButtons({
     setView(nextView);
   };
 
-  const increaseZoom = () => {
-    setMapZoom((prevZoom) => prevZoom - 1);
+  // Updated zoom functions to use controlMapZoom
+  const handleZoomIn = () => {
+    console.log("ZOOM IN BUTTON CLICKED - DEBUGGING");
+    
+    let success = false;
+    
+    // Try using the wrapper object first
+    if (typeof window !== 'undefined' && window.mapWrapper) {
+      console.log("DEBUG: Using window.mapWrapper.zoomIn");
+      try {
+        window.mapWrapper.zoomIn(1);
+        console.log("DEBUG: window.mapWrapper.zoomIn called successfully");
+        success = true;
+      } catch (error) {
+        console.error("DEBUG: Error using mapWrapper:", error);
+      }
+    }
+    
+    // If wrapper failed, try the controlMapZoom function passed from parent
+    if (!success && controlMapZoom) {
+      console.log("DEBUG: Using controlMapZoom function from parent");
+      success = controlMapZoom("in");
+      console.log("DEBUG: controlMapZoom returned:", success);
+    }
+    
+    // If that fails, try direct DOM access to native Leaflet controls
+    if (!success && typeof document !== 'undefined') {
+      console.log("DEBUG: Trying direct DOM access to Leaflet controls");
+      const zoomInButton = document.querySelector(".leaflet-control-zoom-in");
+      if (zoomInButton) {
+        console.log("DEBUG: Found Leaflet's built-in zoom in button, clicking it");
+        zoomInButton.click();
+        success = true;
+      } else {
+        console.log("DEBUG: Could not find Leaflet's built-in zoom in button");
+      }
+    }
+    
+    // Last resort - if all else failed, update the state directly
+    if (!success) {
+      console.log("DEBUG: All zoom methods failed, updating state directly");
+      setMapZoom(prevZoom => {
+        // In the map zoom UI context, lower numbers = more zoomed out (opposite of Leaflet)
+        const newZoom = Math.max(1, prevZoom - 1);
+        console.log(`DEBUG: State updating from ${prevZoom} to ${newZoom}`);
+        return newZoom;
+      });
+    }
   };
 
-  const decreaseZoom = () => {
-    setMapZoom((prevZoom) => prevZoom + 1);
+  const handleZoomOut = () => {
+    console.log("ZOOM OUT BUTTON CLICKED - DEBUGGING");
+    
+    let success = false;
+    
+    // Try using the wrapper object first
+    if (typeof window !== 'undefined' && window.mapWrapper) {
+      console.log("DEBUG: Using window.mapWrapper.zoomOut");
+      try {
+        window.mapWrapper.zoomOut(1);
+        console.log("DEBUG: window.mapWrapper.zoomOut called successfully");
+        success = true;
+      } catch (error) {
+        console.error("DEBUG: Error using mapWrapper:", error);
+      }
+    }
+    
+    // If wrapper failed, try the controlMapZoom function passed from parent
+    if (!success && controlMapZoom) {
+      console.log("DEBUG: Using controlMapZoom function from parent");
+      success = controlMapZoom("out");
+      console.log("DEBUG: controlMapZoom returned:", success);
+    }
+    
+    // If that fails, try direct DOM access to native Leaflet controls
+    if (!success && typeof document !== 'undefined') {
+      console.log("DEBUG: Trying direct DOM access to Leaflet controls");
+      const zoomOutButton = document.querySelector(".leaflet-control-zoom-out");
+      if (zoomOutButton) {
+        console.log("DEBUG: Found Leaflet's built-in zoom out button, clicking it");
+        zoomOutButton.click();
+        success = true;
+      } else {
+        console.log("DEBUG: Could not find Leaflet's built-in zoom out button");
+      }
+    }
+    
+    // Last resort - if all else failed, update the state directly
+    if (!success) {
+      console.log("DEBUG: All zoom methods failed, updating state directly");
+      setMapZoom(prevZoom => {
+        // In the map zoom UI context, higher numbers = more zoomed out (opposite of Leaflet)
+        const newZoom = Math.min(10, prevZoom + 1);
+        console.log(`DEBUG: State updating from ${prevZoom} to ${newZoom}`);
+        return newZoom;
+      });
+    }
   };
 
   const handleShareProduct = () => {
@@ -292,8 +385,8 @@ export default function VerticalToggleButtons({
   };
 
   const buttons = [
-    { value: "add", icon: <AddIcon />, action: increaseZoom },
-    { value: "remove", icon: <RemoveIcon />, action: decreaseZoom },
+    { value: "add", icon: <AddIcon />, action: handleZoomIn },
+    { value: "remove", icon: <RemoveIcon />, action: handleZoomOut },
     {
       value: "share",
       icon: <ShareIcon />,

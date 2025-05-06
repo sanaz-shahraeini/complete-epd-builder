@@ -181,6 +181,83 @@ const IndexPage = () => {
     }
   }, [selectedProduct]);
 
+  // Make a function to directly control the map zoom
+  const controlMapZoom = (direction) => {
+    console.log(`Controlling map zoom: ${direction}`);
+    
+    // Use the global wrapper object if available
+    if (typeof window !== 'undefined' && window.mapWrapper) {
+      console.log("Using window.mapWrapper");
+      if (direction === "in") {
+        return window.mapWrapper.zoomIn(1);
+      } else {
+        return window.mapWrapper.zoomOut(1);
+      }
+    }
+    
+    // Use the global controlMapZoom function if available
+    if (typeof window !== 'undefined' && typeof window.controlMapZoom === 'function') {
+      console.log("Using window.controlMapZoom method");
+      return window.controlMapZoom(direction);
+    }
+    
+    // Try to use the window.mapInstance directly
+    if (typeof window !== 'undefined' && window.mapInstance) {
+      try {
+        const map = window.mapInstance;
+        console.log("Using window.mapInstance directly");
+        
+        if (direction === "in") {
+          if (typeof map.zoomIn === 'function') {
+            map.zoomIn(1);
+            return true;
+          }
+          
+          // Fallback to setView
+          const currentZoom = map.getZoom ? map.getZoom() : 3;
+          map.setView(map.getCenter(), currentZoom + 1);
+          return true;
+        } else {
+          if (typeof map.zoomOut === 'function') {
+            map.zoomOut(1);
+            return true;
+          }
+          
+          // Fallback to setView
+          const currentZoom = map.getZoom ? map.getZoom() : 3;
+          map.setView(map.getCenter(), currentZoom - 1);
+          return true;
+        }
+      } catch (error) {
+        console.error("Error using window.mapInstance:", error);
+      }
+    }
+    
+    // Try Leaflet's DOM controls as a last resort
+    if (typeof document !== 'undefined') {
+      if (direction === "in") {
+        const zoomInButton = document.querySelector(".leaflet-control-zoom-in");
+        if (zoomInButton) {
+          console.log("Clicking Leaflet's zoom in button");
+          zoomInButton.click();
+          return true;
+        }
+      } else {
+        const zoomOutButton = document.querySelector(".leaflet-control-zoom-out");
+        if (zoomOutButton) {
+          console.log("Clicking Leaflet's zoom out button");
+          zoomOutButton.click();
+          return true;
+        }
+      }
+    }
+    
+    // Last resort - update the zoom state directly
+    console.warn("All zoom methods failed, updating state directly");
+    setMapZoom(prev => direction === "in" ? Math.max(1, prev - 1) : Math.min(10, prev + 1));
+    return false;
+  };
+
   return (
     <ProductsProvider>
       <SearchProvider>
@@ -344,6 +421,8 @@ const IndexPage = () => {
                       selectedCategory={selectedCategory}
                       yearRange={yearRange}
                       isSidebarOpen={isSidebarOpen}
+                      mapRef={mapRef}
+                      controlMapZoom={controlMapZoom}
                     />
                   </Suspense>
                 </ClientOnly>
