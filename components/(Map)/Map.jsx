@@ -153,14 +153,16 @@ const MapComponent = forwardRef(
 
         console.log(`Map preparing to show ${productsToShow.length} products`);
         
-        // When showing filtered results, log additional info
-        if (filteredProductsList && filteredProductsList.length > 0) {
-          console.log("MAP: Showing filtered search results only", {
-            filteredCount: filteredProductsList.length,
-            totalCount: allProducts?.length || 0,
-            searchActive: true
-          });
-        }
+        // Detailed logging about the current filter state
+        console.log("MAP: Current filter status:", {
+          searchActive: filteredProductsList && filteredProductsList.length > 0,
+          filteredCount: filteredProductsList?.length || 0,
+          categoryFilter: selectedCategory !== "all" ? selectedCategory : "none",
+          epdOnlyFilter: filterEpdOnly,
+          totalProductsCount: allProducts?.length || 0,
+          visibleProductsCount: productsToShow.length,
+          yearRangeFilter: yearRange ? `${yearRange[0]}-${yearRange[1]}` : "none"
+        });
 
         // Log geo distribution for debugging
         if (productsToShow.length > 0) {

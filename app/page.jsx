@@ -339,6 +339,7 @@ const IndexPage = () => {
                   selectedProduct={selectedProduct}
                   selectedCategory={selectedCategory}
                   yearRange={yearRange}
+                  filterEpdOnly={filterEpdOnly}
                 />
               </ClientOnly>
             </Grid>
@@ -356,11 +357,50 @@ const InfoCard = ({
   selectedCountry, 
   selectedProduct, 
   selectedCategory, 
-  yearRange 
+  yearRange,
+  filterEpdOnly
 }) => {
   const { searchQuery, searchResults } = useSearch();
   
   if (!showInfoCard) return null;
+  
+  // Determine card header and content based on filters/search
+  const getCardTitle = () => {
+    if (searchQuery && searchResults && searchResults.length > 0) {
+      return `Search Results (${searchResults.length})`;
+    } else if (selectedCategory && selectedCategory !== "all") {
+      return `${selectedCategory} Products`;
+    } else if (filterEpdOnly) {
+      return "EPD Products";
+    } else {
+      return "Global Product Map";
+    }
+  };
+
+  // Determine the card description based on current filters
+  const getCardDescription = () => {
+    if (searchQuery && searchResults && searchResults.length > 0) {
+      return `Showing ${searchResults.length} result${searchResults.length !== 1 ? 's' : ''} for "${searchQuery}". These are the only products currently displayed on the map.`;
+    } else if (selectedCategory && selectedCategory !== "all") {
+      return `Viewing products from the ${selectedCategory} category. Use the sidebar to explore more details.`;
+    } else if (filterEpdOnly) {
+      return `Showing Environmental Product Declarations (EPDs) with valid period between ${yearRange[0]} — ${yearRange[1]}.`;
+    } else {
+      return "Welcome to the Global Product Map! Here you can explore products and Environmental Product Declarations (EPDs) across different categories and countries.";
+    }
+  };
+
+  // Determine icon to use
+  const getCardIcon = () => {
+    if (searchQuery && searchResults && searchResults.length > 0) {
+      return <SearchIcon sx={{ fontSize: "18px" }} />;
+    } else if (selectedCategory && selectedCategory !== "all" || filterEpdOnly) {
+      // Use filter icon for categories or EPD filter
+      return <ViewInArIcon sx={{ fontSize: "18px" }} />;
+    } else {
+      return <ViewInArIcon sx={{ fontSize: "18px" }} />;
+    }
+  };
   
   return (
     <Fade in={showInfoCard}>
@@ -408,15 +448,9 @@ const InfoCard = ({
               boxShadow: "0 4px 8px rgba(0, 124, 119, 0.2)",
             }}
           >
-            {searchQuery && searchResults && searchResults.length > 0 ? 
-              <SearchIcon sx={{ fontSize: "18px" }} /> : 
-              <ViewInArIcon sx={{ fontSize: "18px" }} />
-            }
+            {getCardIcon()}
           </Box>
-          {searchQuery && searchResults && searchResults.length > 0 ? 
-            `Search Results (${searchResults.length})` : 
-            "Global Product Map"
-          }
+          {getCardTitle()}
         </Typography>
         
         <Box 
@@ -437,10 +471,7 @@ const InfoCard = ({
               fontSize: "13px",
             }}
           >
-            {searchQuery && searchResults && searchResults.length > 0 ? 
-              `Showing ${searchResults.length} result${searchResults.length !== 1 ? 's' : ''} for "${searchQuery}". These are the only products currently displayed on the map.` :
-              "Welcome to the Global Product Map! Here you can explore products and Environmental Product Declarations (EPDs) across different categories and countries."
-            }
+            {getCardDescription()}
           </Typography>
         </Box>
 
@@ -488,112 +519,92 @@ const InfoCard = ({
               />
             ) : (
               <>
-                <Chip
-                  label={selectedCountry || "All Countries"}
-                  size="small"
-                  sx={{
-                    backgroundColor: "white",
-                    color: "var(--dark-teal)",
-                    fontWeight: 500,
-                    border: "1px solid var(--light-teal)",
-                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
-                    borderRadius: "8px",
-                    height: "24px",
-                    "& .MuiChip-label": {
-                      padding: "0 8px",
-                      fontSize: "12px",
-                    },
-                    "&:hover": {
-                      backgroundColor: "var(--light-teal)",
-                    },
-                  }}
-                />
-                <Chip
-                  label={selectedProduct || "All Products"}
-                  size="small"
-                  sx={{
-                    backgroundColor: "white",
-                    color: "var(--dark-teal)",
-                    fontWeight: 500,
-                    border: "1px solid var(--light-teal)",
-                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
-                    borderRadius: "8px",
-                    height: "24px",
-                    "& .MuiChip-label": {
-                      padding: "0 8px",
-                      fontSize: "12px",
-                    },
-                    "&:hover": {
-                      backgroundColor: "var(--light-teal)",
-                    },
-                  }}
-                />
-                <Chip
-                  label={selectedCategory || "All Categories"}
-                  size="small"
-                  sx={{
-                    backgroundColor: "white",
-                    color: "var(--dark-teal)",
-                    fontWeight: 500,
-                    border: "1px solid var(--light-teal)",
-                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
-                    borderRadius: "8px",
-                    height: "24px",
-                    "& .MuiChip-label": {
-                      padding: "0 8px",
-                      fontSize: "12px",
-                    },
-                    "&:hover": {
-                      backgroundColor: "var(--light-teal)",
-                    },
-                  }}
-                />
+                {selectedCategory && selectedCategory !== "all" && (
+                  <Chip
+                    label={`Category: ${selectedCategory}`}
+                    size="small"
+                    sx={{
+                      backgroundColor: "rgba(101, 184, 125, 0.15)",
+                      color: "var(--medium-green)",
+                      fontWeight: 500,
+                      border: "1px solid var(--medium-green)",
+                      boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
+                      borderRadius: "8px",
+                      height: "24px",
+                      "& .MuiChip-label": {
+                        padding: "0 8px",
+                        fontSize: "12px",
+                      },
+                    }}
+                  />
+                )}
+                {filterEpdOnly && (
+                  <Chip
+                    label="EPD Filter Active"
+                    size="small"
+                    sx={{
+                      backgroundColor: "rgba(101, 184, 125, 0.15)",
+                      color: "var(--medium-green)",
+                      fontWeight: 500,
+                      border: "1px solid var(--medium-green)",
+                      boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
+                      borderRadius: "8px",
+                      height: "24px",
+                      "& .MuiChip-label": {
+                        padding: "0 8px",
+                        fontSize: "12px",
+                      },
+                    }}
+                  />
+                )}
+                {(!selectedCategory || selectedCategory === "all") && !filterEpdOnly && (
+                  <>
+                    <Chip
+                      label={selectedCountry || "All Countries"}
+                      size="small"
+                      sx={{
+                        backgroundColor: "white",
+                        color: "var(--dark-teal)",
+                        fontWeight: 500,
+                        border: "1px solid var(--light-teal)",
+                        boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
+                        borderRadius: "8px",
+                        height: "24px",
+                        "& .MuiChip-label": {
+                          padding: "0 8px",
+                          fontSize: "12px",
+                        },
+                        "&:hover": {
+                          backgroundColor: "var(--light-teal)",
+                        },
+                      }}
+                    />
+                    <Chip
+                      label={selectedProduct || "All Products"}
+                      size="small"
+                      sx={{
+                        backgroundColor: "white",
+                        color: "var(--dark-teal)",
+                        fontWeight: 500,
+                        border: "1px solid var(--light-teal)",
+                        boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
+                        borderRadius: "8px",
+                        height: "24px",
+                        "& .MuiChip-label": {
+                          padding: "0 8px",
+                          fontSize: "12px",
+                        },
+                        "&:hover": {
+                          backgroundColor: "var(--light-teal)",
+                        },
+                      }}
+                    />
+                  </>
+                )}
               </>
             )}
           </Box>
         </Box>
-
-        {!searchQuery && (
-          <Box sx={{ mb: 1.5 }}>
-            <Typography
-              variant="subtitle2"
-              sx={{ 
-                color: "var(--dark-teal)",
-                mb: 1,
-                fontWeight: 600,
-                fontSize: "14px",
-                display: "flex",
-                alignItems: "center",
-                "&:before": {
-                  content: '""',
-                  display: "block",
-                  width: "3px",
-                  height: "16px",
-                  backgroundColor: "var(--medium-green)",
-                  borderRadius: "2px",
-                  marginRight: "6px",
-                },
-              }}
-            >
-              Time Period
-            </Typography>
-            <Box 
-              sx={{ 
-                backgroundColor: "rgba(101, 184, 125, 0.1)",
-                borderRadius: "8px",
-                px: 1.5,
-                py: 0.75,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Typography variant="body2" sx={{ color: "var(--text-dark)", fontWeight: 500, fontSize: "12px" }}>
-                {yearRange[0]} — {yearRange[1]}
-              </Typography>
-            </Box>
-          </Box>
-        )}
 
         <Box sx={{ mb: 1.5 }}>
           <Typography
@@ -778,6 +789,58 @@ const InfoCard = ({
                 </Typography>
               </>
             )}
+          </Box>
+        </Box>
+
+        <Box sx={{ mb: 1.5 }}>
+          <Typography
+            variant="subtitle2"
+            sx={{ 
+              color: "var(--dark-teal)",
+              mb: 1,
+              fontWeight: 600,
+              fontSize: "14px",
+              display: "flex",
+              alignItems: "center",
+              "&:before": {
+                content: '""',
+                display: "block",
+                width: "3px",
+                height: "16px",
+                backgroundColor: "var(--medium-green)",
+                borderRadius: "2px",
+                marginRight: "6px",
+              },
+            }}
+          >
+            {(searchQuery || selectedCategory !== "all" || filterEpdOnly) ? "Filtered Data" : "Time Period"}
+          </Typography>
+          <Box 
+            sx={{ 
+              backgroundColor: (searchQuery || selectedCategory !== "all" || filterEpdOnly) 
+                ? "rgba(101, 184, 125, 0.1)" 
+                : "rgba(0, 124, 119, 0.08)",
+              borderRadius: "8px",
+              px: 1.5,
+              py: 0.75,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                color: "var(--text-dark)", 
+                fontWeight: 500, 
+                fontSize: "12px",
+                textAlign: "center" 
+              }}
+            >
+              {(searchQuery || selectedCategory !== "all" || filterEpdOnly) 
+                ? `Viewing data as of ${new Date().toLocaleTimeString()}` 
+                : `${yearRange[0]} — ${yearRange[1]}`}
+            </Typography>
           </Box>
         </Box>
 

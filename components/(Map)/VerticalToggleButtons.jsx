@@ -258,22 +258,36 @@ export default function VerticalToggleButtons({
     setOpenShareDialog(false);
   };
 
-  // Modified info icon action to respect search results
+  // Modified info icon action to respect search results and category filters
   const handleInfoButtonClick = () => {
     // Toggle the info card visibility
     setShowInfoCard(!showInfoCard);
     
-    // If showing the info card and we have search results, we want to keep showing only the filtered markers
-    if (!showInfoCard && searchResults && searchResults.length > 0 && searchQuery) {
-      console.log("Info card opened with active search results, maintaining filtered view", {
-        searchQuery,
-        resultsCount: searchResults.length,
-        maintainingFilter: true
-      });
-      // No need to do anything - the current filtered view should be maintained
-    } else if (!showInfoCard && (!searchResults || searchResults.length === 0 || !searchQuery)) {
-      console.log("Info card opened with no active search, showing all markers");
-      // No active search, so showing all markers (default behavior)
+    // Log detailed information about current filters to help with debugging
+    console.log("Info card toggled with current state:", {
+      showingInfoCard: !showInfoCard,
+      hasSearchResults: !!(searchResults && searchResults.length > 0),
+      searchQuery: searchQuery || "none",
+      selectedCategory: selectedCategory || "all",
+      isSpecificCategory: !!(selectedCategory && selectedCategory !== "all")
+    });
+    
+    if (!showInfoCard) {
+      // Info card is being shown
+      if (searchResults && searchResults.length > 0 && searchQuery) {
+        // Search results take priority
+        console.log("Info card opened with active search results, maintaining filtered view", {
+          searchQuery,
+          resultsCount: searchResults.length
+        });
+      } else if (selectedCategory && selectedCategory !== "all") {
+        // Category filter is active
+        console.log("Info card opened with active category filter:", selectedCategory);
+        // The current filtered view based on category should be maintained
+      } else {
+        // No active filters
+        console.log("Info card opened with no active filters, showing all markers");
+      }
     }
   };
 

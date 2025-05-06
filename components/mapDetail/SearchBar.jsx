@@ -284,14 +284,47 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
   }, [showResults]);
 
   // Group products by country for the modal display
-  const productsForModal = searchQuery && filteredProducts && filteredProducts.length > 0
-    ? [...filteredProducts] // Only show search results when a search was performed
-    : [...(regularProducts || []), ...(allProducts || [])]; // Otherwise show all products
+  const productsForModal = (() => {
+    // Case 1: Search is active - show only search results
+    if (searchQuery && filteredProducts && filteredProducts.length > 0) {
+      return [...filteredProducts];
+    }
     
-  // Log to verify we're using filtered products when search is active
+    // Case 2: EPD filter is active - show only EPD products
+    if (filterEpdOnly) {
+      // Filter to only show EPD products from the allProducts array
+      const epdProducts = allProducts 
+        ? allProducts.filter(product => product.type === "EPD" || product.isFromEPDAPI)
+        : [];
+      console.log(`Filtered to ${epdProducts.length} EPD products for modal`);
+      return epdProducts;
+    }
+    
+    // Case 3: Category filter is active - show filtered products for that category
+    if (selectedCategory && selectedCategory !== "all") {
+      const categoryProducts = [...(regularProducts || []), ...(allProducts || [])].filter(
+        product => {
+          const productCategory = product.classific || product.category_name || "";
+          // Check if the product's category includes the selected category
+          return typeof productCategory === "string" 
+            ? productCategory.includes(selectedCategory)
+            : Array.isArray(productCategory) && productCategory.includes(selectedCategory);
+        }
+      );
+      console.log(`Filtered to ${categoryProducts.length} ${selectedCategory} products for modal`);
+      return categoryProducts;
+    }
+    
+    // Default case: No filters active - show all products
+    return [...(regularProducts || []), ...(allProducts || [])];
+  })();
+  
+  // Log to verify we're applying the correct filters to modal products
   console.log("Modal products source:", {
     usingSearchResults: !!(searchQuery && filteredProducts && filteredProducts.length > 0),
-    searchQuery,
+    filterEpdOnly,
+    selectedCategory: selectedCategory || "all",
+    searchQuery: searchQuery || "none",
     filteredCount: filteredProducts?.length || 0,
     modalProductsCount: productsForModal.length
   });
@@ -712,16 +745,17 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
         sx={{
           display: "flex",
           justifyContent: "center",
-          alignItems: isMobile ? "flex-end" : "center",
+          alignItems: isMobile ? "flex-start" : "center",
           position: "fixed",
           top: 0,
           left: 0,
           right: 0,
           bottom: 0,
-          zIndex: 1003,
+          zIndex: 9999,
           margin: 0,
           WebkitOverflowScrolling: "touch",
           p: isMobile ? 0 : 3,
+          paddingTop: isMobile ? "70px" : 3,
         }}
       >
         <Box
@@ -729,25 +763,29 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
           sx={{
             width: isMobile ? "100%" : "90%",
             maxWidth: isMobile ? "100%" : "1400px",
-            maxHeight: isMobile ? "85vh" : "90vh",
+            maxHeight: isMobile ? "calc(100vh - 70px)" : "90vh",
             minHeight: isMobile ? "auto" : "50vh",
+            marginTop: isMobile ? 0 : "70px",
             bgcolor: "white",
             padding: 0,
-            borderRadius: isMobile ? "24px 24px 0 0" : "24px",
+            borderRadius: "24px",
+            border: "1px solid rgba(43, 190, 183, 0.1)",
             boxShadow: "0 20px 50px rgba(0, 0, 0, 0.25)",
             overflowY: "auto",
+            overflowX: "hidden",
             WebkitOverflowScrolling: "touch",
             touchAction: "pan-y",
             position: "relative",
-            animation: "fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            transform: "translateZ(0)",
+            animation: "fadeIn 0.4s cubic-bezier(0.2, 0, 0.3, 1)",
             "@keyframes fadeIn": {
               "0%": {
                 opacity: 0,
-                transform: isMobile ? "translateY(100%)" : "scale(0.95)",
+                transform: isMobile ? "translateY(50px)" : "scale(0.95) translateY(30px)",
               },
               "100%": {
                 opacity: 1,
-                transform: isMobile ? "translateY(0)" : "scale(1)",
+                transform: isMobile ? "translateY(0)" : "scale(1) translateY(0)",
               },
             },
             "&::-webkit-scrollbar": {
@@ -778,8 +816,14 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
               color: "white",
               position: "sticky",
               top: 0,
-              zIndex: 10,
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+              zIndex: 1010,
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+              marginBottom: 0,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              overflow: "hidden",
+              width: "100%",
             }}
           >
             <Box
@@ -798,14 +842,28 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
                   alignItems: "center",
                   gap: isMobile ? 1 : 2,
                   fontSize: isMobile ? "18px" : "24px",
+                  lineHeight: 1.3,
+                  paddingRight: "30px",
                 }}
               >
                 <PublicIcon sx={{ fontSize: isMobile ? 20 : 30 }} />
-                {searchQuery && filteredProducts && filteredProducts.length > 0 
-                  ? `Search Results for "${searchQuery}"`
-                  : countryNames[page - 1] === "Not Specified" 
+                {(() => {
+                  if (searchQuery && filteredProducts && filteredProducts.length > 0) {
+                    return `Search Results for "${searchQuery}"`;
+                  }
+                  
+                  if (filterEpdOnly) {
+                    return "Environmental Product Declarations (EPD)";
+                  }
+                  
+                  if (selectedCategory && selectedCategory !== "all") {
+                    return `${selectedCategory} Products`;
+                  }
+                  
+                  return countryNames[page - 1] === "Not Specified" 
                     ? "Products with Unspecified Location" 
-                    : `Products from ${countryNames[page - 1] || "All Countries"}`}
+                    : `Products from ${countryNames[page - 1] || "All Countries"}`;
+                })()}
               </Typography>
               
               <IconButton
@@ -817,8 +875,16 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
                   color: "white",
                   bgcolor: "rgba(255, 255, 255, 0.15)",
                   backdropFilter: "blur(4px)",
+                  borderRadius: "50%",
+                  width: "36px",
+                  height: "36px",
+                  minWidth: "36px",
+                  minHeight: "36px",
+                  padding: 0,
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
                   "&:hover": {
                     bgcolor: "rgba(255, 255, 255, 0.25)",
+                    boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
                   },
                 }}
               >
@@ -884,9 +950,22 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
                   fontSize: isMobile ? "14px" : "16px",
                 }}
               >
-                {searchQuery && filteredProducts && filteredProducts.length > 0 
-                  ? `${filteredProducts.length} search result${filteredProducts.length !== 1 ? 's' : ''}`
-                  : `${countryNames.length} ${countryNames.length === 1 ? "Country" : "Countries"}`}
+                {(() => {
+                  if (searchQuery && filteredProducts && filteredProducts.length > 0) {
+                    return `${filteredProducts.length} search result${filteredProducts.length !== 1 ? 's' : ''}`;
+                  }
+                  
+                  if (filterEpdOnly) {
+                    const epdCount = productsForModal.length;
+                    return `${epdCount} EPD product${epdCount !== 1 ? 's' : ''}`;
+                  }
+                  
+                  if (selectedCategory && selectedCategory !== "all") {
+                    return `${productsForModal.length} product${productsForModal.length !== 1 ? 's' : ''} in "${selectedCategory}"`;
+                  }
+                  
+                  return `${countryNames.length} ${countryNames.length === 1 ? "Country" : "Countries"}`;
+                })()}
               </Typography>
               <Typography
                 sx={{
@@ -906,9 +985,15 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
                   fontSize: isMobile ? "14px" : "16px",
                 }}
               >
-                {searchQuery && filteredProducts && filteredProducts.length > 0 
-                  ? `Showing all matches`
-                  : `Page ${page} of ${countryNames.length || 1}`}
+                {(() => {
+                  if (searchQuery && filteredProducts && filteredProducts.length > 0 ||
+                      filterEpdOnly || 
+                      (selectedCategory && selectedCategory !== "all")) {
+                    return `Showing all matches`;
+                  }
+                  
+                  return `Page ${page} of ${countryNames.length || 1}`;
+                })()}
               </Typography>
             </Box>
             
@@ -919,7 +1004,10 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
               size={isMobile ? "small" : "medium"}
               color="primary"
               sx={{
-                display: searchQuery && filteredProducts && filteredProducts.length > 0 ? 'none' : 'flex',
+                display: searchQuery && filteredProducts && filteredProducts.length > 0 ||
+                         filterEpdOnly ||
+                         (selectedCategory && selectedCategory !== "all")
+                  ? 'none' : 'flex',
                 "& .MuiPaginationItem-root": {
                   fontWeight: 500,
                   "&.Mui-selected": {
@@ -935,7 +1023,11 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
           </Box>
 
           {/* Products List */}
-          <Box sx={{ p: isMobile ? 2 : 3 }}>
+          <Box sx={{ 
+            p: isMobile ? 2 : 3,
+            paddingTop: 2,
+            paddingBottom: isMobile ? 5 : 4,
+          }}>
             <List
               sx={{
                 padding: 0,
@@ -946,268 +1038,649 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
                 gap: isMobile ? 2 : 3,
               }}
             >
-              {productsForCurrentPage.length > 0 ? (
-                productsForCurrentPage.map((product, index) => (
-                  <ListItem
-                    key={`Product${index}`}
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      backgroundColor: "white",
-                      padding: 0,
-                      borderRadius: "16px",
-                      overflow: "hidden",
-                      border: "1px solid",
-                      borderColor: product.source === "EPD" 
-                        ? "rgba(101, 184, 125, 0.3)" 
-                        : "rgba(0, 0, 0, 0.08)",
-                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.03)",
-                      "&:hover": {
-                        boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
-                        transform: "translateY(-4px)",
-                      },
-                      "&:active": {
-                        transform: isMobile ? "scale(0.98)" : "translateY(-4px)",
-                      },
-                    }}
-                  >
-                    {/* Left ribbon for EPD products */}
-                    {product.source === "EPD" && (
-                      <Box
+              {(() => {
+                if (searchQuery && filteredProducts && filteredProducts.length > 0 ||
+                    filterEpdOnly || 
+                    (selectedCategory && selectedCategory !== "all")) {
+                  
+                  return productsForModal.length > 0 ? (
+                    productsForModal.map((product, index) => (
+                      <ListItem
+                        key={`Product${index}`}
                         sx={{
-                          position: "absolute",
-                          left: 0,
-                          top: 0,
-                          bottom: 0,
-                          width: "6px",
-                          backgroundColor: "var(--medium-green)",
-                          borderTopLeftRadius: "16px",
-                          borderBottomLeftRadius: "16px",
-                        }}
-                      />
-                    )}
-                    
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "flex-start",
-                        width: "100%",
-                        p: isMobile ? 2 : 3,
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          width: isMobile ? "50px" : "80px",
-                          height: isMobile ? "50px" : "80px",
-                          marginRight: isMobile ? 2 : 3,
-                          position: "relative",
-                          flexShrink: 0,
-                          borderRadius: "12px",
+                          display: "flex",
+                          alignItems: "center",
+                          backgroundColor: "white",
+                          padding: 0,
+                          borderRadius: "16px",
                           overflow: "hidden",
-                          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.15)",
+                          border: "1px solid",
+                          borderColor: product.source === "EPD" || product.type === "EPD"
+                            ? "rgba(101, 184, 125, 0.3)" 
+                            : "rgba(0, 0, 0, 0.08)",
+                          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.03)",
+                          "&:hover": {
+                            boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
+                            transform: "translateY(-4px)",
+                          },
+                          "&:active": {
+                            transform: isMobile ? "scale(0.98)" : "translateY(-4px)",
+                          },
                         }}
                       >
-                        <Box
-                          component="img"
-                          src={
-                            product.image_url || "/public/images/images(map).png"
-                          }
-                          alt={"No image"}
-                          sx={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                          }}
-                        />
-                        {product.source === "EPD" && (
+                        {(product.source === "EPD" || product.type === "EPD") && (
                           <Box
                             sx={{
                               position: "absolute",
+                              left: 0,
                               top: 0,
-                              right: 0,
+                              bottom: 0,
+                              width: "6px",
                               backgroundColor: "var(--medium-green)",
-                              color: "white",
-                              fontSize: isMobile ? "10px" : "12px",
-                              fontWeight: "bold",
-                              padding: "2px 6px",
-                              borderBottomLeftRadius: "8px",
+                              borderTopLeftRadius: "16px",
+                              borderBottomLeftRadius: "16px",
                             }}
-                          >
-                            EPD
-                          </Box>
+                          />
                         )}
-                      </Box>
-
-                      <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                        <Typography
-                          variant="h6"
-                          sx={{
-                            fontWeight: 600,
-                            color: "var(--dark-teal)",
-                            fontSize: isMobile ? "16px" : "18px",
-                            mb: 0.5,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {product.name}
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            color: "#666",
-                            fontSize: isMobile ? "12px" : "14px",
-                            mb: 1,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {product.industry_solution || "No category"}
-                        </Typography>
                         
                         <Box
                           sx={{
                             display: "flex",
-                            gap: 1,
-                            mt: 1,
+                            alignItems: "flex-start",
+                            width: "100%",
+                            p: isMobile ? 2 : 3,
                           }}
                         >
-                          {product.source === "EPD" && product.pdf_url && (
-                            <IconButton
-                              onClick={() => handleDownload(product.pdf_url)}
-                              size="small"
-                              sx={{
-                                backgroundColor: "var(--light-green)",
-                                p: 1,
-                                "&:hover": {
-                                  backgroundColor: "var(--medium-green)",
-                                  "& svg": {
-                                    color: "white",
-                                  },
-                                },
-                              }}
-                            >
-                              <DownloadIcon
-                                sx={{
-                                  fontSize: isMobile ? "16px" : "18px",
-                                  color: "var(--dark-green)",
-                                }}
-                              />
-                            </IconButton>
-                          )}
-                          <IconButton
-                            size="small"
+                          <Box
                             sx={{
-                              backgroundColor: "var(--light-teal)",
-                              p: 1,
-                              "&:hover": {
-                                backgroundColor: "var(--primary-teal)",
-                                "& svg": {
-                                  color: "white",
-                                },
-                              },
-                            }}
-                          >
-                            <InfoOutlinedIcon
-                              sx={{
-                                fontSize: isMobile ? "16px" : "18px",
-                                color: "var(--dark-teal)",
-                              }}
-                            />
-                          </IconButton>
-                          <IconButton
-                            size="small"
-                            onClick={() => handleSendRequest(product)}
-                            disabled={requestSending}
-                            sx={{
-                              backgroundColor: "var(--light-teal)",
-                              p: 1,
-                              "&:hover": {
-                                backgroundColor: "var(--primary-teal)",
-                                "& svg": {
-                                  color: "white",
-                                },
-                              },
+                              width: isMobile ? "50px" : "80px",
+                              height: isMobile ? "50px" : "80px",
+                              marginRight: isMobile ? 2 : 3,
                               position: "relative",
+                              flexShrink: 0,
+                              borderRadius: "12px",
+                              overflow: "hidden",
+                              boxShadow: "0 4px 8px rgba(0, 0, 0, 0.15)",
                             }}
                           >
-                            {requestSending &&
-                            requestProduct?.name === product.name ? (
-                              <CircularProgress
-                                size={isMobile ? 16 : 18}
-                                thickness={5}
-                                sx={{ color: "var(--dark-teal)" }}
+                            {product.image_url ? (
+                              // Use actual image if available
+                              <Box
+                                component="img"
+                                src={product.image_url}
+                                alt={product.name || product.product_name || "Product"}
+                                sx={{
+                                  width: "100%",
+                                  height: "100%",
+                                  objectFit: "cover",
+                                }}
                               />
                             ) : (
-                              <SendIcon
+                              // Custom EPD placeholder design
+                              <Box 
                                 sx={{
-                                  fontSize: isMobile ? "16px" : "18px",
-                                  color: "var(--dark-teal)",
+                                  width: "100%",
+                                  height: "100%",
+                                  background: (product.source === "EPD" || product.type === "EPD")
+                                    ? "linear-gradient(135deg, #65B87D 0%, #26A69A 100%)"
+                                    : "linear-gradient(135deg, #B2DFDB 0%, #80CBC4 100%)",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  color: "white",
+                                  position: "relative",
+                                  overflow: "hidden",
+                                }}
+                              >
+                                {/* Diagonal pattern in background */}
+                                <Box 
+                                  sx={{
+                                    position: "absolute",
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    opacity: 0.1,
+                                    backgroundImage: (product.source === "EPD" || product.type === "EPD")
+                                      ? "linear-gradient(45deg, rgba(255,255,255,0.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.15) 75%, transparent 75%, transparent)"
+                                      : "none",
+                                    backgroundSize: "8px 8px",
+                                  }}
+                                />
+                                
+                                {/* Product type abbreviation or first letter */}
+                                <Typography
+                                  variant="body1"
+                                  sx={{
+                                    fontWeight: "bold",
+                                    fontSize: isMobile ? "18px" : "24px",
+                                    textTransform: "uppercase",
+                                    letterSpacing: "1px",
+                                    textShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                                  }}
+                                >
+                                  {(product.source === "EPD" || product.type === "EPD") 
+                                    ? "PDF" 
+                                    : (product.name?.charAt(0) || product.product_name?.charAt(0) || "P")
+                                  }
+                                </Typography>
+                              </Box>
+                            )}
+                            
+                            {/* EPD label badge */}
+                            {(product.source === "EPD" || product.type === "EPD") && (
+                              <Box
+                                sx={{
+                                  position: "absolute",
+                                  top: 0,
+                                  right: 0,
+                                  backgroundColor: "var(--medium-green)",
+                                  color: "white",
+                                  fontSize: isMobile ? "10px" : "12px",
+                                  fontWeight: "bold",
+                                  padding: "2px 6px",
+                                  borderBottomLeftRadius: "8px",
+                                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                                  border: "1px solid rgba(255,255,255,0.2)",
+                                }}
+                              >
+                                EPD
+                              </Box>
+                            )}
+                          </Box>
+
+                          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                            <Typography
+                              variant="h6"
+                              sx={{
+                                fontWeight: 600,
+                                color: "var(--dark-teal)",
+                                fontSize: isMobile ? "16px" : "18px",
+                                mb: 0.5,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {product.name || product.product_name}
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                color: "#666",
+                                fontSize: isMobile ? "12px" : "14px",
+                                mb: 1,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {product.industry_solution || product.classific || product.category_name || "No category"}
+                            </Typography>
+                            
+                            <Box
+                              sx={{
+                                display: "flex",
+                                gap: 1,
+                                mt: 1,
+                              }}
+                            >
+                              {(product.source === "EPD" || product.type === "EPD") && product.pdf_url && (
+                                <IconButton
+                                  onClick={() => handleDownload(product.pdf_url)}
+                                  size="small"
+                                  sx={{
+                                    backgroundColor: "var(--light-green)",
+                                    p: 1,
+                                    "&:hover": {
+                                      backgroundColor: "var(--medium-green)",
+                                      "& svg": {
+                                        color: "white",
+                                      },
+                                    },
+                                  }}
+                                >
+                                  <DownloadIcon
+                                    sx={{
+                                      fontSize: isMobile ? "16px" : "18px",
+                                      color: "var(--dark-green)",
+                                    }}
+                                  />
+                                </IconButton>
+                              )}
+                              <IconButton
+                                size="small"
+                                sx={{
+                                  backgroundColor: "var(--light-teal)",
+                                  p: 1,
+                                  "&:hover": {
+                                    backgroundColor: "var(--primary-teal)",
+                                    "& svg": {
+                                      color: "white",
+                                    },
+                                  },
+                                }}
+                              >
+                                <InfoOutlinedIcon
+                                  sx={{
+                                    fontSize: isMobile ? "16px" : "18px",
+                                    color: "var(--dark-teal)",
+                                  }}
+                                />
+                              </IconButton>
+                              <IconButton
+                                size="small"
+                                onClick={() => handleSendRequest(product)}
+                                disabled={requestSending}
+                                sx={{
+                                  backgroundColor: "var(--light-teal)",
+                                  p: 1,
+                                  "&:hover": {
+                                    backgroundColor: "var(--primary-teal)",
+                                    "& svg": {
+                                      color: "white",
+                                    },
+                                  },
+                                  position: "relative",
+                                }}
+                              >
+                                {requestSending &&
+                                requestProduct?.name === product.name ? (
+                                  <CircularProgress
+                                    size={isMobile ? 16 : 18}
+                                    thickness={5}
+                                    sx={{ color: "var(--dark-teal)" }}
+                                  />
+                                ) : (
+                                  <SendIcon
+                                    sx={{
+                                      fontSize: isMobile ? "16px" : "18px",
+                                      color: "var(--dark-teal)",
+                                    }}
+                                  />
+                                )}
+                              </IconButton>
+                            </Box>
+                          </Box>
+                        </Box>
+                      </ListItem>
+                    ))
+                  ) : (
+                    <Box
+                      sx={{
+                        gridColumn: "1 / -1",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        py: 6,
+                        px: 3,
+                        textAlign: "center",
+                        bgcolor: "rgba(224, 242, 241, 0.3)",
+                        borderRadius: "16px",
+                        border: "1px dashed var(--light-teal)",
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: "80px",
+                          height: "80px",
+                          borderRadius: "50%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          backgroundColor: "white",
+                          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
+                          mb: 3,
+                        }}
+                      >
+                        <PublicIcon sx={{ fontSize: 40, color: "var(--primary-teal)" }} />
+                      </Box>
+                      <Typography
+                        variant="h5"
+                        sx={{
+                          color: "var(--dark-teal)",
+                          fontWeight: 600,
+                          mb: 1,
+                        }}
+                      >
+                        No Products Available
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          color: "#666",
+                          maxWidth: "400px",
+                        }}
+                      >
+                        {selectedCategory && selectedCategory !== "all" 
+                          ? `There are no products in the "${selectedCategory}" category.`
+                          : filterEpdOnly
+                            ? "There are no EPD products available."
+                            : "There are no products matching your criteria."}
+                      </Typography>
+                    </Box>
+                  );
+                } else {
+                  return productsForCurrentPage.length > 0 ? (
+                    productsForCurrentPage.map((product, index) => (
+                      <ListItem
+                        key={`Product${index}`}
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          backgroundColor: "white",
+                          padding: 0,
+                          borderRadius: "16px",
+                          overflow: "hidden",
+                          border: "1px solid",
+                          borderColor: product.source === "EPD" 
+                            ? "rgba(101, 184, 125, 0.3)" 
+                            : "rgba(0, 0, 0, 0.08)",
+                          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.03)",
+                          "&:hover": {
+                            boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
+                            transform: "translateY(-4px)",
+                          },
+                          "&:active": {
+                            transform: isMobile ? "scale(0.98)" : "translateY(-4px)",
+                          },
+                        }}
+                      >
+                        {product.source === "EPD" && (
+                          <Box
+                            sx={{
+                              position: "absolute",
+                              left: 0,
+                              top: 0,
+                              bottom: 0,
+                              width: "6px",
+                              backgroundColor: "var(--medium-green)",
+                              borderTopLeftRadius: "16px",
+                              borderBottomLeftRadius: "16px",
+                            }}
+                          />
+                        )}
+                        
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "flex-start",
+                            width: "100%",
+                            p: isMobile ? 2 : 3,
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              width: isMobile ? "50px" : "80px",
+                              height: isMobile ? "50px" : "80px",
+                              marginRight: isMobile ? 2 : 3,
+                              position: "relative",
+                              flexShrink: 0,
+                              borderRadius: "12px",
+                              overflow: "hidden",
+                              boxShadow: "0 4px 8px rgba(0, 0, 0, 0.15)",
+                            }}
+                          >
+                            {product.image_url ? (
+                              // Use actual image if available
+                              <Box
+                                component="img"
+                                src={product.image_url}
+                                alt={product.name || product.product_name || "Product"}
+                                sx={{
+                                  width: "100%",
+                                  height: "100%",
+                                  objectFit: "cover",
                                 }}
                               />
+                            ) : (
+                              // Custom EPD placeholder design
+                              <Box 
+                                sx={{
+                                  width: "100%",
+                                  height: "100%",
+                                  background: (product.source === "EPD" || product.type === "EPD")
+                                    ? "linear-gradient(135deg, #65B87D 0%, #26A69A 100%)"
+                                    : "linear-gradient(135deg, #B2DFDB 0%, #80CBC4 100%)",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  color: "white",
+                                  position: "relative",
+                                  overflow: "hidden",
+                                }}
+                              >
+                                {/* Diagonal pattern in background */}
+                                <Box 
+                                  sx={{
+                                    position: "absolute",
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    opacity: 0.1,
+                                    backgroundImage: (product.source === "EPD" || product.type === "EPD")
+                                      ? "linear-gradient(45deg, rgba(255,255,255,0.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.15) 75%, transparent 75%, transparent)"
+                                      : "none",
+                                    backgroundSize: "8px 8px",
+                                  }}
+                                />
+                                
+                                {/* Product type abbreviation or first letter */}
+                                <Typography
+                                  variant="body1"
+                                  sx={{
+                                    fontWeight: "bold",
+                                    fontSize: isMobile ? "18px" : "24px",
+                                    textTransform: "uppercase",
+                                    letterSpacing: "1px",
+                                    textShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                                  }}
+                                >
+                                  {(product.source === "EPD" || product.type === "EPD") 
+                                    ? "PDF" 
+                                    : (product.name?.charAt(0) || product.product_name?.charAt(0) || "P")
+                                  }
+                                </Typography>
+                              </Box>
                             )}
-                          </IconButton>
+                            
+                            {/* EPD label badge */}
+                            {(product.source === "EPD" || product.type === "EPD") && (
+                              <Box
+                                sx={{
+                                  position: "absolute",
+                                  top: 0,
+                                  right: 0,
+                                  backgroundColor: "var(--medium-green)",
+                                  color: "white",
+                                  fontSize: isMobile ? "10px" : "12px",
+                                  fontWeight: "bold",
+                                  padding: "2px 6px",
+                                  borderBottomLeftRadius: "8px",
+                                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                                  border: "1px solid rgba(255,255,255,0.2)",
+                                }}
+                              >
+                                EPD
+                              </Box>
+                            )}
+                          </Box>
+
+                          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                            <Typography
+                              variant="h6"
+                              sx={{
+                                fontWeight: 600,
+                                color: "var(--dark-teal)",
+                                fontSize: isMobile ? "16px" : "18px",
+                                mb: 0.5,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {product.name}
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                color: "#666",
+                                fontSize: isMobile ? "12px" : "14px",
+                                mb: 1,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {product.industry_solution || "No category"}
+                            </Typography>
+                            
+                            <Box
+                              sx={{
+                                display: "flex",
+                                gap: 1,
+                                mt: 1,
+                              }}
+                            >
+                              {product.source === "EPD" && product.pdf_url && (
+                                <IconButton
+                                  onClick={() => handleDownload(product.pdf_url)}
+                                  size="small"
+                                  sx={{
+                                    backgroundColor: "var(--light-green)",
+                                    p: 1,
+                                    "&:hover": {
+                                      backgroundColor: "var(--medium-green)",
+                                      "& svg": {
+                                        color: "white",
+                                      },
+                                    },
+                                  }}
+                                >
+                                  <DownloadIcon
+                                    sx={{
+                                      fontSize: isMobile ? "16px" : "18px",
+                                      color: "var(--dark-green)",
+                                    }}
+                                  />
+                                </IconButton>
+                              )}
+                              <IconButton
+                                size="small"
+                                sx={{
+                                  backgroundColor: "var(--light-teal)",
+                                  p: 1,
+                                  "&:hover": {
+                                    backgroundColor: "var(--primary-teal)",
+                                    "& svg": {
+                                      color: "white",
+                                    },
+                                  },
+                                }}
+                              >
+                                <InfoOutlinedIcon
+                                  sx={{
+                                    fontSize: isMobile ? "16px" : "18px",
+                                    color: "var(--dark-teal)",
+                                  }}
+                                />
+                              </IconButton>
+                              <IconButton
+                                size="small"
+                                onClick={() => handleSendRequest(product)}
+                                disabled={requestSending}
+                                sx={{
+                                  backgroundColor: "var(--light-teal)",
+                                  p: 1,
+                                  "&:hover": {
+                                    backgroundColor: "var(--primary-teal)",
+                                    "& svg": {
+                                      color: "white",
+                                    },
+                                  },
+                                  position: "relative",
+                                }}
+                              >
+                                {requestSending &&
+                                requestProduct?.name === product.name ? (
+                                  <CircularProgress
+                                    size={isMobile ? 16 : 18}
+                                    thickness={5}
+                                    sx={{ color: "var(--dark-teal)" }}
+                                  />
+                                ) : (
+                                  <SendIcon
+                                    sx={{
+                                      fontSize: isMobile ? "16px" : "18px",
+                                      color: "var(--dark-teal)",
+                                    }}
+                                  />
+                                )}
+                              </IconButton>
+                            </Box>
+                          </Box>
                         </Box>
+                      </ListItem>
+                    ))
+                  ) : (
+                    <Box
+                      sx={{
+                        gridColumn: "1 / -1",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        py: 6,
+                        px: 3,
+                        textAlign: "center",
+                        bgcolor: "rgba(224, 242, 241, 0.3)",
+                        borderRadius: "16px",
+                        border: "1px dashed var(--light-teal)",
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: "80px",
+                          height: "80px",
+                          borderRadius: "50%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          backgroundColor: "white",
+                          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
+                          mb: 3,
+                        }}
+                      >
+                        <PublicIcon sx={{ fontSize: 40, color: "var(--primary-teal)" }} />
                       </Box>
+                      <Typography
+                        variant="h5"
+                        sx={{
+                          color: "var(--dark-teal)",
+                          fontWeight: 600,
+                          mb: 1,
+                        }}
+                      >
+                        No Products Available
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          color: "#666",
+                          maxWidth: "400px",
+                        }}
+                      >
+                        There are currently no products available for{" "}
+                        <strong>{countryNames[page - 1] || "this country"}</strong>.
+                      </Typography>
                     </Box>
-                  </ListItem>
-                ))
-              ) : (
-                <Box
-                  sx={{
-                    gridColumn: "1 / -1",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    py: 6,
-                    px: 3,
-                    textAlign: "center",
-                    bgcolor: "rgba(224, 242, 241, 0.3)",
-                    borderRadius: "16px",
-                    border: "1px dashed var(--light-teal)",
-                  }}
-                >
-                  <Box
-                    sx={{
-                      width: "80px",
-                      height: "80px",
-                      borderRadius: "50%",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      backgroundColor: "white",
-                      boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
-                      mb: 3,
-                    }}
-                  >
-                    <PublicIcon sx={{ fontSize: 40, color: "var(--primary-teal)" }} />
-                  </Box>
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      color: "var(--dark-teal)",
-                      fontWeight: 600,
-                      mb: 1,
-                    }}
-                  >
-                    No Products Available
-                  </Typography>
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      color: "#666",
-                      maxWidth: "400px",
-                    }}
-                  >
-                    There are currently no products available for{" "}
-                    <strong>{countryNames[page - 1] || "this country"}</strong>.
-                  </Typography>
-                </Box>
-              )}
+                  );
+                }
+              })()}
             </List>
           </Box>
         </Box>
