@@ -420,7 +420,7 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
         sx={{
           display: "flex",
           justifyContent: "center",
-          width: isMobile ? "70%" : "45%",
+          width: isMobile ? "60%" : "40%",
           padding: isMobile ? "0 10px" : 0,
           position: "relative",
           zIndex: 999,
