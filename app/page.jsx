@@ -101,17 +101,28 @@ const IndexPage = () => {
     const dataLoadingCheckTimer = setInterval(() => {
       // Check if data has loaded in the ProductsContext (allProducts exists and isn't empty)
       if (mapRef.current) {
-        // If the map is ready and rendered, hide the info card
-        console.log("Map is ready, hiding info card");
-        setShowInfoCard(false);
+        // Only hide the info card if no filters are active and no product is selected
+        const hasActiveFilters = selectedCategory !== "all" || filterEpdOnly || selectedProduct;
+        if (!hasActiveFilters) {
+          console.log("Map is ready and no filters active, hiding info card");
+          setShowInfoCard(false);
+        } else {
+          console.log("Map is ready but filters are active or product selected, keeping info card visible");
+        }
         clearInterval(dataLoadingCheckTimer);
       }
     }, 1000); // Check every second
     
     // Also set a fallback timeout in case detection fails
     const fallbackTimer = setTimeout(() => {
-      console.log("Fallback timer triggered to hide info card");
-      setShowInfoCard(false);
+      // Only hide the info card if no filters are active and no product is selected
+      const hasActiveFilters = selectedCategory !== "all" || filterEpdOnly || selectedProduct;
+      if (!hasActiveFilters) {
+        console.log("Fallback timer triggered to hide info card");
+        setShowInfoCard(false);
+      } else {
+        console.log("Fallback timer triggered but filters are active or product selected, keeping info card visible");
+      }
       clearInterval(dataLoadingCheckTimer);
     }, 8000); // 8 seconds as fallback
     
@@ -160,7 +171,15 @@ const IndexPage = () => {
       window.removeEventListener('resetFilters', handleResetFilters);
       window.removeEventListener('showAllMarkers', handleShowAllMarkers);
     };
-  }, []); // Empty dependency array means this runs once on component mount
+  }, [selectedCategory, filterEpdOnly, selectedProduct]); // Dependency array includes filters state and selected product
+
+  // Add effect to show the InfoCard when a product is selected
+  useEffect(() => {
+    if (selectedProduct) {
+      console.log(`Product selected: "${selectedProduct}", showing info card`);
+      setShowInfoCard(true);
+    }
+  }, [selectedProduct]);
 
   return (
     <ProductsProvider>
@@ -361,6 +380,34 @@ const InfoCard = ({
   filterEpdOnly
 }) => {
   const { searchQuery, searchResults } = useSearch();
+  // Add ref to store product count
+  const [filteredCount, setFilteredCount] = useState(0);
+  
+  // Effect to update product count based on what's visible on the map
+  useEffect(() => {
+    // Try to access map markers data from window if available
+    const updateFilteredCount = () => {
+      try {
+        // This assumes there's some global state with marker count
+        // We'll fallback to search results length if available
+        if (searchResults && searchResults.length > 0) {
+          setFilteredCount(searchResults.length);
+        }
+      } catch (error) {
+        console.log("Could not determine filtered count");
+      }
+    };
+    
+    // Update count immediately and whenever search results change
+    updateFilteredCount();
+    
+    // Set up event listener for marker updates
+    window.addEventListener('markersUpdated', updateFilteredCount);
+    
+    return () => {
+      window.removeEventListener('markersUpdated', updateFilteredCount);
+    };
+  }, [searchResults]);
   
   if (!showInfoCard) return null;
   
@@ -368,6 +415,8 @@ const InfoCard = ({
   const getCardTitle = () => {
     if (searchQuery && searchResults && searchResults.length > 0) {
       return `Search Results (${searchResults.length})`;
+    } else if (selectedProduct) {
+      return `Product Details`;
     } else if (selectedCategory && selectedCategory !== "all") {
       return `${selectedCategory} Products`;
     } else if (filterEpdOnly) {
@@ -381,6 +430,8 @@ const InfoCard = ({
   const getCardDescription = () => {
     if (searchQuery && searchResults && searchResults.length > 0) {
       return `Showing ${searchResults.length} result${searchResults.length !== 1 ? 's' : ''} for "${searchQuery}". These are the only products currently displayed on the map.`;
+    } else if (selectedProduct) {
+      return `Viewing details for "${selectedProduct}". This product is currently highlighted on the map.`;
     } else if (selectedCategory && selectedCategory !== "all") {
       return `Viewing products from the ${selectedCategory} category. Use the sidebar to explore more details.`;
     } else if (filterEpdOnly) {
@@ -394,6 +445,8 @@ const InfoCard = ({
   const getCardIcon = () => {
     if (searchQuery && searchResults && searchResults.length > 0) {
       return <SearchIcon sx={{ fontSize: "18px" }} />;
+    } else if (selectedProduct) {
+      return <ViewInArIcon sx={{ fontSize: "18px" }} />;
     } else if (selectedCategory && selectedCategory !== "all" || filterEpdOnly) {
       // Use filter icon for categories or EPD filter
       return <ViewInArIcon sx={{ fontSize: "18px" }} />;
@@ -408,19 +461,24 @@ const InfoCard = ({
         elevation={3}
         sx={{
           position: "fixed",
-          top: "180px",
-          right: "120px",
+          top: { xs: "150px", sm: "120px" }, // Responsive positioning
+          right: { xs: "16px", sm: "80px", md: "120px" }, // Responsive right positioning
           zIndex: 2,
           padding: "15px",
-          maxWidth: "350px",
+          maxWidth: { xs: "calc(100% - 32px)", sm: "350px" }, // Full width on mobile, fixed on desktop
           background: "linear-gradient(145deg, rgba(222, 241, 241, 0.97), rgba(247, 247, 247, 0.97))",
           backdropFilter: "blur(10px)",
           borderRadius: "16px",
           boxShadow: "0 10px 30px rgba(0, 124, 119, 0.15)",
           border: "1px solid rgba(43, 190, 183, 0.2)",
-          transition: "all 0.3s ease-in-out",
+          transition: "all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1.0)",
           opacity: showInfoCard ? 1 : 0,
           transform: showInfoCard ? "translateY(0)" : "translateY(-20px)",
+          maxHeight: "calc(100vh - 200px)",
+          overflowY: "auto",
+          "&:hover": {
+            boxShadow: "0 12px 35px rgba(0, 124, 119, 0.25)",
+          }
         }}
       >
         <Typography
@@ -815,33 +873,358 @@ const InfoCard = ({
           >
             {(searchQuery || selectedCategory !== "all" || filterEpdOnly) ? "Filtered Data" : "Time Period"}
           </Typography>
-          <Box 
-            sx={{ 
-              backgroundColor: (searchQuery || selectedCategory !== "all" || filterEpdOnly) 
-                ? "rgba(101, 184, 125, 0.1)" 
-                : "rgba(0, 124, 119, 0.08)",
-              borderRadius: "8px",
-              px: 1.5,
-              py: 0.75,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Typography 
-              variant="body2" 
+          
+          {/* Enhanced Filtered Data display */}
+          {(searchQuery || selectedCategory !== "all" || filterEpdOnly) ? (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {/* Filter summary box */}
+              <Box 
+                sx={{ 
+                  backgroundColor: "rgba(101, 184, 125, 0.1)",
+                  borderRadius: "8px",
+                  px: 1.5,
+                  py: 0.75,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  border: "1px solid rgba(101, 184, 125, 0.2)",
+                }}
+              >
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    color: "var(--text-dark)", 
+                    fontWeight: 500, 
+                    fontSize: "12px",
+                    textAlign: "center",
+                    mb: searchResults && searchResults.length > 0 ? 0.5 : 0
+                  }}
+                >
+                  {searchResults && searchResults.length > 0 
+                    ? `Found ${searchResults.length} result${searchResults.length !== 1 ? 's' : ''}`
+                    : "Viewing filtered results"}
+                </Typography>
+                
+                {searchQuery && (
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      color: "var(--dark-teal)", 
+                      fontWeight: 600, 
+                      fontSize: "11px",
+                      textAlign: "center",
+                      backgroundColor: "rgba(0, 124, 119, 0.08)",
+                      px: 1,
+                      py: 0.25,
+                      borderRadius: "4px",
+                      maxWidth: "100%",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap"
+                    }}
+                  >
+                    "{searchQuery}"
+                  </Typography>
+                )}
+                
+                {!searchQuery && filteredCount > 0 && (
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      color: "var(--dark-teal)", 
+                      fontWeight: 600, 
+                      fontSize: "11px", 
+                    }}
+                  >
+                    {filteredCount} product{filteredCount !== 1 ? 's' : ''} visible
+                  </Typography>
+                )}
+              </Box>
+              
+              {/* Filter details */}
+              <Box sx={{ 
+                backgroundColor: "white",
+                borderRadius: "8px",
+                p: 1,
+                border: "1px solid rgba(0, 124, 119, 0.1)",
+              }}>
+                {/* Display country if selected */}
+                {selectedCountry && (
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 0.5 }}>
+                    <Box
+                      sx={{
+                        width: "6px",
+                        height: "6px",
+                        borderRadius: "50%",
+                        backgroundColor: "var(--accent-orange)",
+                        mr: 1,
+                      }}
+                    />
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "var(--text-dark)",
+                        fontSize: "11px",
+                        fontWeight: 500,
+                      }}
+                    >
+                      Country: <span style={{ fontWeight: 600 }}>{selectedCountry}</span>
+                    </Typography>
+                  </Box>
+                )}
+                
+                {/* Display selected product if any */}
+                {selectedProduct && (
+                  <Box>
+                    <Box sx={{ display: "flex", alignItems: "center", mb: 0.5 }}>
+                      <Box
+                        sx={{
+                          width: "6px",
+                          height: "6px",
+                          borderRadius: "50%",
+                          backgroundColor: "var(--accent-lime)",
+                          mr: 1,
+                        }}
+                      />
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: "var(--text-dark)",
+                          fontSize: "11px",
+                          fontWeight: 500,
+                        }}
+                      >
+                        Product: <span style={{ fontWeight: 600 }}>{selectedProduct}</span>
+                      </Typography>
+                    </Box>
+                    
+                    {/* Add product details badge if a product is selected */}
+                    <Box 
+                      sx={{ 
+                        backgroundColor: "rgba(200, 227, 51, 0.15)",
+                        borderRadius: "6px",
+                        p: 0.75,
+                        mb: 0.75,
+                        border: "1px dashed rgba(200, 227, 51, 0.5)",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 0.25
+                      }}
+                    >
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: "var(--dark-teal)",
+                          fontSize: "10px",
+                          fontWeight: 600,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.5px"
+                        }}
+                      >
+                        Selected Product Details
+                      </Typography>
+                      
+                      {/* EPD Status Badge */}
+                      <Box sx={{ 
+                        display: "flex", 
+                        alignItems: "center", 
+                        backgroundColor: filterEpdOnly ? "rgba(101, 184, 125, 0.2)" : "rgba(255, 255, 255, 0.5)",
+                        borderRadius: "4px",
+                        px: 0.75,
+                        py: 0.5,
+                        mt: 0.25,
+                        mb: 0.5,
+                        border: filterEpdOnly ? "1px solid rgba(101, 184, 125, 0.4)" : "1px solid rgba(0, 0, 0, 0.1)",
+                      }}>
+                        <Box sx={{
+                          width: "8px",
+                          height: "8px",
+                          borderRadius: "50%",
+                          backgroundColor: filterEpdOnly ? "var(--medium-green)" : "var(--text-medium)",
+                          mr: 1
+                        }} />
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: filterEpdOnly ? "var(--medium-green)" : "var(--text-medium)",
+                            fontSize: "10px",
+                            fontWeight: 600
+                          }}
+                        >
+                          {filterEpdOnly ? "EPD VERIFIED" : "EPD STATUS UNKNOWN"}
+                        </Typography>
+                      </Box>
+                      
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: "var(--text-dark)",
+                          fontSize: "11px",
+                          lineHeight: 1.4,
+                          display: "flex",
+                          alignItems: "center",
+                        }}
+                      >
+                        <span style={{ 
+                          display: "inline-block", 
+                          width: "12px", 
+                          height: "12px", 
+                          borderRadius: "2px",
+                          backgroundColor: "var(--primary-teal)",
+                          marginRight: "6px",
+                          opacity: 0.6
+                        }}></span>
+                        Click on map marker for detailed information
+                      </Typography>
+                      
+                      {selectedCategory !== "all" && (
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: "var(--text-dark)",
+                            fontSize: "11px",
+                            lineHeight: 1.4,
+                            display: "flex",
+                            alignItems: "center",
+                          }}
+                        >
+                          <span style={{ 
+                            display: "inline-block", 
+                            width: "12px", 
+                            height: "12px", 
+                            borderRadius: "2px",
+                            backgroundColor: "var(--primary-teal)",
+                            marginRight: "6px",
+                            opacity: 0.6
+                          }}></span>
+                          Category: {selectedCategory}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
+                )}
+                
+                {/* Display category if selected */}
+                {selectedCategory !== "all" && (
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 0.5 }}>
+                    <Box
+                      sx={{
+                        width: "6px",
+                        height: "6px",
+                        borderRadius: "50%",
+                        backgroundColor: "var(--primary-teal)",
+                        mr: 1,
+                      }}
+                    />
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "var(--text-dark)",
+                        fontSize: "11px",
+                        fontWeight: 500,
+                      }}
+                    >
+                      Category: <span style={{ fontWeight: 600 }}>{selectedCategory}</span>
+                    </Typography>
+                  </Box>
+                )}
+                
+                {/* Display if EPD filter is active */}
+                {filterEpdOnly && (
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 0.5 }}>
+                    <Box
+                      sx={{
+                        width: "6px",
+                        height: "6px",
+                        borderRadius: "50%",
+                        backgroundColor: "var(--primary-teal)",
+                        mr: 1,
+                      }}
+                    />
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "var(--text-dark)",
+                        fontSize: "11px",
+                        fontWeight: 500,
+                      }}
+                    >
+                      EPD Mode: <span style={{ fontWeight: 600 }}>Active</span>
+                    </Typography>
+                  </Box>
+                )}
+                
+                {/* Display year range */}
+                <Box sx={{ display: "flex", alignItems: "center", mb: 0.5 }}>
+                  <Box
+                    sx={{
+                      width: "6px",
+                      height: "6px",
+                      borderRadius: "50%",
+                      backgroundColor: "var(--primary-teal)",
+                      mr: 1,
+                    }}
+                  />
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "var(--text-dark)",
+                      fontSize: "11px",
+                      fontWeight: 500,
+                    }}
+                  >
+                    Year range: <span style={{ fontWeight: 600 }}>{yearRange[0]} — {yearRange[1]}</span>
+                  </Typography>
+                </Box>
+                
+                {/* Timestamp */}
+                <Box sx={{ 
+                  display: "flex", 
+                  alignItems: "center", 
+                  justifyContent: "flex-end",
+                  mt: 0.5,
+                  pt: 0.5,
+                  borderTop: "1px dashed rgba(0, 124, 119, 0.1)"
+                }}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: "var(--text-medium)",
+                      fontSize: "10px",
+                      fontStyle: "italic"
+                    }}
+                  >
+                    Updated at {new Date().toLocaleTimeString()}
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+          ) : (
+            <Box 
               sx={{ 
-                color: "var(--text-dark)", 
-                fontWeight: 500, 
-                fontSize: "12px",
-                textAlign: "center" 
+                backgroundColor: "rgba(0, 124, 119, 0.08)",
+                borderRadius: "8px",
+                px: 1.5,
+                py: 0.75,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              {(searchQuery || selectedCategory !== "all" || filterEpdOnly) 
-                ? `Viewing data as of ${new Date().toLocaleTimeString()}` 
-                : `${yearRange[0]} — ${yearRange[1]}`}
-            </Typography>
-          </Box>
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: "var(--text-dark)", 
+                  fontWeight: 500, 
+                  fontSize: "12px",
+                  textAlign: "center" 
+                }}
+              >
+                {`${yearRange[0]} — ${yearRange[1]}`}
+              </Typography>
+            </Box>
+          )}
         </Box>
 
         <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
