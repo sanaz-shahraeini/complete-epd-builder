@@ -27,13 +27,18 @@ export default function DashboardLayout({
   const [isProfilePage, setIsProfilePage] = useState(false)
   const [userDataFetched, setUserDataFetched] = useState(false)
 
-  // Check if we're on the profile page to prevent update loops
+  // Check if we're on the profile page to prevent update loops - improved detection
   useEffect(() => {
     // Check location based on window object to avoid dependency on router
     if (typeof window !== 'undefined') {
-      const isProfile = window.location.pathname.includes('/dashboard/profile');
+      const path = window.location.pathname;
+      const isProfile = path.includes('/dashboard/profile') || 
+                        path.includes('/epd/en/dashboard/profile') || 
+                        path.includes('/epd/en/en/dashboard/profile') ||
+                        path.match(/\/epd\/[a-z]{2}\/dashboard\/profile/);
+      
       setIsProfilePage(isProfile);
-      console.log('Is profile page:', isProfile);
+      console.log('Is profile page:', isProfile, 'Path:', path);
     }
   }, []);
 
@@ -41,6 +46,14 @@ export default function DashboardLayout({
   useEffect(() => {
     // Skip effect if we're on the profile page or already fetched data
     if (isProfilePage || userDataFetched) {
+      console.log('Skipping user data fetch: isProfilePage=', isProfilePage, 'userDataFetched=', userDataFetched);
+      return;
+    }
+
+    // If we already have user data, just mark as fetched
+    if (user) {
+      console.log('Already have user data, marking as fetched');
+      setUserDataFetched(true);
       return;
     }
 
@@ -49,16 +62,15 @@ export default function DashboardLayout({
     
     const fetchUserData = async () => {
       try {
-        if (!user && isMounted) {
-          console.log('Fetching user data from dashboard layout');
-          const userData = await getUserProfile();
-          
-          if (isMounted) {
+        console.log('Fetching user data from dashboard layout');
+        const userData = await getUserProfile();
+        
+        if (isMounted && userData) {
+          console.log('User data fetched successfully:', userData);
+          // Only set user if we're not on profile page to prevent loops
+          if (!isProfilePage) {
             setUser(userData);
-            setUserDataFetched(true);
           }
-        } else if (user) {
-          // Already have user data
           setUserDataFetched(true);
         }
       } catch (error) {
@@ -74,7 +86,7 @@ export default function DashboardLayout({
       isMounted = false;
       controller.abort();
     };
-  }, [user, isProfilePage, userDataFetched]); // Add dependencies to prevent stale state
+  }, [isProfilePage, userDataFetched]); // Remove user from dependencies to prevent loops
 
   return (
     <UsersProvider>

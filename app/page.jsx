@@ -17,9 +17,10 @@ import SearchBar from "../components/mapDetail/SearchBar";
 import countryCoordinates from "../public/data/countryCoordinates";
 import Header from "../components/header/Header";
 import "../styles/css/colors.css";
-import { SearchProvider } from "../useContexts/SearchContext";
+import { SearchProvider, useSearch } from "../useContexts/SearchContext";
 import { ProductsProvider } from "../useContexts/ProductsContext";
 import ViewInArIcon from "@mui/icons-material/ViewInAr";
+import SearchIcon from "@mui/icons-material/Search";
 
 // Dynamic imports for components that need to be client-side only
 const VerticalToggleButtons = dynamic(
@@ -330,352 +331,479 @@ const IndexPage = () => {
               </Grid>
 
               {/* Info Card */}
-              <Fade in={showInfoCard}>
-                <Paper
-                  elevation={3}
-                  sx={{
-                    position: "fixed",
-                    top: "180px",
-                    right: "120px",
-                    zIndex: 2,
-                    padding: "15px",
-                    maxWidth: "350px",
-                    background: "linear-gradient(145deg, rgba(222, 241, 241, 0.97), rgba(247, 247, 247, 0.97))",
-                    backdropFilter: "blur(10px)",
-                    borderRadius: "16px",
-                    boxShadow: "0 10px 30px rgba(0, 124, 119, 0.15)",
-                    border: "1px solid rgba(43, 190, 183, 0.2)",
-                    transition: "all 0.3s ease-in-out",
-                    opacity: showInfoCard ? 1 : 0,
-                    transform: showInfoCard ? "translateY(0)" : "translateY(-20px)",
-                  }}
-                >
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      color: "var(--dark-teal)",
-                      mb: 1.5,
-                      fontSize: "18px",
-                      fontWeight: 700,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1,
-                      letterSpacing: "-0.01em",
-                    }}
-                  >
-                    <Box 
-                      sx={{
-                        background: "var(--gradient-teal)",
-                        color: "white",
-                        borderRadius: "8px",
-                        p: 0.75,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        boxShadow: "0 4px 8px rgba(0, 124, 119, 0.2)",
-                      }}
-                    >
-                      <ViewInArIcon sx={{ fontSize: "18px" }} />
-                    </Box>
-                    Global Product Map
-                  </Typography>
-                  
-                  <Box 
-                    sx={{ 
-                      mb: 1.5,
-                      p: 1.5,
-                      borderRadius: "8px",
-                      backgroundColor: "rgba(255, 255, 255, 0.5)",
-                      border: "1px solid rgba(200, 227, 51, 0.2)",
-                    }}
-                  >
-                    <Typography
-                      variant="body2"
-                      sx={{ 
-                        color: "var(--text-dark)", 
-                        mb: 0,
-                        lineHeight: 1.4,
-                        fontSize: "13px",
-                      }}
-                    >
-                      Welcome to the Global Product Map! Here you can explore
-                      products and Environmental Product Declarations (EPDs)
-                      across different categories and countries.
-                    </Typography>
-                  </Box>
-
-                  <Box sx={{ mb: 1.5 }}>
-                    <Typography
-                      variant="subtitle2"
-                      sx={{ 
-                        color: "var(--dark-teal)",
-                        mb: 1,
-                        fontWeight: 600,
-                        fontSize: "14px",
-                        display: "flex",
-                        alignItems: "center",
-                        "&:before": {
-                          content: '""',
-                          display: "block",
-                          width: "3px",
-                          height: "16px",
-                          backgroundColor: "var(--accent-lime)",
-                          borderRadius: "2px",
-                          marginRight: "6px",
-                        },
-                      }}
-                    >
-                      Current View
-                    </Typography>
-                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
-                      <Chip
-                        label={selectedCountry || "All Countries"}
-                        size="small"
-                        sx={{
-                          backgroundColor: "white",
-                          color: "var(--dark-teal)",
-                          fontWeight: 500,
-                          border: "1px solid var(--light-teal)",
-                          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
-                          borderRadius: "8px",
-                          height: "24px",
-                          "& .MuiChip-label": {
-                            padding: "0 8px",
-                            fontSize: "12px",
-                          },
-                          "&:hover": {
-                            backgroundColor: "var(--light-teal)",
-                          },
-                        }}
-                      />
-                      <Chip
-                        label={selectedProduct || "All Products"}
-                        size="small"
-                        sx={{
-                          backgroundColor: "white",
-                          color: "var(--dark-teal)",
-                          fontWeight: 500,
-                          border: "1px solid var(--light-teal)",
-                          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
-                          borderRadius: "8px",
-                          height: "24px",
-                          "& .MuiChip-label": {
-                            padding: "0 8px",
-                            fontSize: "12px",
-                          },
-                          "&:hover": {
-                            backgroundColor: "var(--light-teal)",
-                          },
-                        }}
-                      />
-                      <Chip
-                        label={selectedCategory || "All Categories"}
-                        size="small"
-                        sx={{
-                          backgroundColor: "white",
-                          color: "var(--dark-teal)",
-                          fontWeight: 500,
-                          border: "1px solid var(--light-teal)",
-                          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
-                          borderRadius: "8px",
-                          height: "24px",
-                          "& .MuiChip-label": {
-                            padding: "0 8px",
-                            fontSize: "12px",
-                          },
-                          "&:hover": {
-                            backgroundColor: "var(--light-teal)",
-                          },
-                        }}
-                      />
-                    </Box>
-                  </Box>
-
-                  <Box sx={{ mb: 1.5 }}>
-                    <Typography
-                      variant="subtitle2"
-                      sx={{ 
-                        color: "var(--dark-teal)",
-                        mb: 1,
-                        fontWeight: 600,
-                        fontSize: "14px",
-                        display: "flex",
-                        alignItems: "center",
-                        "&:before": {
-                          content: '""',
-                          display: "block",
-                          width: "3px",
-                          height: "16px",
-                          backgroundColor: "var(--medium-green)",
-                          borderRadius: "2px",
-                          marginRight: "6px",
-                        },
-                      }}
-                    >
-                      Time Period
-                    </Typography>
-                    <Box 
-                      sx={{ 
-                        backgroundColor: "rgba(101, 184, 125, 0.1)",
-                        borderRadius: "8px",
-                        px: 1.5,
-                        py: 0.75,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Typography variant="body2" sx={{ color: "var(--text-dark)", fontWeight: 500, fontSize: "12px" }}>
-                        {yearRange[0]} — {yearRange[1]}
-                      </Typography>
-                    </Box>
-                  </Box>
-
-                  <Box sx={{ mb: 1.5 }}>
-                    <Typography
-                      variant="subtitle2"
-                      sx={{ 
-                        color: "var(--dark-teal)",
-                        mb: 1,
-                        fontWeight: 600,
-                        fontSize: "14px",
-                        display: "flex",
-                        alignItems: "center",
-                        "&:before": {
-                          content: '""',
-                          display: "block",
-                          width: "3px",
-                          height: "16px",
-                          backgroundColor: "var(--primary-teal)",
-                          borderRadius: "2px",
-                          marginRight: "6px",
-                        },
-                      }}
-                    >
-                      Quick Tips
-                    </Typography>
-                    <Box 
-                      sx={{ 
-                        backgroundColor: "white",
-                        borderRadius: "8px",
-                        p: 1,
-                        boxShadow: "0 2px 10px rgba(0, 0, 0, 0.03)",
-                      }}
-                    >
-                      <Typography
-                        variant="body2"
-                        sx={{ 
-                          color: "var(--text-dark)", 
-                          mb: 0.5,
-                          fontSize: "12px",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 0.75,
-                          "&:before": {
-                            content: '""',
-                            display: "block",
-                            width: "5px",
-                            height: "5px",
-                            backgroundColor: "var(--accent-lime)",
-                            borderRadius: "50%",
-                          },
-                        }}
-                      >
-                        Click on countries to view specific data
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ 
-                          color: "var(--text-dark)", 
-                          mb: 0.5,
-                          fontSize: "12px",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 0.75,
-                          "&:before": {
-                            content: '""',
-                            display: "block",
-                            width: "5px",
-                            height: "5px",
-                            backgroundColor: "var(--accent-lime)",
-                            borderRadius: "50%",
-                          },
-                        }}
-                      >
-                        Use the sidebar categories to filter products
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ 
-                          color: "var(--text-dark)", 
-                          mb: 0.5,
-                          fontSize: "12px",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 0.75,
-                          "&:before": {
-                            content: '""',
-                            display: "block",
-                            width: "5px",
-                            height: "5px",
-                            backgroundColor: "var(--accent-lime)",
-                            borderRadius: "50%",
-                          },
-                        }}
-                      >
-                        Toggle EPD mode to focus on environmental declarations
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ 
-                          color: "var(--text-dark)", 
-                          fontSize: "12px",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 0.75,
-                          "&:before": {
-                            content: '""',
-                            display: "block",
-                            width: "5px",
-                            height: "5px",
-                            backgroundColor: "var(--accent-lime)",
-                            borderRadius: "50%",
-                          },
-                        }}
-                      >
-                        Use zoom controls to adjust the map view
-                      </Typography>
-                    </Box>
-                  </Box>
-
-                  <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        color: "var(--primary-teal)",
-                        fontWeight: 600,
-                        cursor: "pointer",
-                        py: 0.25,
-                        px: 0.75,
-                        borderRadius: "4px",
-                        transition: "all 0.2s ease",
-                        fontSize: "11px",
-                        "&:hover": {
-                          backgroundColor: "rgba(43, 190, 183, 0.1)",
-                        },
-                      }}
-                      onClick={() => setShowInfoCard(false)}
-                    >
-                      Hide this card
-                    </Typography>
-                  </Box>
-                </Paper>
-              </Fade>
+              <ClientOnly>
+                <InfoCard 
+                  showInfoCard={showInfoCard}
+                  setShowInfoCard={setShowInfoCard}
+                  selectedCountry={selectedCountry}
+                  selectedProduct={selectedProduct}
+                  selectedCategory={selectedCategory}
+                  yearRange={yearRange}
+                />
+              </ClientOnly>
             </Grid>
           </Box>
         </Box>
       </SearchProvider>
     </ProductsProvider>
+  );
+};
+
+// Create a separate InfoCard component that can access the search context
+const InfoCard = ({ 
+  showInfoCard, 
+  setShowInfoCard, 
+  selectedCountry, 
+  selectedProduct, 
+  selectedCategory, 
+  yearRange 
+}) => {
+  const { searchQuery, searchResults } = useSearch();
+  
+  if (!showInfoCard) return null;
+  
+  return (
+    <Fade in={showInfoCard}>
+      <Paper
+        elevation={3}
+        sx={{
+          position: "fixed",
+          top: "180px",
+          right: "120px",
+          zIndex: 2,
+          padding: "15px",
+          maxWidth: "350px",
+          background: "linear-gradient(145deg, rgba(222, 241, 241, 0.97), rgba(247, 247, 247, 0.97))",
+          backdropFilter: "blur(10px)",
+          borderRadius: "16px",
+          boxShadow: "0 10px 30px rgba(0, 124, 119, 0.15)",
+          border: "1px solid rgba(43, 190, 183, 0.2)",
+          transition: "all 0.3s ease-in-out",
+          opacity: showInfoCard ? 1 : 0,
+          transform: showInfoCard ? "translateY(0)" : "translateY(-20px)",
+        }}
+      >
+        <Typography
+          variant="h6"
+          sx={{
+            color: "var(--dark-teal)",
+            mb: 1.5,
+            fontSize: "18px",
+            fontWeight: 700,
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            letterSpacing: "-0.01em",
+          }}
+        >
+          <Box 
+            sx={{
+              background: "var(--gradient-teal)",
+              color: "white",
+              borderRadius: "8px",
+              p: 0.75,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 4px 8px rgba(0, 124, 119, 0.2)",
+            }}
+          >
+            {searchQuery && searchResults && searchResults.length > 0 ? 
+              <SearchIcon sx={{ fontSize: "18px" }} /> : 
+              <ViewInArIcon sx={{ fontSize: "18px" }} />
+            }
+          </Box>
+          {searchQuery && searchResults && searchResults.length > 0 ? 
+            `Search Results (${searchResults.length})` : 
+            "Global Product Map"
+          }
+        </Typography>
+        
+        <Box 
+          sx={{ 
+            mb: 1.5,
+            p: 1.5,
+            borderRadius: "8px",
+            backgroundColor: "rgba(255, 255, 255, 0.5)",
+            border: "1px solid rgba(200, 227, 51, 0.2)",
+          }}
+        >
+          <Typography
+            variant="body2"
+            sx={{ 
+              color: "var(--text-dark)", 
+              mb: 0,
+              lineHeight: 1.4,
+              fontSize: "13px",
+            }}
+          >
+            {searchQuery && searchResults && searchResults.length > 0 ? 
+              `Showing ${searchResults.length} result${searchResults.length !== 1 ? 's' : ''} for "${searchQuery}". These are the only products currently displayed on the map.` :
+              "Welcome to the Global Product Map! Here you can explore products and Environmental Product Declarations (EPDs) across different categories and countries."
+            }
+          </Typography>
+        </Box>
+
+        <Box sx={{ mb: 1.5 }}>
+          <Typography
+            variant="subtitle2"
+            sx={{ 
+              color: "var(--dark-teal)",
+              mb: 1,
+              fontWeight: 600,
+              fontSize: "14px",
+              display: "flex",
+              alignItems: "center",
+              "&:before": {
+                content: '""',
+                display: "block",
+                width: "3px",
+                height: "16px",
+                backgroundColor: "var(--accent-lime)",
+                borderRadius: "2px",
+                marginRight: "6px",
+              },
+            }}
+          >
+            Current View
+          </Typography>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+            {searchQuery ? (
+              <Chip
+                label={`Search: ${searchQuery}`}
+                size="small"
+                sx={{
+                  backgroundColor: "rgba(0, 124, 119, 0.1)",
+                  color: "var(--dark-teal)",
+                  fontWeight: 500,
+                  border: "1px solid var(--dark-teal)",
+                  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
+                  borderRadius: "8px",
+                  height: "24px",
+                  "& .MuiChip-label": {
+                    padding: "0 8px",
+                    fontSize: "12px",
+                  },
+                }}
+              />
+            ) : (
+              <>
+                <Chip
+                  label={selectedCountry || "All Countries"}
+                  size="small"
+                  sx={{
+                    backgroundColor: "white",
+                    color: "var(--dark-teal)",
+                    fontWeight: 500,
+                    border: "1px solid var(--light-teal)",
+                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
+                    borderRadius: "8px",
+                    height: "24px",
+                    "& .MuiChip-label": {
+                      padding: "0 8px",
+                      fontSize: "12px",
+                    },
+                    "&:hover": {
+                      backgroundColor: "var(--light-teal)",
+                    },
+                  }}
+                />
+                <Chip
+                  label={selectedProduct || "All Products"}
+                  size="small"
+                  sx={{
+                    backgroundColor: "white",
+                    color: "var(--dark-teal)",
+                    fontWeight: 500,
+                    border: "1px solid var(--light-teal)",
+                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
+                    borderRadius: "8px",
+                    height: "24px",
+                    "& .MuiChip-label": {
+                      padding: "0 8px",
+                      fontSize: "12px",
+                    },
+                    "&:hover": {
+                      backgroundColor: "var(--light-teal)",
+                    },
+                  }}
+                />
+                <Chip
+                  label={selectedCategory || "All Categories"}
+                  size="small"
+                  sx={{
+                    backgroundColor: "white",
+                    color: "var(--dark-teal)",
+                    fontWeight: 500,
+                    border: "1px solid var(--light-teal)",
+                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
+                    borderRadius: "8px",
+                    height: "24px",
+                    "& .MuiChip-label": {
+                      padding: "0 8px",
+                      fontSize: "12px",
+                    },
+                    "&:hover": {
+                      backgroundColor: "var(--light-teal)",
+                    },
+                  }}
+                />
+              </>
+            )}
+          </Box>
+        </Box>
+
+        {!searchQuery && (
+          <Box sx={{ mb: 1.5 }}>
+            <Typography
+              variant="subtitle2"
+              sx={{ 
+                color: "var(--dark-teal)",
+                mb: 1,
+                fontWeight: 600,
+                fontSize: "14px",
+                display: "flex",
+                alignItems: "center",
+                "&:before": {
+                  content: '""',
+                  display: "block",
+                  width: "3px",
+                  height: "16px",
+                  backgroundColor: "var(--medium-green)",
+                  borderRadius: "2px",
+                  marginRight: "6px",
+                },
+              }}
+            >
+              Time Period
+            </Typography>
+            <Box 
+              sx={{ 
+                backgroundColor: "rgba(101, 184, 125, 0.1)",
+                borderRadius: "8px",
+                px: 1.5,
+                py: 0.75,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Typography variant="body2" sx={{ color: "var(--text-dark)", fontWeight: 500, fontSize: "12px" }}>
+                {yearRange[0]} — {yearRange[1]}
+              </Typography>
+            </Box>
+          </Box>
+        )}
+
+        <Box sx={{ mb: 1.5 }}>
+          <Typography
+            variant="subtitle2"
+            sx={{ 
+              color: "var(--dark-teal)",
+              mb: 1,
+              fontWeight: 600,
+              fontSize: "14px",
+              display: "flex",
+              alignItems: "center",
+              "&:before": {
+                content: '""',
+                display: "block",
+                width: "3px",
+                height: "16px",
+                backgroundColor: "var(--primary-teal)",
+                borderRadius: "2px",
+                marginRight: "6px",
+              },
+            }}
+          >
+            {searchQuery ? "Search Tips" : "Quick Tips"}
+          </Typography>
+          <Box 
+            sx={{ 
+              backgroundColor: "white",
+              borderRadius: "8px",
+              p: 1,
+              boxShadow: "0 2px 10px rgba(0, 0, 0, 0.03)",
+            }}
+          >
+            {searchQuery ? (
+              <>
+                <Typography
+                  variant="body2"
+                  sx={{ 
+                    color: "var(--text-dark)", 
+                    mb: 0.5,
+                    fontSize: "12px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.75,
+                    "&:before": {
+                      content: '""',
+                      display: "block",
+                      width: "5px",
+                      height: "5px",
+                      backgroundColor: "var(--accent-lime)",
+                      borderRadius: "50%",
+                    },
+                  }}
+                >
+                  Click on markers to view product details
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{ 
+                    color: "var(--text-dark)", 
+                    mb: 0.5,
+                    fontSize: "12px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.75,
+                    "&:before": {
+                      content: '""',
+                      display: "block",
+                      width: "5px",
+                      height: "5px",
+                      backgroundColor: "var(--accent-lime)",
+                      borderRadius: "50%",
+                    },
+                  }}
+                >
+                  Clear the search to see all products
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{ 
+                    color: "var(--text-dark)", 
+                    fontSize: "12px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.75,
+                    "&:before": {
+                      content: '""',
+                      display: "block",
+                      width: "5px",
+                      height: "5px",
+                      backgroundColor: "var(--accent-lime)",
+                      borderRadius: "50%",
+                    },
+                  }}
+                >
+                  Use zoom controls to get a better view
+                </Typography>
+              </>
+            ) : (
+              <>
+                <Typography
+                  variant="body2"
+                  sx={{ 
+                    color: "var(--text-dark)", 
+                    mb: 0.5,
+                    fontSize: "12px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.75,
+                    "&:before": {
+                      content: '""',
+                      display: "block",
+                      width: "5px",
+                      height: "5px",
+                      backgroundColor: "var(--accent-lime)",
+                      borderRadius: "50%",
+                    },
+                  }}
+                >
+                  Click on countries to view specific data
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{ 
+                    color: "var(--text-dark)", 
+                    mb: 0.5,
+                    fontSize: "12px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.75,
+                    "&:before": {
+                      content: '""',
+                      display: "block",
+                      width: "5px",
+                      height: "5px",
+                      backgroundColor: "var(--accent-lime)",
+                      borderRadius: "50%",
+                    },
+                  }}
+                >
+                  Use the sidebar categories to filter products
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{ 
+                    color: "var(--text-dark)", 
+                    mb: 0.5,
+                    fontSize: "12px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.75,
+                    "&:before": {
+                      content: '""',
+                      display: "block",
+                      width: "5px",
+                      height: "5px",
+                      backgroundColor: "var(--accent-lime)",
+                      borderRadius: "50%",
+                    },
+                  }}
+                >
+                  Toggle EPD mode to focus on environmental declarations
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{ 
+                    color: "var(--text-dark)", 
+                    fontSize: "12px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.75,
+                    "&:before": {
+                      content: '""',
+                      display: "block",
+                      width: "5px",
+                      height: "5px",
+                      backgroundColor: "var(--accent-lime)",
+                      borderRadius: "50%",
+                    },
+                  }}
+                >
+                  Use zoom controls to adjust the map view
+                </Typography>
+              </>
+            )}
+          </Box>
+        </Box>
+
+        <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "var(--primary-teal)",
+              fontWeight: 600,
+              cursor: "pointer",
+              py: 0.25,
+              px: 0.75,
+              borderRadius: "4px",
+              transition: "all 0.2s ease",
+              fontSize: "11px",
+              "&:hover": {
+                backgroundColor: "rgba(43, 190, 183, 0.1)",
+              },
+            }}
+            onClick={() => setShowInfoCard(false)}
+          >
+            Hide this card
+          </Typography>
+        </Box>
+      </Paper>
+    </Fade>
   );
 };
 

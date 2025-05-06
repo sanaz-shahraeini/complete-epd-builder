@@ -2,15 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useLocale } from 'next-intl';
 
 export default function ProfilePage() {
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const locale = useLocale();
 
   // Load user data from localStorage on client side only
   useEffect(() => {
     try {
-      // Try to get user data from local storage
+      // Try to get user data from local storage directly
+      // This avoids using the Zustand store which can cause update loops
       const userStoreData = localStorage.getItem('user-store');
       if (userStoreData) {
         const parsedData = JSON.parse(userStoreData);
@@ -47,7 +50,7 @@ export default function ProfilePage() {
         <div className="bg-white rounded-lg shadow-md p-6">
           <h1 className="text-2xl font-bold mb-6">Not Authenticated</h1>
           <p className="mb-4">You need to be logged in to view your profile information.</p>
-          <Link href="/epd/en/dashboard">
+          <Link href={`/epd/${locale}/dashboard`}>
             <span className="inline-flex items-center justify-center rounded-md text-sm font-medium border border-gray-300 bg-white hover:bg-gray-100 h-10 px-4 py-2">
               Back to Dashboard
             </span>
@@ -102,7 +105,7 @@ export default function ProfilePage() {
           </div>
           
           <div className="pt-4">
-            <Link href="/epd/en/dashboard">
+            <Link href={`/epd/${locale}/dashboard`}>
               <span className="inline-flex items-center justify-center rounded-md text-sm font-medium border border-gray-300 bg-white hover:bg-gray-100 h-10 px-4 py-2">
                 Back to Dashboard
               </span>

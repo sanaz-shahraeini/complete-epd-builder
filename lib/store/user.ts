@@ -25,10 +25,16 @@ interface UserStore {
   setShowSignInModal: (show: boolean) => void
 }
 
-// Utility to check if we're on the profile page
+// Utility to check if we're on the profile page - improved to be more reliable
 const isProfilePage = () => {
   if (typeof window === 'undefined') return false;
-  return window.location.pathname.includes('/dashboard/profile');
+  
+  // More comprehensive check for profile paths
+  const path = window.location.pathname;
+  return path.includes('/dashboard/profile') || 
+         path.includes('/epd/en/dashboard/profile') || 
+         path.includes('/epd/en/en/dashboard/profile') ||
+         path.match(/\/epd\/[a-z]{2}\/dashboard\/profile/);
 };
 
 // Debounce helper to prevent multiple rapid updates
@@ -51,6 +57,12 @@ export const useUserStore = create<UserStore>()(
       isUpdating: false,
       lastUpdated: 0,
       setUser: (user) => {
+        // Skip if user is null or undefined
+        if (!user) {
+          console.log('Skipping update for null/undefined user');
+          return;
+        }
+        
         // Prevent updates on profile page
         if (isProfilePage()) {
           console.log('Skipping user update on profile page');
@@ -60,6 +72,13 @@ export const useUserStore = create<UserStore>()(
         // Prevent updates if already updating or updated very recently
         const currentState = get();
         const now = Date.now();
+        
+        // If the user data is identical, skip update
+        if (currentState.user && JSON.stringify(currentState.user) === JSON.stringify(user)) {
+          console.log('Skipping identical user update');
+          return;
+        }
+        
         if (currentState.isUpdating || (now - currentState.lastUpdated < 500)) {
           console.log('Skipping rapid consecutive user update');
           return;

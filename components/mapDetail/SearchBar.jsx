@@ -284,7 +284,17 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
   }, [showResults]);
 
   // Group products by country for the modal display
-  const productsForModal = [...(regularProducts || []), ...(allProducts || [])];
+  const productsForModal = searchQuery && filteredProducts && filteredProducts.length > 0
+    ? [...filteredProducts] // Only show search results when a search was performed
+    : [...(regularProducts || []), ...(allProducts || [])]; // Otherwise show all products
+    
+  // Log to verify we're using filtered products when search is active
+  console.log("Modal products source:", {
+    usingSearchResults: !!(searchQuery && filteredProducts && filteredProducts.length > 0),
+    searchQuery,
+    filteredCount: filteredProducts?.length || 0,
+    modalProductsCount: productsForModal.length
+  });
 
   const groupedByCountry = Array.isArray(productsForModal)
     ? productsForModal.reduce((acc, product) => {
@@ -791,9 +801,11 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
                 }}
               >
                 <PublicIcon sx={{ fontSize: isMobile ? 20 : 30 }} />
-                {countryNames[page - 1] === "Not Specified" 
-                  ? "Products with Unspecified Location" 
-                  : `Products from ${countryNames[page - 1] || "All Countries"}`}
+                {searchQuery && filteredProducts && filteredProducts.length > 0 
+                  ? `Search Results for "${searchQuery}"`
+                  : countryNames[page - 1] === "Not Specified" 
+                    ? "Products with Unspecified Location" 
+                    : `Products from ${countryNames[page - 1] || "All Countries"}`}
               </Typography>
               
               <IconButton
@@ -872,7 +884,9 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
                   fontSize: isMobile ? "14px" : "16px",
                 }}
               >
-                {countryNames.length} {countryNames.length === 1 ? "Country" : "Countries"}
+                {searchQuery && filteredProducts && filteredProducts.length > 0 
+                  ? `${filteredProducts.length} search result${filteredProducts.length !== 1 ? 's' : ''}`
+                  : `${countryNames.length} ${countryNames.length === 1 ? "Country" : "Countries"}`}
               </Typography>
               <Typography
                 sx={{
@@ -892,7 +906,9 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
                   fontSize: isMobile ? "14px" : "16px",
                 }}
               >
-                Page {page} of {countryNames.length || 1}
+                {searchQuery && filteredProducts && filteredProducts.length > 0 
+                  ? `Showing all matches`
+                  : `Page ${page} of ${countryNames.length || 1}`}
               </Typography>
             </Box>
             
@@ -903,6 +919,7 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
               size={isMobile ? "small" : "medium"}
               color="primary"
               sx={{
+                display: searchQuery && filteredProducts && filteredProducts.length > 0 ? 'none' : 'flex',
                 "& .MuiPaginationItem-root": {
                   fontWeight: 500,
                   "&.Mui-selected": {

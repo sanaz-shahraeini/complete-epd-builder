@@ -152,6 +152,15 @@ const MapComponent = forwardRef(
             : allProducts || [];
 
         console.log(`Map preparing to show ${productsToShow.length} products`);
+        
+        // When showing filtered results, log additional info
+        if (filteredProductsList && filteredProductsList.length > 0) {
+          console.log("MAP: Showing filtered search results only", {
+            filteredCount: filteredProductsList.length,
+            totalCount: allProducts?.length || 0,
+            searchActive: true
+          });
+        }
 
         // Log geo distribution for debugging
         if (productsToShow.length > 0) {

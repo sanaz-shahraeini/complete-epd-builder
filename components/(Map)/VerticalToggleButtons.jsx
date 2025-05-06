@@ -18,6 +18,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
 import { Paper, Fade, Chip, Box, Typography } from "@mui/material";
+import { useSearch } from "../../useContexts/SearchContext";
 
 export default function VerticalToggleButtons({
   mapZoom,
@@ -38,6 +39,7 @@ export default function VerticalToggleButtons({
     defaultMatches: false,
     noSsr: true,
   });
+  const { searchResults, searchQuery } = useSearch();
 
   useEffect(() => {
     // This will only run on the client side
@@ -256,6 +258,25 @@ export default function VerticalToggleButtons({
     setOpenShareDialog(false);
   };
 
+  // Modified info icon action to respect search results
+  const handleInfoButtonClick = () => {
+    // Toggle the info card visibility
+    setShowInfoCard(!showInfoCard);
+    
+    // If showing the info card and we have search results, we want to keep showing only the filtered markers
+    if (!showInfoCard && searchResults && searchResults.length > 0 && searchQuery) {
+      console.log("Info card opened with active search results, maintaining filtered view", {
+        searchQuery,
+        resultsCount: searchResults.length,
+        maintainingFilter: true
+      });
+      // No need to do anything - the current filtered view should be maintained
+    } else if (!showInfoCard && (!searchResults || searchResults.length === 0 || !searchQuery)) {
+      console.log("Info card opened with no active search, showing all markers");
+      // No active search, so showing all markers (default behavior)
+    }
+  };
+
   const buttons = [
     { value: "add", icon: <AddIcon />, action: increaseZoom },
     { value: "remove", icon: <RemoveIcon />, action: decreaseZoom },
@@ -267,7 +288,7 @@ export default function VerticalToggleButtons({
     {
       value: "info",
       icon: <InfoIcon />,
-      action: () => setShowInfoCard((prev) => !prev),
+      action: handleInfoButtonClick,
       selected: showInfoCard,
     },
     { value: "settings", icon: <SettingsIcon /> },
