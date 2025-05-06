@@ -305,12 +305,24 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
       const categoryProducts = [...(regularProducts || []), ...(allProducts || [])].filter(
         product => {
           const productCategory = product.classific || product.category_name || "";
+          
           // Check if the product's category includes the selected category
-          return typeof productCategory === "string" 
-            ? productCategory.includes(selectedCategory)
-            : Array.isArray(productCategory) && productCategory.includes(selectedCategory);
+          // Improved to handle partial matches and different formats
+          if (typeof productCategory === "string") {
+            // For string categories, do a case-insensitive partial match
+            return productCategory.toLowerCase().includes(selectedCategory.toLowerCase());
+          } else if (Array.isArray(productCategory)) {
+            // For array categories, check if any element contains the selected category
+            return productCategory.some(cat => 
+              typeof cat === "string" && cat.toLowerCase().includes(selectedCategory.toLowerCase())
+            );
+          }
+          
+          // If we reach here, there's no category match
+          return false;
         }
       );
+      
       console.log(`Filtered to ${categoryProducts.length} ${selectedCategory} products for modal`);
       return categoryProducts;
     }

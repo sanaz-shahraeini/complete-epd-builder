@@ -601,11 +601,15 @@ const MapComponent = forwardRef(
         const categoryMatch =
           selectedCategory === "all" ||
           !selectedCategory ||
-          (location.categories &&
-            (typeof location.categories === "string"
-              ? location.categories.includes(selectedCategory)
+          (location.categories && (
+            // Improved category matching with case-insensitive partial matching
+            typeof location.categories === "string"
+              ? location.categories.toLowerCase().includes(selectedCategory.toLowerCase())
               : Array.isArray(location.categories) &&
-                location.categories.includes(selectedCategory)));
+                location.categories.some(cat => 
+                  typeof cat === "string" && cat.toLowerCase().includes(selectedCategory.toLowerCase())
+                )
+          ));
 
         return countryMatch && yearMatch && productMatch && categoryMatch;
       });

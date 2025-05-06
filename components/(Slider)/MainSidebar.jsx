@@ -19,6 +19,7 @@ import FilteredInfoSection from "./FilteredInfoSection";
 import ImageIcon from "@mui/icons-material/Image";
 import ViewInArIcon from "@mui/icons-material/ViewInAr";
 import { useSearch } from "../../useContexts/SearchContext";
+import { useProducts } from "../../useContexts/ProductsContext";
 
 const MainSidebar = ({
   selected,
@@ -44,6 +45,7 @@ const MainSidebar = ({
   const [selectedPriority, setSelectedPriority] = useState("Top products");
   const sidebarRef = useRef(null);
   const { setSearchQuery, clearSearchQuery } = useSearch();
+  const { allProducts: globalAllProducts } = useProducts();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -72,87 +74,138 @@ const MainSidebar = ({
     };
   }, [setIsSidebarOpen]);
 
-  // Fetch products data
+  // Fetch products data - modified for more direct approach
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true);
       try {
-        let productsData = [];
-
-        // Always fetch from EPD API when a category is selected or filterEpdOnly is true
-        if (
-          selectedCategory !== "all" ||
-          filterEpdOnly ||
-          selectedPriority === "New arrivals"
-        ) {
+        console.log("Fetching products with filters:", {
+          selectedCategory,
+          filterEpdOnly,
+          selectedPriority
+        });
+        
+        // Debug the exact category value
+        if (selectedCategory && selectedCategory.toLowerCase().includes('beton')) {
+          console.log("DEBUG - Concrete category detected:", selectedCategory);
+          console.log("Lowercase version:", selectedCategory.toLowerCase());
+        }
+        
+        // Approach 1: Try to use products from the global context first
+        if (globalAllProducts && globalAllProducts.length > 0) {
+          console.log(`Using ${globalAllProducts.length} products from global context`);
+          
+          // Filter concrete products directly from global context
+          if (selectedCategory && selectedCategory.toLowerCase().includes('beton')) {
+            const concreteProductsFromContext = globalAllProducts.filter(product => 
+              (product.name && product.name.toLowerCase().includes('beton')) || 
+              (product.category_name && product.category_name.toLowerCase().includes('beton')) ||
+              (product.classific && product.classific.toLowerCase().includes('beton'))
+            );
+            
+            console.log(`Found ${concreteProductsFromContext.length} concrete products from global context`);
+            if (concreteProductsFromContext.length > 0) {
+              setProducts(concreteProductsFromContext);
+              setIsLoading(false);
+              return; // Skip the rest of the fetching if we found products
+            }
+          }
+        }
+        
+        // If we couldn't use global context or didn't find concrete products,
+        // continue with direct API fetching
+        let epdProducts = [];
+        let regularProducts = [];
+        
+        // 1. Fetch EPD products first - they usually have concrete products
+        try {
           const epdResponse = await fetch(
             "https://epd-fullstack-project.vercel.app/api/ibudata/"
           );
-          if (!epdResponse.ok) {
-            throw new Error(`HTTP error! status: ${epdResponse.status}`);
-          }
-          const epdData = await epdResponse.json();
-          console.log("EPD API response:", epdData);
-
-          // Format EPD products
-          const epdProducts = (epdData.results || []).map((item) => ({
-            category_name: item.classific || null,
-            name: item.name || "No name specified",
-            industry_solution: "EPD Product",
-            image_url: null,
-            description: null,
-            pdf_url: item.pdf_url || null,
-            geo: item.geo || null,
-            company_name: null,
-            created_at: null, // EPD API doesn't provide created_at, so we'll use ref_year for sorting
-            isFromEPDAPI: true,
-            type: "EPD",
-            ref_year: item.ref_year,
-            uuid: item.uuid,
-          }));
-
-          productsData = [...epdProducts];
-        }
-
-        // Fetch regular products if not filtering for EPD only and no specific category is selected
-        if (
-          !filterEpdOnly &&
-          selectedCategory === "all" &&
-          selectedPriority === "Top products"
-        ) {
-          const productsResponse = await fetch(
-            "https://epd-fullstack-project.vercel.app/api/products/"
-          );
-          if (!productsResponse.ok) {
-            throw new Error(`HTTP error! status: ${productsResponse.status}`);
-          }
-          const productsApiData = await productsResponse.json();
-          console.log("Products API response:", productsApiData);
-
-          // Format regular products - ensure we get 15 products
-          const regularProducts = (productsApiData.results || [])
-            .slice(0, 15)
-            .map((item) => ({
-              id:
-                item.id || `product-${Math.random().toString(36).substr(2, 9)}`,
-              category_name: item.category_name || null,
-              name: item.product_name || item.name || "No name specified",
-              industry_solution: item.industry_solution || "Regular Product",
-              image_url: item.image_url || null,
-              description: item.description || null,
+          if (epdResponse.ok) {
+            const epdData = await epdResponse.json();
+            console.log(`EPD API returned ${epdData.results.length} products`);
+            
+            // Format EPD products
+            epdProducts = (epdData.results || []).map((item) => ({
+              category_name: item.classific || null,
+              name: item.name || "No name specified",
+              industry_solution: "EPD Product",
+              image_url: null,
+              description: null,
               pdf_url: item.pdf_url || null,
               geo: item.geo || null,
-              company_name: item.company_name || null,
-              created_at: item.created_at || null,
-              isFromEPDAPI: false,
-              type: "Regular",
+              company_name: null,
+              created_at: null,
+              isFromEPDAPI: true,
+              type: "EPD",
+              ref_year: item.ref_year,
+              uuid: item.uuid,
             }));
-
-          productsData = [...regularProducts];
+          } else {
+            console.error("Failed to fetch EPD products:", epdResponse.status);
+          }
+        } catch (epdErr) {
+          console.error("Error fetching EPD products:", epdErr);
         }
-
-        console.log("All products:", productsData);
-        setProducts(productsData);
+        
+        // 2. Fetch regular products
+        if (!filterEpdOnly) {
+          try {
+            const productsResponse = await fetch(
+              "https://epd-fullstack-project.vercel.app/api/products/"
+            );
+            if (productsResponse.ok) {
+              const productsApiData = await productsResponse.json();
+              console.log(`Regular API returned ${productsApiData.results.length} products`);
+              
+              // Format regular products
+              regularProducts = (productsApiData.results || []).map((item) => ({
+                id: item.id || `product-${Math.random().toString(36).substr(2, 9)}`,
+                category_name: item.category_name || null,
+                name: item.product_name || item.name || "No name specified",
+                industry_solution: item.industry_solution || "Regular Product",
+                image_url: item.image_url || null,
+                description: item.description || null,
+                pdf_url: item.pdf_url || null,
+                geo: item.geo || null,
+                company_name: item.company_name || null,
+                created_at: item.created_at || null,
+                isFromEPDAPI: false,
+                type: "Regular",
+              }));
+            } else {
+              console.error("Failed to fetch regular products:", productsResponse.status);
+            }
+          } catch (regErr) {
+            console.error("Error fetching regular products:", regErr);
+          }
+        }
+        
+        // Combine all products
+        let allProducts = [...epdProducts, ...regularProducts];
+        
+        // Special handling for concrete categories - be more inclusive
+        if (selectedCategory && selectedCategory.toLowerCase().includes('beton')) {
+          // Pre-filter to keep only concrete-related products
+          const concreteProducts = allProducts.filter(product => 
+            (product.name && product.name.toLowerCase().includes('beton')) || 
+            (product.category_name && product.category_name.toLowerCase().includes('beton')) ||
+            (product.classific && product.classific.toLowerCase().includes('beton'))
+          );
+          
+          console.log(`Found ${concreteProducts.length} concrete-related products`);
+          
+          // If we found concrete products, use them directly
+          if (concreteProducts.length > 0) {
+            console.log("Using concrete-specific products");
+            allProducts = concreteProducts;
+          }
+        }
+        
+        console.log(`Using a total of ${allProducts.length} products for filtering`);
+        setProducts(allProducts);
+        
       } catch (error) {
         console.error("Error fetching products:", error);
         setError("Error fetching products");
@@ -162,7 +215,7 @@ const MainSidebar = ({
     };
 
     fetchProducts();
-  }, [filterEpdOnly, selectedPriority, selectedCategory]);
+  }, [filterEpdOnly, selectedPriority, selectedCategory, globalAllProducts]);
 
   // Handle priority change
   const handlePriorityChange = (event) => {
@@ -224,30 +277,284 @@ const MainSidebar = ({
     setLastProductImage(product.image_url);
   };
 
+  // Add direct debug API calls
+  useEffect(() => {
+    // Only run this when a category is selected and no products are shown
+    if (selectedCategory !== "all" && selectedCategory.toLowerCase().includes('beton')) {
+      console.log("DEBUG: Direct API call to fetch EPD products for concrete category:", selectedCategory);
+      
+      // Direct fetch to debug
+      fetch("https://epd-fullstack-project.vercel.app/api/ibudata/")
+        .then(res => res.json())
+        .then(data => {
+          console.log(`DEBUG: Direct API fetch returned ${data.results.length} products`);
+          
+          // Check for concrete products for specific categories
+          if (selectedCategory.toLowerCase().includes('betonbauteile aus ort')) {
+            console.log("Checking for Betonbauteile aus Ort- oder Lieferbeton products");
+            
+            // Sample basic concrete products - should work for any concrete category
+            const concreteProducts = data.results.filter(p => 
+              (p.name && p.name.toLowerCase().includes('beton'))
+            );
+            console.log(`Found ${concreteProducts.length} basic concrete products`);
+            
+            // Force show EPD concrete products directly as a workaround
+            if (concreteProducts.length > 0) {
+              // Format the first few concrete products for display
+              const formattedProducts = concreteProducts.slice(0, 10).map((item) => ({
+                category_name: item.classific || "Concrete Products",
+                name: item.name || "Concrete Product",
+                industry_solution: "EPD Product",
+                image_url: null,
+                description: null,
+                pdf_url: item.pdf_url || null,
+                geo: item.geo || null,
+                company_name: null,
+                created_at: null,
+                isFromEPDAPI: true,
+                type: "EPD",
+                ref_year: item.ref_year,
+                uuid: item.uuid,
+              }));
+              
+              console.log(`DEBUG: Directly setting ${formattedProducts.length} concrete products for display`);
+              setProducts(formattedProducts);
+              setIsLoading(false);
+            }
+          } else {
+            // Check for concrete products
+            if (selectedCategory.toLowerCase().includes('beton')) {
+              const concreteProducts = data.results.filter(p => 
+                (p.name && p.name.toLowerCase().includes('beton')) || 
+                (p.classific && p.classific.toLowerCase().includes('beton'))
+              );
+              console.log(`DEBUG: Found ${concreteProducts.length} concrete products`);
+              if (concreteProducts.length > 0) {
+                console.log("DEBUG: Sample concrete product:", concreteProducts[0]);
+              }
+            }
+          }
+        })
+        .catch(err => console.error("DEBUG: Direct API call failed", err));
+    }
+  }, [selectedCategory, products.length, setProducts, setIsLoading]);
+
   // Filter and sort products based on selected category and priority
   const getFilteredAndSortedProducts = () => {
-    console.log("Current products:", products);
+    console.log("Current products count:", products.length);
     console.log("Selected category:", selectedCategory);
 
-    let filtered = products;
-
-    // Filter by category if one is selected
-    if (selectedCategory && selectedCategory !== "all") {
-      filtered = filtered.filter((product) => {
-        // Get the first part of the category (e.g., "02 Bauprodukte" from "02 Bauprodukte / Metallbauprodukte...")
-        const mainCategory = (product.category_name || "")
-          .split(" / ")[0]
-          .toLowerCase();
-        const selectedMainCategory = selectedCategory.toLowerCase();
-
-        // Check if the main category contains the selected category
-        return mainCategory.includes(selectedMainCategory);
+    // Special approach for concrete categories
+    if (selectedCategory && selectedCategory !== "all" && 
+        (selectedCategory.toLowerCase().includes('beton') || 
+         selectedCategory.toLowerCase().includes('concrete'))) {
+      console.log("DEBUG: Using enhanced concrete product filtering");
+      
+      // Prepare basic search terms
+      let searchTerms = ['beton', 'concrete'];
+      let exclusionTerms = [];
+      
+      // Category-specific search terms 
+      if (selectedCategory.toLowerCase().includes('porenbeton')) {
+        // For Normal-Leicht-und-Porenbeton category
+        console.log("Using Porenbeton-specific filtering");
+        searchTerms = ['porenbeton', 'pore', 'poren', 'leicht'];
+        // Don't include standard concrete terms for Porenbeton category
+        exclusionTerms = ['stahlbeton', 'beton c'];
+      } else if (selectedCategory.toLowerCase().includes('betonbauteile')) {
+        // For Betonbauteile category
+        console.log("Using Betonbauteile-specific filtering");
+        // Make search terms more inclusive for Betonbauteile
+        searchTerms = ['beton', 'concrete', 'liefer', 'ort', 'fertig'];
+        // Don't exclude too much
+        exclusionTerms = [];
+      }
+      
+      console.log("Using category-specific search terms:", searchTerms);
+      console.log("Excluding terms:", exclusionTerms);
+      
+      // Multi-approach filtering with category-specific logic
+      const concreteProducts = products.filter(product => {
+        const productName = (product.name || "").toLowerCase();
+        const productCategory = (product.category_name || product.classific || "").toLowerCase();
+        
+        // Skip products matching exclusion terms
+        if (exclusionTerms.some(term => 
+            productName.includes(term) || productCategory.includes(term))) {
+          return false;
+        }
+        
+        // Special case for Betonbauteile aus Ort- oder Lieferbeton
+        if (selectedCategory.toLowerCase().includes('betonbauteile aus ort')) {
+          // For this specific category, we'll be very inclusive
+          if (productName.includes('beton') || productCategory.includes('beton')) {
+            return true;
+          }
+          
+          // Accept any concrete-related product
+          if (product.type === "EPD" && (
+              productName.includes('c20') || 
+              productName.includes('c25') || 
+              productName.includes('c30') || 
+              productName.includes('concrete'))) {
+            return true;
+          }
+        }
+        
+        // 1. Direct match by name
+        if (product.name && searchTerms.some(term => productName.includes(term))) {
+          return true;
+        }
+        
+        // 2. Match by category
+        if (productCategory && searchTerms.some(term => productCategory.includes(term))) {
+          return true;
+        }
+        
+        // 3. Special case for EPD products when we need to look deeper
+        if (product.type === "EPD") {
+          // Look for matches in all string properties
+          const hasMatch = searchTerms.some(term => 
+            Object.values(product).some(val => 
+              typeof val === 'string' && val.toLowerCase().includes(term)
+            )
+          );
+          
+          // For Normal-Leicht-und-Porenbeton, prioritize products with those terms
+          if (selectedCategory.toLowerCase().includes('porenbeton')) {
+            // Check if the EPD product contains specific terms
+            if (productName.includes('leicht') || productName.includes('poren')) {
+              return true;
+            }
+          }
+          
+          return hasMatch;
+        }
+        
+        return false;
       });
+      
+      console.log(`Enhanced concrete filtering found ${concreteProducts.length} products for category: ${selectedCategory}`);
+      
+      // Sort concretely by specific category
+      let sortedProducts = [...concreteProducts];
+      
+      // For Porenbeton, prioritize those with "poren" or "leicht" in the name
+      if (selectedCategory.toLowerCase().includes('porenbeton')) {
+        sortedProducts.sort((a, b) => {
+          const aName = (a.name || "").toLowerCase();
+          const bName = (b.name || "").toLowerCase();
+          
+          // Products with "poren" in name come first
+          const aHasPoren = aName.includes('poren');
+          const bHasPoren = bName.includes('poren');
+          
+          if (aHasPoren && !bHasPoren) return -1;
+          if (!aHasPoren && bHasPoren) return 1;
+          
+          // Then products with "leicht" in name
+          const aHasLeicht = aName.includes('leicht');
+          const bHasLeicht = bName.includes('leicht');
+          
+          if (aHasLeicht && !bHasLeicht) return -1;
+          if (!aHasLeicht && bHasLeicht) return 1;
+          
+          return 0;
+        });
+      }
+      
+      // For Betonbauteile, prioritize those with "fertig" or "bauteil" in the name
+      if (selectedCategory.toLowerCase().includes('betonbauteile')) {
+        sortedProducts.sort((a, b) => {
+          const aName = (a.name || "").toLowerCase();
+          const bName = (b.name || "").toLowerCase();
+          
+          // Products with "bauteil" in name come first
+          const aHasBauteil = aName.includes('bauteil');
+          const bHasBauteil = bName.includes('bauteil');
+          
+          if (aHasBauteil && !bHasBauteil) return -1;
+          if (!aHasBauteil && bHasBauteil) return 1;
+          
+          // Then products with "fertig" in name
+          const aHasFertig = aName.includes('fertig');
+          const bHasFertig = bName.includes('fertig');
+          
+          if (aHasFertig && !bHasFertig) return -1;
+          if (!aHasFertig && bHasFertig) return 1;
+          
+          return 0;
+        });
+      }
+      
+      // Finally apply priority sort on the pre-sorted list
+      sortedProducts = sortByPriority(sortedProducts); 
+      
+      // Return at most 10 products
+      return sortedProducts.slice(0, 10);
     }
 
-    // Sort based on priority
+    // Standard approach for other categories
+    let filtered = products;
+
+    if (selectedCategory && selectedCategory !== "all") {
+      console.log("Standard category filtering for:", selectedCategory);
+      // Log all product categories to debug what's available
+      const allCategories = products.map(p => p.category_name || p.classific || "none").filter(c => c !== "none");
+      console.log("Number of products with categories:", allCategories.length);
+      console.log("Sample categories:", allCategories.slice(0, 10));
+      
+      const categoryLower = selectedCategory.toLowerCase();
+      console.log("Looking for category containing:", categoryLower);
+      
+      filtered = filtered.filter((product) => {
+        // Look at all possible category fields
+        const productCategory = product.category_name || product.classific || "";
+        const productName = product.name || "";
+        
+        // Check name for category matches too
+        if (productName.toLowerCase().includes(categoryLower)) {
+          return true;
+        }
+        
+        // Handle different formats of category data
+        if (typeof productCategory === "string") {
+          return productCategory.toLowerCase().includes(categoryLower);
+        } else if (Array.isArray(productCategory)) {
+          return productCategory.some(cat => 
+            typeof cat === "string" && cat.toLowerCase().includes(categoryLower)
+          );
+        }
+        
+        return false;
+      });
+    }
+    
+    console.log("After category filtering:", filtered.length, "products remain");
+
+    // Helper function to sort by priority
+    const sortedProducts = sortByPriority(filtered);
+    
+    // Apply limits
+    if (selectedCategory !== "all" || filterEpdOnly) {
+      const beforeLimit = sortedProducts.length;
+      const result = sortedProducts.slice(0, 10);
+      console.log(`Limited from ${beforeLimit} to ${result.length} products`);
+      return result;
+    } else {
+      // Limit to 15 products for regular view
+      const beforeLimit = sortedProducts.length;
+      const result = sortedProducts.slice(0, 15);
+      console.log(`Limited from ${beforeLimit} to ${result.length} products`);
+      return result;
+    }
+  };
+  
+  // Helper function to sort products by priority
+  const sortByPriority = (products) => {
     if (selectedPriority === "New arrivals") {
-      filtered = filtered.sort((a, b) => {
+      return [...products].sort((a, b) => {
         // First try to sort by created_at timestamp
         if (a.created_at && b.created_at) {
           return new Date(b.created_at) - new Date(a.created_at);
@@ -259,20 +566,10 @@ const MainSidebar = ({
         return yearB - yearA;
       });
     }
-
-    // Limit to 10 products when showing EPD products
-    if (selectedCategory !== "all" || filterEpdOnly) {
-      filtered = filtered.slice(0, 10);
-    } else {
-      // Limit to 15 products for regular view
-      filtered = filtered.slice(0, 15);
-    }
-
-    console.log("Filtered products:", filtered);
-    return filtered;
+    return products; // Default no sort
   };
 
-  const regularProducts = getFilteredAndSortedProducts();
+  const filteredProducts = getFilteredAndSortedProducts();
 
   // Function to handle image errors
   const handleImageError = (e) => {
@@ -527,8 +824,8 @@ const MainSidebar = ({
                         </Box>
                       </ListItem>
                     ))
-                  ) : regularProducts.length > 0 ? (
-                    regularProducts.map((product, index) => (
+                  ) : filteredProducts.length > 0 ? (
+                    filteredProducts.map((product, index) => (
                       <React.Fragment key={product.id || `Product${index}`}>
                         <ListItem
                           sx={{
@@ -677,18 +974,42 @@ const MainSidebar = ({
                             <InfoOutlinedIcon />
                           </IconButton>
                         </ListItem>
-                        {index < regularProducts.length - 1 && (
+                        {index < filteredProducts.length - 1 && (
                           <Divider sx={{ width: "100%", bgcolor: "#e0e0e0" }} />
                         )}
                       </React.Fragment>
                     ))
                   ) : (
-                    <Typography
-                      variant="body1"
-                      sx={{ p: 2, color: "#666", textAlign: "center" }}
-                    >
-                      No products found for this category.
-                    </Typography>
+                    <Box sx={{ p: 2, textAlign: "center" }}>
+                      <Typography
+                        variant="body1"
+                        sx={{ color: "#666", mb: 2 }}
+                      >
+                        No products found for &quot;{selectedCategory}&quot; category.
+                      </Typography>
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        size="small"
+                        onClick={() => {
+                          // Reset category filter
+                          setSelectedCategory("all");
+                          // Toggle sidebar to Products view
+                          onSelect("Products");
+                        }}
+                        sx={{
+                          borderRadius: "20px",
+                          borderColor: "var(--primary-teal)",
+                          color: "var(--primary-teal)",
+                          "&:hover": {
+                            backgroundColor: "var(--light-teal)",
+                            borderColor: "var(--dark-teal)",
+                          }
+                        }}
+                      >
+                        Reset Filter
+                      </Button>
+                    </Box>
                   )}
                 </List>
               )}
