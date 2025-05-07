@@ -853,10 +853,15 @@ const MapComponent = forwardRef(
 
           // Center map on the location
           if (mapRef.current) {
-            mapRef.current.setView(
-              [matchedLocation.lat, matchedLocation.lng],
-              8 // Zoom level
-            );
+            console.log("mapRef.current at setView:", mapRef.current);
+            if (typeof mapRef.current.setView === "function") {
+              mapRef.current.setView(
+                [matchedLocation.lat, matchedLocation.lng],
+                8 // Zoom level
+              );
+            } else {
+              console.error("mapRef.current does not have setView! It is:", mapRef.current);
+            }
           }
         } else {
           console.warn("No matching location found for:", selectedName);
@@ -874,7 +879,12 @@ const MapComponent = forwardRef(
             setSelectedLocation(newLocation);
 
             if (mapRef.current) {
-              mapRef.current.setView([newLocation.lat, newLocation.lng], 8);
+              console.log("mapRef.current at setView (newLocation):", mapRef.current);
+              if (typeof mapRef.current.setView === "function") {
+                mapRef.current.setView([newLocation.lat, newLocation.lng], 8);
+              } else {
+                console.error("mapRef.current does not have setView! It is:", mapRef.current);
+              }
             }
           } else {
             setSelectedLocation(null);
@@ -898,8 +908,12 @@ const MapComponent = forwardRef(
 
         // This will force a recalculation of locations
         if (mapRef.current) {
-          // Reset view to show all markers
-          mapRef.current.setView([30, -10], 3);
+          console.log("mapRef.current at setView (reset):", mapRef.current);
+          if (typeof mapRef.current.setView === "function") {
+            mapRef.current.setView([30, -10], 3);
+          } else {
+            console.error("mapRef.current does not have setView! It is:", mapRef.current);
+          }
         }
       }
 
@@ -931,16 +945,6 @@ const MapComponent = forwardRef(
               center={[30, -10]}
               zoom={3}
               style={{ height: "100vh", width: "100%" }}
-              ref={(map) => {
-                if (map) {
-                  console.log("MapContainer ref callback");
-                  mapRef.current = map;
-                  if (typeof window !== 'undefined') {
-                    window.mapInstance = map;
-                    console.log("Map instance stored from MapContainer ref callback");
-                  }
-                }
-              }}
               maxBounds={[
                 [-90, -180],
                 [90, 180],
@@ -1404,27 +1408,28 @@ const MapComponent = forwardRef(
       return null;
     };
 
+    function MapController({ mapRef }) {
+      const map = useMap();
+      useEffect(() => {
+        if (map && mapRef) {
+          mapRef.current = map;
+        }
+      }, [map, mapRef]);
+      return null;
+    }
+
     return (
       <>
         <MapContainer
           center={[30, -10]}
           zoom={3}
           style={{ height: "100vh", width: "100%" }}
-          ref={(map) => {
-            if (map) {
-              console.log("MapContainer ref callback");
-              mapRef.current = map;
-              if (typeof window !== 'undefined') {
-                window.mapInstance = map;
-                console.log("Map instance stored from MapContainer ref callback");
-              }
-            }
-          }}
           maxBounds={[
             [-90, -180],
             [90, 180],
           ]}
         >
+          <MapController mapRef={mapRef} />
           <MapEvents />
           <ZoomControl
             setZoom={setZoom}
