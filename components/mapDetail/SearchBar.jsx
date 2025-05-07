@@ -159,17 +159,24 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
 
   const handleProductSelect = (product) => {
     const productName = product.product_name || product.name;
+    const formattedName = (product.type === "regular" || product.isFromRegularAPI)
+      ? formatProductName(productName)
+      : productName;
     console.log("Product selected:", product);
 
-    // Set search query and context
-    setSearchQuery(productName);
-    setContextSearchQuery(productName);
+    // Set search query and context to the formatted name
+    setSearchQuery(formattedName);
+    setContextSearchQuery(formattedName);
 
     // Make a deep copy to ensure all properties are passed
     const productToSelect = { ...product };
 
-    // Set the selected product in the context
-    setSelectedProduct(productToSelect);
+    // Set the selected product in the context (formatted for regular products)
+    if (productToSelect.type === "regular" || productToSelect.isFromRegularAPI) {
+      setSelectedProduct(formattedName);
+    } else {
+      setSelectedProduct(productToSelect);
+    }
 
     // Center map on the selected product's location if coordinates are available
     if (productToSelect.lat && productToSelect.lng) {

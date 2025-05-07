@@ -841,10 +841,12 @@ const MapComponent = forwardRef(
 
         // If still no match, try case-insensitive
         if (!matchedLocation) {
-          const lowerName = selectedName.toLowerCase();
-          matchedLocation = locations.find(
-            (loc) => (loc.product || "").toLowerCase() === lowerName
-          );
+          if (typeof selectedName === 'string') {
+            const lowerName = selectedName.toLowerCase();
+            matchedLocation = locations.find(
+              (loc) => (loc.product || "").toLowerCase() === lowerName
+            );
+          }
         }
 
         if (matchedLocation) {
@@ -1480,10 +1482,11 @@ const MapComponent = forwardRef(
             // Different style for selected marker
             const circleOptions = isSelected
               ? {
-                  fillColor: "#4DB6AC", // Teal 300 for selected (brighter)
-                  color: "#00695C", // Teal 800 border (darker)
-                  weight: 2,
-                  fillOpacity: 0.8,
+                  fillColor: "#FF9800", // Orange for selected
+                  color: "#D84315", // Deep orange border
+                  weight: 4,
+                  fillOpacity: 0.95,
+                  className: "selected-marker-pulse", // Add a class for animation
                 }
               : {
                   fillColor: location.isEpd ? "#4DB6AC" : "#00695C", // Teal 300 vs Teal 800 (light vs dark)
@@ -1492,11 +1495,14 @@ const MapComponent = forwardRef(
                   fillOpacity: 0.6,
                 };
 
+            // Make selected marker much larger
+            const markerRadius = isSelected ? 60000 : getCircleRadius(zoom);
+
             return (
               <Circle
                 key={`${location.lat}-${location.lng}-${index}-zoom-${zoom}`}
                 center={[location.lat, location.lng]}
-                radius={getCircleRadius(zoom)}
+                radius={markerRadius}
                 pathOptions={circleOptions}
               >
                 <Popup>
@@ -1673,13 +1679,21 @@ const MapComponent = forwardRef(
           @keyframes pulse {
             0% {
               transform: scale(1);
+              box-shadow: 0 0 0 0 rgba(255,152,0, 0.9);
             }
-            50% {
-              transform: scale(1.2);
+            70% {
+              transform: scale(1.35);
+              box-shadow: 0 0 40px 20px rgba(255,152,0, 0.5);
             }
             100% {
               transform: scale(1);
+              box-shadow: 0 0 0 0 rgba(255,152,0, 0.0);
             }
+          }
+          .selected-marker-pulse {
+            animation: pulse 1.2s infinite;
+            stroke-width: 6px !important;
+            filter: drop-shadow(0 0 16px #FF9800);
           }
         `}</style>
       </>
