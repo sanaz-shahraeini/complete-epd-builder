@@ -1217,18 +1217,30 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
                             >
                               {product.name || product.product_name}
                             </Typography>
+                            {/* Category/classific field */}
                             <Typography
                               variant="body2"
                               sx={{
-                                color: "#666",
-                                fontSize: isMobile ? "12px" : "14px",
-                                mb: 1,
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
+                                color: "#388e3c",
+                                fontSize: isMobile ? "12px" : "13px",
+                                mb: 0.5,
+                                fontWeight: 500,
+                                display: 'block',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
                               }}
                             >
-                              {product.industry_solution || product.classific || product.category_name || "No category"}
+                              <span style={{ color: '#00796b', fontWeight: 600 }}>Category:</span>{' '}
+                              {(() => {
+                                const cat = product.classific || product.category_name || 'No category';
+                                if (cat.length > 40) {
+                                  return (
+                                    <span title={cat}>{cat.slice(0, 40)}...</span>
+                                  );
+                                }
+                                return cat;
+                              })()}
                             </Typography>
                             
                             <Box
@@ -1535,20 +1547,32 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
                                 whiteSpace: "nowrap",
                               }}
                             >
-                              {product.name}
+                              {product.name || product.product_name}
                             </Typography>
+                            {/* Category/classific field */}
                             <Typography
                               variant="body2"
                               sx={{
-                                color: "#666",
-                                fontSize: isMobile ? "12px" : "14px",
-                                mb: 1,
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
+                                color: "#388e3c",
+                                fontSize: isMobile ? "12px" : "13px",
+                                mb: 0.5,
+                                fontWeight: 500,
+                                display: 'block',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
                               }}
                             >
-                              {product.industry_solution || "No category"}
+                              <span style={{ color: '#00796b', fontWeight: 600 }}>Category:</span>{' '}
+                              {(() => {
+                                const cat = product.classific || product.category_name || 'No category';
+                                if (cat.length > 40) {
+                                  return (
+                                    <span title={cat}>{cat.slice(0, 40)}...</span>
+                                  );
+                                }
+                                return cat;
+                              })()}
                             </Typography>
                             
                             <Box
