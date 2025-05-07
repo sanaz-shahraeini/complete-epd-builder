@@ -365,22 +365,18 @@ export default function VerticalToggleButtons({
       isSpecificCategory: !!(selectedCategory && selectedCategory !== "all")
     });
     
-    if (!showInfoCard) {
-      // Info card is being shown
-      if (searchResults && searchResults.length > 0 && searchQuery) {
-        // Search results take priority
-        console.log("Info card opened with active search results, maintaining filtered view", {
-          searchQuery,
-          resultsCount: searchResults.length
-        });
-      } else if (selectedCategory && selectedCategory !== "all") {
-        // Category filter is active
-        console.log("Info card opened with active category filter:", selectedCategory);
-        // The current filtered view based on category should be maintained
-      } else {
-        // No active filters
-        console.log("Info card opened with no active filters, showing all markers");
-      }
+    // Add a more visible log message
+    console.log(`INFO BUTTON CLICKED - ${!showInfoCard ? 'SHOWING' : 'HIDING'} INFO CARD`);
+    
+    // Dispatch an event that the page component can listen for
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('infoCardToggled', { 
+        detail: { 
+          visible: !showInfoCard,
+          source: 'infoButton',
+          timestamp: new Date().getTime()
+        } 
+      }));
     }
   };
 

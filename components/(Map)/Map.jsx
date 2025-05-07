@@ -377,6 +377,20 @@ const MapComponent = forwardRef(
             withoutCoords.slice(0, 3)
           );
         }
+        
+        // Dispatch event to notify that products are loaded
+        if (typeof window !== 'undefined') {
+          // Add a delay to ensure the page has time to stabilize before showing/hiding UI elements
+          setTimeout(() => {
+            console.log("Dispatching productsLoaded event");
+            window.dispatchEvent(new CustomEvent('productsLoaded', { 
+              detail: { 
+                count: allProducts.length,
+                timestamp: new Date().getTime()
+              } 
+            }));
+          }, 1000); // 1 second delay
+        }
       }
     }, [allProducts, productsLoading]);
 
@@ -1562,7 +1576,7 @@ const MapComponent = forwardRef(
 
         <style jsx global>{`
           .leaflet-popup {
-            z-index: 9000 !important;
+            z-index: 12000 !important;
             position: relative;
           }
           .leaflet-popup-content-wrapper {
@@ -1573,16 +1587,16 @@ const MapComponent = forwardRef(
             padding: 8px 12px;
             max-width: 300px;
             position: relative;
-            z-index: 9500 !important;
+            z-index: 12500 !important;
           }
           .leaflet-popup-content {
             margin: 8px;
             position: relative;
-            z-index: 9600 !important;
+            z-index: 12600 !important;
           }
           .leaflet-popup-tip {
             background: rgba(255, 255, 255, 0.95);
-            z-index: 9400 !important;
+            z-index: 12400 !important;
             position: relative;
           }
           .map-popup-content {
@@ -1590,7 +1604,7 @@ const MapComponent = forwardRef(
             color: #333;
             padding: 5px;
             position: relative;
-            z-index: 9700 !important;
+            z-index: 12700 !important;
           }
           .popup-title {
             color: #00695c;
@@ -1614,7 +1628,7 @@ const MapComponent = forwardRef(
             z-index: 400 !important;
           }
           .leaflet-popup-pane {
-            z-index: 9000 !important;
+            z-index: 12000 !important;
           }
           .leaflet-overlay-pane {
             z-index: 300 !important;
@@ -1644,7 +1658,7 @@ const MapComponent = forwardRef(
             z-index: 800 !important;
           }
           .leaflet-popup-pane {
-            z-index: 9000 !important;
+            z-index: 12000 !important;
           }
           @keyframes pulse {
             0% {
