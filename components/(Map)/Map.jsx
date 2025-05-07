@@ -16,6 +16,7 @@ import countryCoordinates from "../../public/data/countryCoordinates";
 import { useProducts } from "../../useContexts/ProductsContext";
 import { useSearch } from "../../useContexts/SearchContext";
 import Loading from "../common/Loading";
+import { formatProductName } from "../../utils/formatProductName";
 
 // Dynamically import react-leaflet to avoid SSR issues
 const MapContainer = dynamic(
@@ -1495,7 +1496,7 @@ const MapComponent = forwardRef(
               >
                 <Popup>
                   <div className="map-popup-content">
-                    <h3 className="popup-title">{location.product}</h3>
+                    <h3 className="popup-title">{formatProductName(location.product)}</h3>
                     <p>
                       <strong>Country:</strong> {location.country}
                       {location.company_name && (

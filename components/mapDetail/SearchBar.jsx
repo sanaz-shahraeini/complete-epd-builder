@@ -31,6 +31,7 @@ import SendIcon from "@mui/icons-material/Send";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import { useSearch } from "../../useContexts/SearchContext";
 import { useProducts } from "../../useContexts/ProductsContext";
+import { formatProductName } from "../../utils/formatProductName";
 
 const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
   const [icon, setIcon] = useState(<PublicIcon sx={{ color: "#384029" }} />);
@@ -642,7 +643,7 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
                                   fontSize: isMobile ? "13px" : "inherit",
                                 }}
                               >
-                                {product.product_name || product.name}
+                                {formatProductName(product.product_name || product.name)}
                               </Typography>
                             }
                             secondary={
@@ -1215,7 +1216,7 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
                                 whiteSpace: "nowrap",
                               }}
                             >
-                              {product.name || product.product_name}
+                              {formatProductName(product.name || product.product_name)}
                             </Typography>
                             {/* Category/classific field */}
                             <Typography
@@ -1547,7 +1548,7 @@ const SearchBar = ({ mapRef, filterEpdOnly, selectedCategory }) => {
                                 whiteSpace: "nowrap",
                               }}
                             >
-                              {product.name || product.product_name}
+                              {formatProductName(product.name || product.product_name)}
                             </Typography>
                             {/* Category/classific field */}
                             <Typography

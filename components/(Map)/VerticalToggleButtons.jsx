@@ -19,6 +19,7 @@ import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
 import { Paper, Fade, Chip, Box, Typography } from "@mui/material";
 import { useSearch } from "../../useContexts/SearchContext";
+import { formatProductName } from "../../utils/formatProductName";
 
 export default function VerticalToggleButtons({
   mapZoom,
@@ -155,8 +156,7 @@ export default function VerticalToggleButtons({
     if (!isClient) return;
 
     if (selectedProduct) {
-      const productName =
-        selectedProduct.product_name || selectedProduct.name || "";
+      const productName = formatProductName(selectedProduct.product_name || selectedProduct.name);
       const subject = `Product Information: ${productName}`;
       const body =
         `Hello,\n\nI am sharing the information of the product I viewed:\n\n` +
@@ -204,8 +204,7 @@ export default function VerticalToggleButtons({
       if (typeof document !== "undefined") {
         const currentUrl = document.location.href;
         const baseUrl = new URL(currentUrl);
-        const productName =
-          selectedProduct.product_name || selectedProduct.name || "";
+        const productName = formatProductName(selectedProduct.product_name || selectedProduct.name);
         baseUrl.searchParams.set("product", productName);
 
         copyToClipboard(baseUrl.toString())
@@ -269,8 +268,7 @@ export default function VerticalToggleButtons({
       return;
     }
 
-    const productName =
-      selectedProduct.product_name || selectedProduct.name || "";
+    const productName = formatProductName(selectedProduct.product_name || selectedProduct.name);
     const subject = `Product Information: ${productName}`;
     const body =
       `Hello,\n\nI am sharing the information of the product I viewed:\n\n` +
@@ -324,8 +322,7 @@ export default function VerticalToggleButtons({
       return;
     }
 
-    const productName =
-      selectedProduct.product_name || selectedProduct.name || "";
+    const productName = formatProductName(selectedProduct.product_name || selectedProduct.name);
     const subject = `Product Information: ${productName}`;
     const body =
       `Hello,\n\nI am sharing the information of the product I viewed:\n\n` +
@@ -479,7 +476,7 @@ export default function VerticalToggleButtons({
             <>
               <p>
                 <strong>Share:</strong>{" "}
-                {selectedProduct.product_name || selectedProduct.name || ""}
+                {formatProductName(selectedProduct.product_name || selectedProduct.name)}
               </p>
               <div
                 style={{

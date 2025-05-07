@@ -20,6 +20,7 @@ import ImageIcon from "@mui/icons-material/Image";
 import ViewInArIcon from "@mui/icons-material/ViewInAr";
 import { useSearch } from "../../useContexts/SearchContext";
 import { useProducts } from "../../useContexts/ProductsContext";
+import { formatProductName } from "../../utils/formatProductName";
 
 const MainSidebar = ({
   selected,
@@ -932,7 +933,7 @@ const MainSidebar = ({
 
                           <Box sx={{ flexGrow: 1, minWidth: 0 }}>
                             <ListItemText
-                              primary={product.name}
+                              primary={formatProductName(product.name)}
                               secondary={
                                 product.industry_solution ||
                                 (product.isFromEPDAPI

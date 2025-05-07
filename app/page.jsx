@@ -21,6 +21,7 @@ import { SearchProvider, useSearch } from "../useContexts/SearchContext";
 import { ProductsProvider } from "../useContexts/ProductsContext";
 import ViewInArIcon from "@mui/icons-material/ViewInAr";
 import SearchIcon from "@mui/icons-material/Search";
+import { formatProductName } from "../utils/formatProductName";
 
 // Dynamic imports for components that need to be client-side only
 const VerticalToggleButtons = dynamic(
@@ -74,7 +75,7 @@ const IndexPage = () => {
   const [categories, setCategories] = useState([]);
   const [topCategories, setTopCategories] = useState([]);
   const [mapZoom, setMapZoom] = useState(3);
-  const [showInfoCard, setShowInfoCard] = useState(false);
+  const [showInfoCard, setShowInfoCard] = useState(true);
   const [filterEpdOnly, setFilterEpdOnly] = useState(false);
 
   const toggleSidebar = () => {
@@ -554,7 +555,7 @@ const InfoCard = ({
     if (searchQuery && searchResults && searchResults.length > 0) {
       return `Showing ${searchResults.length} result${searchResults.length !== 1 ? 's' : ''} for "${searchQuery}". These are the only products currently displayed on the map.`;
     } else if (selectedProduct) {
-      return `Viewing details for "${selectedProduct}". This product is currently highlighted on the map.`;
+      return `Viewing details for "${formatProductName(selectedProduct)}". This product is currently highlighted on the map.`;
     } else if (selectedCategory && selectedCategory !== "all") {
       return `Viewing products from the ${selectedCategory} category. Use the sidebar to explore more details.`;
     } else if (filterEpdOnly) {
@@ -1115,7 +1116,7 @@ const InfoCard = ({
                         fontWeight: 500,
                       }}
                     >
-                      Product: <span style={{ fontWeight: 600 }}>{selectedProduct}</span>
+                      Product: <span style={{ fontWeight: 600 }}>{formatProductName(selectedProduct)}</span>
                     </Typography>
                   </Box>
                   
