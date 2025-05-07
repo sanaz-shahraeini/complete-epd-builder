@@ -311,6 +311,7 @@ const MapComponent = forwardRef(
                 geoMapped: product.geoMapped,
                 productId: product.id || product.uid,
                 pdf_url: product.pdf_url || null,
+                company_name: product.company_name || "",
               };
             })
             .filter((location) => location !== null);
@@ -1497,6 +1498,9 @@ const MapComponent = forwardRef(
                     <h3 className="popup-title">{location.product}</h3>
                     <p>
                       <strong>Country:</strong> {location.country}
+                      {location.company_name && (
+                        <><br /><strong>Company:</strong> {location.company_name}</>
+                      )}
                       {isSelected && (
                         <span style={{ color: "red" }}> ★ Selected</span>
                       )}
