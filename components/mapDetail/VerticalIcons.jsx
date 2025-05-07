@@ -125,27 +125,19 @@ const VerticalIcons = ({
   const [totalProducts, setTotalProducts] = useState(0);
 
   const findTopCategories = useCallback(
-    (categories) => {
+    () => {
       if (!allProducts) return [];
 
       const frequencyMap = {};
       allProducts.forEach((product) => {
-        const categories = (
-          product.category_name ||
-          product.classific ||
-          "Uncategorized"
-        )
-          .split(" / ")
-          .map((category) => category.trim());
-
-        categories.forEach((category) => {
-          frequencyMap[category] = (frequencyMap[category] || 0) + 1;
-        });
+        // Use full string as category key, no splitting
+        const category = (product.category_name || product.classific || "Uncategorized").trim();
+        frequencyMap[category] = (frequencyMap[category] || 0) + 1;
       });
 
       return Object.entries(frequencyMap)
         .sort(([, a], [, b]) => b - a)
-        .slice(0, 4)
+        .slice(0, 5)
         .map(([category, count]) => ({ name: category, count }));
     },
     [allProducts]
@@ -173,11 +165,11 @@ const VerticalIcons = ({
   }, [loading, error, allProducts, setCategories]);
 
   useEffect(() => {
-    if (categories.length > 0) {
-      const topCategories = findTopCategories(categories);
+    if (allProducts && allProducts.length > 0) {
+      const topCategories = findTopCategories();
       setTopCategories(topCategories);
     }
-  }, [categories, findTopCategories]);
+  }, [allProducts, findTopCategories]);
 
   const handleCategoryClick = (label) => {
     // If we're already on this category, don't do anything
